@@ -14,18 +14,19 @@ from vlnr.vuln_models import PackageFindings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def process_package(pkg: dict[str, Any], out_dir: str) -> None:
+
+def process_package(pkg: dict[str, Any], out_dir: str, max_files: int = 0) -> PackageFindings | None:
     name = str(pkg["name"])
     version = str(pkg["version"])
     repo_url = pkg.get("repo_url", "")
 
     source = fetch_source(name, version, repo_url)
     if not source:
-        return
+        return None
 
     try:
         local_path = source.local_path
-        
+
         # 1. Entry points
         eps = discover_entrypoints(local_path)
         logger.info(f"Discovered {len(eps)} entry points for {name}")
@@ -36,11 +37,15 @@ def process_package(pkg: dict[str, Any], out_dir: str) -> None:
 
         # 3. AST Scan
         all_slices = []
+        files_scanned = 0
         for root, _, files in os.walk(local_path):
             if "tests" in root.split(os.sep):
                 continue
             for f in files:
                 if f.endswith(".py"):
+                    if max_files > 0 and files_scanned >= max_files:
+                        break
+                    files_scanned += 1
                     full_p = os.path.join(root, f)
                     rel_p = os.path.relpath(full_p, local_path)
                     try:
@@ -50,11 +55,21 @@ def process_package(pkg: dict[str, Any], out_dir: str) -> None:
                             all_slices.extend(slices)
                     except Exception as e:
                         logger.error(f"Failed to parse {full_p}: {e}")
+            if max_files > 0 and files_scanned >= max_files:
+                break
 
         # 4. Refine slices with external hits and scoring
         for s in all_slices:
             # Match external hits by file and line
-            s.tool_hits = [h for h in external_hits if h.file.endswith(s.dataflow_summary[-1].file) and h.line == s.dataflow_summary[-1].line] if s.dataflow_summary else []
+            s.tool_hits = (
+                [
+                    h
+                    for h in external_hits
+                    if h.file.endswith(s.dataflow_summary[-1].file) and h.line == s.dataflow_summary[-1].line
+                ]
+                if s.dataflow_summary
+                else []
+            )
             s.risk_score_static = score_slice(s)
             # Add bonus for tool agreement
             if s.tool_hits:
@@ -66,34 +81,39 @@ def process_package(pkg: dict[str, Any], out_dir: str) -> None:
         # 6. Save results
         findings_path = os.path.join(out_dir, f"{name}-findings.json")
         slices_path = os.path.join(out_dir, f"{name}-slices.jsonl")
-        
+
         findings = PackageFindings(
             package=pkg,
             sinks=[s.model_dump() for s in all_slices],
             stats={
                 "num_sinks_total": len(all_slices),
                 "num_obvious_vuln": len([s for s in all_slices if s.static_class == "obvious_vuln"]),
-                "num_bandit_hits": len([h for h in external_hits if h.tool == "bandit"])
-            }
+                "num_bandit_hits": len([h for h in external_hits if h.tool == "bandit"]),
+            },
         )
-        
+
         with open(findings_path, "w") as f_findings:
             json.dump(findings.model_dump(), f_findings, indent=2)
-        
+
         with open(slices_path, "w") as f_slices:
             for s in all_slices:
                 f_slices.write(json.dumps(s.model_dump()) + "\n")
 
         logger.info(f"Finished processing {name}. Found {len(all_slices)} potential vulnerabilities.")
+        return findings
 
     finally:
         cleanup_source(source)
 
+
 def main() -> None:
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("candidates", help="Path to candidates.json")
     parser.add_argument("--out-dir", default="findings", help="Output directory")
+    parser.add_argument("--max-packages", type=int, default=0, help="Max packages to process")
+    parser.add_argument("--max-files-per-pkg", type=int, default=0, help="Max files to scan per package")
     args = parser.parse_args()
 
     if not os.path.exists(args.out_dir):
@@ -102,11 +122,23 @@ def main() -> None:
     with open(args.candidates, "r") as f:
         candidates = json.load(f)
 
+    if args.max_packages > 0:
+        candidates = candidates[: args.max_packages]
+
+    global_index = []
+
     for pkg in candidates:
         try:
-            process_package(pkg, args.out_dir)
+            findings = process_package(pkg, args.out_dir, max_files=args.max_files_per_pkg)
+            if findings:
+                global_index.append({"package": pkg["name"], "version": pkg["version"], "stats": findings.stats})
         except Exception as e:
             logger.exception(f"Failed to process {pkg['name']}: {e}")
+
+    index_path = os.path.join(args.out_dir, "all-findings-index.json")
+    with open(index_path, "w") as f_index:
+        json.dump(global_index, f_index, indent=2)
+
 
 if __name__ == "__main__":
     main()
