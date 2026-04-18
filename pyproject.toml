@@ -26,6 +26,9 @@ dev = [
     "types-pyyaml>=6.0.12.20260408",
 ]
 
+[tool.uv]
+package = true
+
 [tool.ruff]
 line-length = 120
 target-version = "py314"
