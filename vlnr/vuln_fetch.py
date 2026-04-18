@@ -8,12 +8,14 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class RepoSource:
     package: str
     version: str
     repo_url: str
     local_path: str
+
 
 def fetch_source(package: str, version: str, repo_url: str) -> Optional[RepoSource]:
     """
@@ -29,10 +31,7 @@ def fetch_source(package: str, version: str, repo_url: str) -> Optional[RepoSour
         # Clone with depth 1
         logger.info(f"Cloning {repo_url} for {package}...")
         subprocess.run(
-            ["git", "clone", "--depth", "1", repo_url, temp_dir],
-            check=True,
-            capture_output=True,
-            timeout=60
+            ["git", "clone", "--depth", "1", repo_url, temp_dir], check=True, capture_output=True, timeout=60
         )
 
         # Attempt to checkout version tag
@@ -46,15 +45,9 @@ def fetch_source(package: str, version: str, repo_url: str) -> Optional[RepoSour
                     cwd=temp_dir,
                     check=True,
                     capture_output=True,
-                    timeout=30
+                    timeout=30,
                 )
-                subprocess.run(
-                    ["git", "checkout", tag],
-                    cwd=temp_dir,
-                    check=True,
-                    capture_output=True,
-                    timeout=30
-                )
+                subprocess.run(["git", "checkout", tag], cwd=temp_dir, check=True, capture_output=True, timeout=30)
                 checkout_success = True
                 logger.info(f"Checked out {tag} for {package}")
                 break
@@ -78,12 +71,7 @@ def fetch_source(package: str, version: str, repo_url: str) -> Optional[RepoSour
             shutil.rmtree(temp_dir)
             return None
 
-        return RepoSource(
-            package=package,
-            version=version,
-            repo_url=repo_url,
-            local_path=temp_dir
-        )
+        return RepoSource(package=package, version=version, repo_url=repo_url, local_path=temp_dir)
 
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
         logger.error(f"Failed to clone/checkout {package}: {e}")
@@ -95,6 +83,7 @@ def fetch_source(package: str, version: str, repo_url: str) -> Optional[RepoSour
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
         return None
+
 
 def cleanup_source(source: RepoSource) -> None:
     """Removes the local clone."""

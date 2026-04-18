@@ -6,12 +6,14 @@ import tomllib
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass
 class EntryPoint:
     file: str
     function_name: str
     line: int
     type: str  # "cli" or "api"
+
 
 def discover_entrypoints(local_path: str) -> list[EntryPoint]:
     """
@@ -79,16 +81,14 @@ def discover_entrypoints(local_path: str) -> list[EntryPoint]:
                 tree = ast.parse(f_root.read())
                 for node in tree.body:
                     if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
-                        entrypoints.append(EntryPoint(
-                            file=filename,
-                            function_name=node.name,
-                            line=node.lineno,
-                            type="api"
-                        ))
+                        entrypoints.append(
+                            EntryPoint(file=filename, function_name=node.name, line=node.lineno, type="api")
+                        )
         except Exception:
             pass
 
     return entrypoints
+
 
 def parse_spec(local_path: str, spec: str, ep_type: str) -> Optional[EntryPoint]:
     """Parses a spec like 'pkg.module:func'"""
@@ -99,7 +99,7 @@ def parse_spec(local_path: str, spec: str, ep_type: str) -> Optional[EntryPoint]
     # Search for the file in local_path
     # Heuristic: match the tail of the path
     rel_path_tail = module_path.replace(".", os.sep) + ".py"
-    
+
     for root, _, files in os.walk(local_path):
         for f in files:
             full_p = os.path.join(root, f)
@@ -113,7 +113,7 @@ def parse_spec(local_path: str, spec: str, ep_type: str) -> Optional[EntryPoint]
                                     file=os.path.relpath(full_p, local_path),
                                     function_name=func_name,
                                     line=node.lineno,
-                                    type=ep_type
+                                    type=ep_type,
                                 )
                 except Exception:
                     pass
