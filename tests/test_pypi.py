@@ -18,6 +18,14 @@ def test_extract_repo_url() -> None:
     urls = {"Documentation": "https://docs.io"}
     assert extract_repo_url(urls) is None
 
+    # Test with .git suffix and trailing slash
+    urls = {"Repository": "https://github.com/user/project.git/"}
+    assert extract_repo_url(urls) == "https://github.com/user/project"
+
+    # Test Case Insensitivity
+    urls = {"source": "https://GITHUB.COM/user/PROJECT"}
+    assert extract_repo_url(urls) == "https://GITHUB.COM/user/PROJECT"
+
 
 def test_stream_packages_from_jsonl(tmp_path: Path) -> None:
     p = tmp_path / "pypi.jsonl"

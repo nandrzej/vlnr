@@ -21,8 +21,8 @@ console = Console()
 async def _process_package(
     pkg: PackageInfo,
     vuln_index: VulnerabilityIndex,
-    downloads_map: dict[str, int],
-    deps_map: dict[str, int],
+    downloads_map: Optional[dict[str, int]],
+    deps_map: Optional[dict[str, int]],
     candidates: list[CandidateRecord],
     progress: Progress,
     task: TaskID,
@@ -34,7 +34,10 @@ async def _process_package(
         stars = await get_repo_stars(pkg.repo_url)
 
     # Score
-    pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
+    pkg_downloads = 0
+    if downloads_map is not None:
+        pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
+
     candidate = score_candidate(pkg, vuln_index, downloads=pkg_downloads, repo_stars=stars, dependency_map=deps_map)
     candidates.append(candidate)
     progress.update(task, advance=1)
@@ -70,8 +73,9 @@ async def run_pipeline(
         load_pypa_advisory_db(pypa_repo, vuln_index)
 
     # 2. Load downloads and deps data if provided
-    downloads_map: dict[str, int] = {}
+    downloads_map: Optional[dict[str, int]] = None
     if downloads_csv and downloads_csv.exists():
+        downloads_map = {}
         console.print(f"[bold blue]Loading downloads from {downloads_csv}...[/bold blue]")
         with downloads_csv.open("r") as f:
             for line in f:
@@ -83,8 +87,9 @@ async def run_pipeline(
                     except ValueError:
                         continue
 
-    deps_map: dict[str, int] = {}
+    deps_map: Optional[dict[str, int]] = None
     if deps_csv and deps_csv.exists():
+        deps_map = {}
         console.print(f"[bold blue]Loading dependencies from {deps_csv}...[/bold blue]")
         with deps_csv.open("r") as f:
             for line in f:
@@ -95,6 +100,14 @@ async def run_pipeline(
                         deps_map[name.lower()] = int(count)
                     except ValueError:
                         continue
+
+    # 2.5 Check GITHUB_TOKEN
+    import os
+
+    if not os.environ.get("GITHUB_TOKEN"):
+        console.print(
+            "[yellow]Warning: GITHUB_TOKEN not set. GitHub API requests will be heavily rate-limited.[/yellow]"
+        )
 
     # 3. Stream and process packages
     candidates: list[CandidateRecord] = []

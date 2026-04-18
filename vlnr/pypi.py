@@ -1,6 +1,7 @@
 import asyncio
 import json
 from collections.abc import AsyncIterator, Iterator
+from datetime import datetime
 from pathlib import Path
 
 import aiohttp
@@ -32,6 +33,15 @@ def stream_packages_from_jsonl(path: Path) -> Iterator[PackageInfo]:
                     info_data["classifiers"] = []
                 if info_data.get("summary") is None:
                     info_data["summary"] = ""
+
+                # Explicitly parse upload_time if it's a string
+                upload_time = info_data.get("upload_time")
+                if isinstance(upload_time, str):
+                    try:
+                        # PyPI typically uses ISO format
+                        info_data["upload_time"] = datetime.fromisoformat(upload_time.replace("Z", "+00:00"))
+                    except ValueError:
+                        pass
 
                 pkg = PackageInfo(**info_data)
                 pkg.repo_url = extract_repo_url(pkg.project_urls)
@@ -81,7 +91,10 @@ def extract_repo_url(project_urls: dict[str, str] | None) -> str | None:
     for key in priority_keys:
         url = urls.get(key)
         if url and any(domain in url.lower() for domain in ["github.com", "gitlab.com"]):
-            # Strip trailing .git and whitespace
-            return url.strip().removesuffix(".git").rstrip("/")
+            # Strip trailing whitespace, trailing slash, and then .git suffix
+            normalized = url.strip().rstrip("/")
+            if normalized.lower().endswith(".git"):
+                normalized = normalized[:-4]
+            return normalized.rstrip("/")
 
     return None
