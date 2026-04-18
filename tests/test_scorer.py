@@ -43,3 +43,16 @@ def test_score_candidate() -> None:
     vuln_index.by_package["test"] = [VulnerabilityRecord(id="V-1", package_name="test")]
     cand = score_candidate(pkg, vuln_index)
     assert round(cand.candidate_score, 2) == 0.16
+
+
+def test_score_candidate_neutral_centrality() -> None:
+    pkg = PackageInfo(name="test", version="1.0")
+    vuln_index = VulnerabilityIndex()
+
+    # When dependency_map is None, centrality should be 0.5
+    cand = score_candidate(pkg, vuln_index, dependency_map=None)
+    assert cand.centrality_dep == 0.5
+
+    # When dependency_map is provided but empty, centrality should be 0.0 (log(0+1)/log(max+1))
+    cand = score_candidate(pkg, vuln_index, dependency_map={})
+    assert cand.centrality_dep == 0.0
