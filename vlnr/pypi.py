@@ -30,7 +30,7 @@ def stream_packages_from_jsonl(path: Path) -> Iterator[PackageInfo]:
                     pkg.console_scripts = info_data["console_scripts"]
 
                 yield pkg
-            except json.JSONDecodeError, ValidationError:
+            except (json.JSONDecodeError, ValidationError):
                 continue
 
 

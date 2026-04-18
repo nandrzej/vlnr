@@ -2,11 +2,52 @@ import json
 import zipfile
 from pathlib import Path
 
+import yaml
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version, InvalidVersion
 from pydantic import ValidationError
 
 from vlnr.models import VulnerabilityIndex, VulnerabilityRecord
+
+
+def load_pypa_advisory_db(repo_path: Path, index: VulnerabilityIndex) -> None:
+    """Load vulnerabilities from a local clone of pypa/advisory-database."""
+    vulns_dir = repo_path / "vulns"
+    if not vulns_dir.exists():
+        return
+
+    for yaml_path in vulns_dir.rglob("*.yaml"):
+        with yaml_path.open("r", encoding="utf-8") as f:
+            try:
+                data = yaml.safe_load(f)
+                if not isinstance(data, dict):
+                    continue
+                vuln = VulnerabilityRecord(
+                    id=data.get("id", ""),
+                    aliases=data.get("aliases", []),
+                    package_name="",
+                    affected_versions=[],
+                    ranges=[],
+                )
+
+                for affected in data.get("affected", []):
+                    package = affected.get("package", {})
+                    if package.get("ecosystem") != "PyPI":
+                        continue
+
+                    pkg_name = package.get("name", "").lower()
+                    if not pkg_name:
+                        continue
+
+                    vuln.package_name = pkg_name
+                    vuln.affected_versions = affected.get("versions", [])
+                    vuln.ranges = affected.get("ranges", [])
+
+                    if pkg_name not in index.by_package:
+                        index.by_package[pkg_name] = []
+                    index.by_package[pkg_name].append(vuln.model_copy())
+            except yaml.YAMLError, KeyError, ValidationError:
+                continue
 
 
 def load_osv_index(zip_path: Path) -> VulnerabilityIndex:
