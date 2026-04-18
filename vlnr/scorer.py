@@ -44,6 +44,8 @@ def score_candidate(
     repo_stars: int = 0,
     max_downloads: int = 10_000_000,
     max_stars: int = 100_000,
+    dependency_map: dict[str, int] | None = None,
+    max_dependents: int = 10_000,
 ) -> CandidateRecord:
     """Full scoring pipeline for single package."""
     vulns = vuln_index.by_package.get(pkg.name.lower(), [])
@@ -61,8 +63,12 @@ def score_candidate(
     # Popularity component
     norm_downloads = normalize_log(float(downloads), float(max_downloads))
     norm_stars = normalize_log(float(repo_stars), float(max_stars))
-    # Centrality is fixed at 0.5 for now per spec
-    centrality = 0.5
+    if dependency_map is not None:
+        deps = dependency_map.get(pkg.name.lower(), 0)
+        centrality = normalize_log(float(deps), float(max_dependents))
+    else:
+        # Centrality is fixed at 0.5 for now per spec
+        centrality = 0.5
 
     pop_score = (
         norm_downloads * DEFAULT_WEIGHTS["downloads"]

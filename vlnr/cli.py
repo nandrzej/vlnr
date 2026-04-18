@@ -22,6 +22,7 @@ async def _process_package(
     pkg: PackageInfo,
     vuln_index: VulnerabilityIndex,
     downloads_map: dict[str, int],
+    deps_map: dict[str, int],
     candidates: list[CandidateRecord],
     progress: Progress,
     task: TaskID,
@@ -34,7 +35,7 @@ async def _process_package(
 
     # Score
     pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
-    candidate = score_candidate(pkg, vuln_index, downloads=pkg_downloads, repo_stars=stars)
+    candidate = score_candidate(pkg, vuln_index, downloads=pkg_downloads, repo_stars=stars, dependency_map=deps_map)
     candidates.append(candidate)
     progress.update(task, advance=1)
 
@@ -43,7 +44,9 @@ async def run_pipeline(
     pypi_json: Optional[Path] = None,
     packages: Optional[str] = None,
     osv_dump: Optional[Path] = None,
+    pypa_repo: Optional[Path] = None,
     downloads_csv: Optional[Path] = None,
+    deps_csv: Optional[Path] = None,
     limit: int = 100,
     include_cli: bool = True,
     include_ml: bool = True,
@@ -58,9 +61,15 @@ async def run_pipeline(
         console.print(f"[bold blue]Loading OSV index from {osv_dump}...[/bold blue]")
         vuln_index = load_osv_index(osv_dump)
     else:
-        console.print("[yellow]Warning: No OSV dump provided or found. Skipping vulnerability analysis.[/yellow]")
+        console.print("[yellow]Warning: No OSV dump provided or found. Skipping OSV vulnerability analysis.[/yellow]")
 
-    # 2. Load downloads data if provided
+    if pypa_repo and pypa_repo.exists():
+        from vlnr.osv import load_pypa_advisory_db
+
+        console.print(f"[bold blue]Loading PyPA advisories from {pypa_repo}...[/bold blue]")
+        load_pypa_advisory_db(pypa_repo, vuln_index)
+
+    # 2. Load downloads and deps data if provided
     downloads_map: dict[str, int] = {}
     if downloads_csv and downloads_csv.exists():
         console.print(f"[bold blue]Loading downloads from {downloads_csv}...[/bold blue]")
@@ -71,6 +80,19 @@ async def run_pipeline(
                     name, count = parts[0], parts[1]
                     try:
                         downloads_map[name.lower()] = int(count)
+                    except ValueError:
+                        continue
+
+    deps_map: dict[str, int] = {}
+    if deps_csv and deps_csv.exists():
+        console.print(f"[bold blue]Loading dependencies from {deps_csv}...[/bold blue]")
+        with deps_csv.open("r") as f:
+            for line in f:
+                parts = line.strip().split(",")
+                if len(parts) >= 2:
+                    name, count = parts[0], parts[1]
+                    try:
+                        deps_map[name.lower()] = int(count)
                     except ValueError:
                         continue
 
@@ -86,12 +108,12 @@ async def run_pipeline(
             async for pkg in fetch_packages_from_api(pkg_names):
                 if not is_target_category(pkg, include_cli, include_ml, include_dev):
                     continue
-                await _process_package(pkg, vuln_index, downloads_map, candidates, progress, task)
+                await _process_package(pkg, vuln_index, downloads_map, deps_map, candidates, progress, task)
         elif pypi_json and pypi_json.exists():
             for pkg in stream_packages_from_jsonl(pypi_json):
                 if not is_target_category(pkg, include_cli, include_ml, include_dev):
                     continue
-                await _process_package(pkg, vuln_index, downloads_map, candidates, progress, task)
+                await _process_package(pkg, vuln_index, downloads_map, deps_map, candidates, progress, task)
         else:
             console.print("[bold red]Error: Either --pypi-json or --packages must be provided.[/bold red]")
             raise typer.Exit(1)
@@ -110,7 +132,9 @@ def main(
     pypi_json: Optional[Path] = typer.Option(None, help="Path to PyPI bulk JSONL file"),
     packages: Optional[str] = typer.Option(None, help="Comma-separated package names for live API fetch"),
     osv_dump: Path = typer.Option(..., help="Path to OSV PyPI vulnerability ZIP dump"),
+    pypa_repo: Optional[Path] = typer.Option(None, help="Path to local clone of pypa/advisory-database"),
     downloads_csv: Optional[Path] = typer.Option(None, help="Path to CSV with package downloads (name,count)"),
+    deps_csv: Optional[Path] = typer.Option(None, help="Path to CSV with package dependents (name,count)"),
     limit: int = typer.Option(100, help="Max number of candidates to output"),
     include_cli: bool = typer.Option(True, help="Include CLI tools"),
     include_ml: bool = typer.Option(True, help="Include ML/AI projects"),
@@ -123,7 +147,9 @@ def main(
             pypi_json=pypi_json,
             packages=packages,
             osv_dump=osv_dump,
+            pypa_repo=pypa_repo,
             downloads_csv=downloads_csv,
+            deps_csv=deps_csv,
             limit=limit,
             include_cli=include_cli,
             include_ml=include_ml,
