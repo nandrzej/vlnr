@@ -110,10 +110,21 @@ async def run_pipeline(
                     continue
                 await _process_package(pkg, vuln_index, downloads_map, deps_map, candidates, progress, task)
         elif pypi_json and pypi_json.exists():
+            tasks = []
             for pkg in stream_packages_from_jsonl(pypi_json):
                 if not is_target_category(pkg, include_cli, include_ml, include_dev):
                     continue
-                await _process_package(pkg, vuln_index, downloads_map, deps_map, candidates, progress, task)
+
+                tasks.append(_process_package(pkg, vuln_index, downloads_map, deps_map, candidates, progress, task))
+                if len(tasks) >= 50:
+                    await asyncio.gather(*tasks)
+                    tasks = []
+
+                if len(candidates) >= limit:
+                    break
+
+            if tasks and len(candidates) < limit:
+                await asyncio.gather(*tasks)
         else:
             console.print("[bold red]Error: Either --pypi-json or --packages must be provided.[/bold red]")
             raise typer.Exit(1)

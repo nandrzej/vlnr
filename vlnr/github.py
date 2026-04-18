@@ -1,10 +1,10 @@
 import os
-from functools import lru_cache
 
 import aiohttp
 
+_STARS_CACHE: dict[str, int] = {}
 
-@lru_cache(maxsize=5000)
+
 async def get_repo_stars(repo_url: str) -> int:
     """
     Fetch star count from GitHub API.
@@ -13,6 +13,9 @@ async def get_repo_stars(repo_url: str) -> int:
     """
     if not repo_url or "github.com" not in repo_url.lower():
         return 0
+
+    if repo_url in _STARS_CACHE:
+        return _STARS_CACHE[repo_url]
 
     # Extract owner/repo from URL
     # https://github.com/owner/repo[/...]
@@ -36,7 +39,9 @@ async def get_repo_stars(repo_url: str) -> int:
             async with session.get(api_url, headers=headers) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    return int(data.get("stargazers_count", 0))
+                    stars = int(data.get("stargazers_count", 0))
+                    _STARS_CACHE[repo_url] = stars
+                    return stars
                 return 0
     except aiohttp.ClientError, ValueError, KeyError:
         return 0
