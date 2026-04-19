@@ -54,11 +54,16 @@ def score_candidate(
     latest_vulnerable = any(is_version_affected(pkg.version, v) for v in vulns)
 
     now = datetime.now(timezone.utc)
-    age_years = 0.0
-    recency_days = 0
+    age_years = 1.0  # Default to 1 year for missing date
+    recency_days = 365
     if pkg.upload_time:
-        age_years = (now - pkg.upload_time).days / 365.25
-        recency_days = (now - pkg.upload_time).days
+        # Handle naive datetimes from fromisoformat if they don't have timezone
+        if pkg.upload_time.tzinfo is None:
+            upload_time = pkg.upload_time.replace(tzinfo=timezone.utc)
+        else:
+            upload_time = pkg.upload_time
+        age_years = (now - upload_time).days / 365.25
+        recency_days = (now - upload_time).days
 
     # Popularity component
     norm_downloads = normalize_log(float(downloads), float(max_downloads))

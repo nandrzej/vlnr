@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
+
 from vlnr.cli import run_pipeline
+
 import pytest
 
 
@@ -25,6 +27,11 @@ async def test_full_pipeline_with_fixtures(tmp_path: Path) -> None:
         data = json.load(f)
 
     assert len(data) == 3
+
+    # Verify sorting (descending candidate_score)
+    for i in range(len(data) - 1):
+        assert data[i]["candidate_score"] >= data[i + 1]["candidate_score"]
+
     # Check that vuln-package has vulnerability info
     vuln_pkg = next(p for p in data if p["name"] == "vuln-package")
     assert vuln_pkg["known_vuln_count"] == 1

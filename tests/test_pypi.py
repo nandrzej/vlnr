@@ -43,6 +43,40 @@ def test_stream_packages_from_jsonl(tmp_path: Path) -> None:
     assert pkgs[1].name == "pkg2"
 
 
+def test_stream_packages_datetime_parsing(tmp_path: Path) -> None:
+    p = tmp_path / "pypi_date.jsonl"
+    pkg = {
+        "name": "date-pkg",
+        "version": "1.0",
+        "upload_time": "2023-01-01T12:00:00Z",  # Classic ISO
+    }
+    with open(p, "w") as f:
+        f.write(json.dumps(pkg) + "\n")
+
+    pkgs = list(stream_packages_from_jsonl(p))
+    assert len(pkgs) == 1
+    assert pkgs[0].upload_time is not None
+    assert pkgs[0].upload_time.year == 2023
+    assert pkgs[0].upload_time.month == 1
+    assert pkgs[0].upload_time.day == 1
+
+    # Test with +00:00 format
+    pkg["upload_time"] = "2023-05-15T10:30:00+00:00"
+    with open(p, "w") as f:
+        f.write(json.dumps(pkg) + "\n")
+    pkgs = list(stream_packages_from_jsonl(p))
+    assert pkgs[0].upload_time.month == 5
+    assert pkgs[0].upload_time.day == 15
+
+    # Test with invalid date
+    pkg["upload_time"] = "invalid-date"
+    with open(p, "w") as f:
+        f.write(json.dumps(pkg) + "\n")
+    pkgs = list(stream_packages_from_jsonl(p))
+    # It should skip the package because PackageInfo validation will fail
+    assert len(pkgs) == 0
+
+
 @pytest.mark.asyncio
 async def test_fetch_packages_from_api(monkeypatch: pytest.MonkeyPatch) -> None:
     class MockResponse:
@@ -62,7 +96,9 @@ async def test_fetch_packages_from_api(monkeypatch: pytest.MonkeyPatch) -> None:
     class MockSession:
         def get(self, url: str) -> MockResponse:
             if "exists" in url:
-                return MockResponse({"info": {"name": "exists", "version": "1.0"}})
+                return MockResponse(
+                    {"info": {"name": "exists", "version": "1.0"}, "urls": [{"upload_time": "2024-01-01T12:00:00"}]}
+                )
             return MockResponse({}, status=404)
 
         async def __aenter__(self) -> typing.Any:
@@ -84,3 +120,5 @@ async def test_fetch_packages_from_api(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert len(pkgs) == 1
     assert pkgs[0].name == "exists"
+    assert pkgs[0].upload_time is not None
+    assert pkgs[0].upload_time.year == 2024

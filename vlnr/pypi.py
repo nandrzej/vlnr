@@ -63,6 +63,19 @@ async def fetch_packages_from_api(names: list[str]) -> AsyncIterator[PackageInfo
                 data = await resp.json()
                 try:
                     info = data.get("info", {})
+                    # PyPI API doesn't have upload_time in info, but it is in urls or releases
+                    upload_time_str = None
+                    urls = data.get("urls", [])
+                    if urls and "upload_time" in urls[0]:
+                        upload_time_str = urls[0]["upload_time"]
+                    elif "releases" in data and info.get("version") in data["releases"]:
+                        rel_assets = data["releases"][info["version"]]
+                        if rel_assets and "upload_time" in rel_assets[0]:
+                            upload_time_str = rel_assets[0]["upload_time"]
+
+                    if upload_time_str:
+                        info["upload_time"] = upload_time_str
+
                     pkg = PackageInfo(**info)
                     pkg.repo_url = extract_repo_url(pkg.project_urls)
 
