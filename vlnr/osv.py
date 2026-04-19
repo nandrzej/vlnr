@@ -3,8 +3,8 @@ import zipfile
 from pathlib import Path
 
 import yaml
-from packaging.specifiers import SpecifierSet
-from packaging.version import Version, InvalidVersion
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.version import InvalidVersion, Version
 from pydantic import ValidationError
 
 from vlnr.models import VulnerabilityIndex, VulnerabilityRecord
@@ -91,6 +91,18 @@ def load_osv_index(zip_path: Path) -> VulnerabilityIndex:
     return index
 
 
+def _normalize_version_for_specifier(v_str: str) -> str:
+    """Normalize version string for packaging.specifiers.Specifier.
+
+    Specifiers do not allow local versions (PEP 440).
+    We extract the public part.
+    """
+    try:
+        return str(Version(v_str).public)
+    except InvalidVersion:
+        return v_str
+
+
 def is_version_affected(version_str: str, vuln: VulnerabilityRecord) -> bool:
     """Check if version falls within affected ranges or specific versions."""
     try:
@@ -127,18 +139,21 @@ def is_version_affected(version_str: str, vuln: VulnerabilityRecord) -> bool:
 
         spec_parts = []
         if introduced and introduced != "0":
-            spec_parts.append(f">={introduced}")
+            spec_parts.append(f">={_normalize_version_for_specifier(introduced)}")
         if fixed:
-            spec_parts.append(f"<{fixed}")
+            spec_parts.append(f"<{_normalize_version_for_specifier(fixed)}")
         if last_affected:
-            spec_parts.append(f"<={last_affected}")
+            spec_parts.append(f"<={_normalize_version_for_specifier(last_affected)}")
 
         if not spec_parts:
             continue
 
-        spec = SpecifierSet(",".join(spec_parts))
-        if version in spec:
-            return True
+        try:
+            spec = SpecifierSet(",".join(spec_parts))
+            if version in spec:
+                return True
+        except InvalidSpecifier, ValueError:
+            continue
 
     return False
 

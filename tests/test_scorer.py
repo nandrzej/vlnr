@@ -23,11 +23,11 @@ def test_score_candidate() -> None:
     vuln_index = VulnerabilityIndex()
 
     # Base case: 0 downloads, 0 stars, 0 vulns
-    # Pop = 0*0.4 + 0.5*0.4 + 0*0.2 = 0.2
+    # Pop = normalize_log(100, 10^7)*0.4 + 0.5*0.4 + 0*0.2 approx 0.3145
     # Audit = 1.0
-    # Final = 0.2
+    # Final = 0.3145
     cand = score_candidate(pkg, vuln_index)
-    assert cand.candidate_score == 0.2
+    assert round(cand.candidate_score, 4) == 0.3145
 
     # Case with downloads and stars
     # Max downloads: 10,000,000, max stars: 100,000
@@ -39,10 +39,10 @@ def test_score_candidate() -> None:
     assert round(cand.candidate_score, 1) == 0.8
 
     # Case with vulnerability
-    # Pop = 0.2, Audit = 0.8 (1 vuln) -> Final = 0.16
+    # Pop = 0.3145, Audit = 0.8 (1 vuln) -> Final = 0.2516
     vuln_index.by_package["test"] = [VulnerabilityRecord(id="V-1", package_name="test")]
     cand = score_candidate(pkg, vuln_index)
-    assert round(cand.candidate_score, 2) == 0.16
+    assert round(cand.candidate_score, 4) == 0.2516
 
 
 def test_score_candidate_neutral_centrality() -> None:
