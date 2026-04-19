@@ -66,7 +66,9 @@ def score_candidate(
         recency_days = (now - upload_time).days
 
     # Popularity component
-    norm_downloads = normalize_log(float(downloads), float(max_downloads))
+    # Use a small baseline for downloads if missing from map (small footprint)
+    adj_downloads = float(downloads) if downloads > 0 else 100.0
+    norm_downloads = normalize_log(adj_downloads, float(max_downloads))
     norm_stars = normalize_log(float(repo_stars), float(max_stars))
     if dependency_map is not None:
         deps = dependency_map.get(pkg.name.lower(), 0)

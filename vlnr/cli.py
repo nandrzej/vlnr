@@ -7,6 +7,7 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, TaskID
 
+from vlnr.data import fetch_top_packages
 from vlnr.filters import is_target_category
 from vlnr.github import get_repo_stars
 from vlnr.models import CandidateRecord, PackageInfo, VulnerabilityIndex
@@ -86,8 +87,11 @@ async def run_pipeline(
                         downloads_map[name.lower()] = int(count)
                     except ValueError:
                         continue
+    elif not downloads_csv:
+        # Auto-fetch if no CSV provided
+        downloads_map = await fetch_top_packages()
     else:
-        console.print("[yellow]Warning: No downloads CSV provided. Download scores will be 0.0.[/yellow]")
+        console.print("[yellow]Warning: Downloads CSV provided but not found. Download scores will be 0.0.[/yellow]")
 
     deps_map: Optional[dict[str, int]] = None
     if deps_csv and deps_csv.exists():

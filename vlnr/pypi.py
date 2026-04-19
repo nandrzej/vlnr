@@ -3,6 +3,7 @@ import json
 from collections.abc import AsyncIterator, Iterator
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import aiohttp
 from pydantic import ValidationError
@@ -27,19 +28,27 @@ def stream_packages_from_jsonl(path: Path) -> Iterator[PackageInfo]:
                 info_data = data.get("info", data)
 
                 # Pre-process info_data before pydantic validation
-                if info_data.get("project_urls") is None:
+                if not isinstance(info_data.get("project_urls"), dict):
                     info_data["project_urls"] = {}
                 if info_data.get("classifiers") is None:
                     info_data["classifiers"] = []
                 if info_data.get("summary") is None:
                     info_data["summary"] = ""
 
-                # Explicitly parse upload_time if it's a string
-                upload_time = info_data.get("upload_time")
-                if isinstance(upload_time, str):
+                # Try to get upload_time from info or from urls list
+                upload_time_str = info_data.get("upload_time")
+                if not upload_time_str:
+                    urls = data.get("urls", [])
+                    if urls:
+                        # Find the latest upload_time in the urls list
+                        times = [u.get("upload_time") for u in urls if u.get("upload_time")]
+                        if times:
+                            upload_time_str = max(times)
+
+                if isinstance(upload_time_str, str):
                     try:
                         # PyPI typically uses ISO format
-                        info_data["upload_time"] = datetime.fromisoformat(upload_time.replace("Z", "+00:00"))
+                        info_data["upload_time"] = datetime.fromisoformat(upload_time_str.replace("Z", "+00:00"))
                     except ValueError:
                         pass
 
@@ -66,12 +75,17 @@ async def fetch_packages_from_api(names: list[str]) -> AsyncIterator[PackageInfo
                     # PyPI API doesn't have upload_time in info, but it is in urls or releases
                     upload_time_str = None
                     urls = data.get("urls", [])
-                    if urls and "upload_time" in urls[0]:
-                        upload_time_str = urls[0]["upload_time"]
-                    elif "releases" in data and info.get("version") in data["releases"]:
+                    if urls:
+                        times = [u.get("upload_time") for u in urls if u.get("upload_time")]
+                        if times:
+                            upload_time_str = max(times)
+
+                    if not upload_time_str and "releases" in data and info.get("version") in data["releases"]:
                         rel_assets = data["releases"][info["version"]]
-                        if rel_assets and "upload_time" in rel_assets[0]:
-                            upload_time_str = rel_assets[0]["upload_time"]
+                        if rel_assets:
+                            times = [r.get("upload_time") for r in rel_assets if r.get("upload_time")]
+                            if times:
+                                upload_time_str = max(times)
 
                     if upload_time_str:
                         info["upload_time"] = upload_time_str
@@ -91,13 +105,13 @@ async def fetch_packages_from_api(names: list[str]) -> AsyncIterator[PackageInfo
             await asyncio.sleep(0.1)  # Rate limit: 10 req/sec
 
 
-def extract_repo_url(project_urls: dict[str, str] | None) -> str | None:
+def extract_repo_url(project_urls: Any) -> str | None:
     """Priority: Source > Code > Homepage. Only return GitHub/GitLab URLs."""
-    if not project_urls:
+    if not isinstance(project_urls, dict):
         return None
 
-    # Normalise keys to lowercase
-    urls = {k.lower(): v for k, v in project_urls.items() if v}
+    # Normalise keys to lowercase, ensuring values are strings
+    urls = {str(k).lower(): str(v) for k, v in project_urls.items() if v}
 
     priority_keys = ["source", "code", "homepage", "repository"]
 
