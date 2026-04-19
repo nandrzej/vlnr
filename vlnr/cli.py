@@ -117,11 +117,12 @@ async def run_pipeline(
             "[yellow]Warning: GITHUB_TOKEN not set. GitHub API requests will be heavily rate-limited.[/yellow]"
         )
 
-    # 3. Stream and process packages
-    candidates: list[CandidateRecord] = []
+    # 3. Stream and process packages (Pass 1: Discovery)
+    # Store tuples of (PackageInfo, CandidateRecord) to avoid re-calculating preliminary data
+    discovered: list[tuple[PackageInfo, CandidateRecord]] = []
 
     with Progress() as progress:
-        task = progress.add_task("[green]Processing packages...", total=None)
+        scan_task = progress.add_task("[green]Scanning packages...", total=None)
 
         # Determine source and stream
         if packages:
@@ -129,32 +130,84 @@ async def run_pipeline(
             async for pkg in fetch_packages_from_api(pkg_names):
                 if not is_target_category(pkg, include_cli, include_ml, include_dev):
                     continue
-                await _process_package(pkg, vuln_index, downloads_map, deps_map, candidates, progress, task)
+                # Score with 0 stars initially
+                pkg_downloads = 0
+                if downloads_map is not None:
+                    pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
+
+                candidate = score_candidate(
+                    pkg, vuln_index, downloads=pkg_downloads, repo_stars=0, dependency_map=deps_map
+                )
+                discovered.append((pkg, candidate))
+                progress.update(
+                    scan_task, advance=1, description=f"[green]Scanning: {len(discovered)} candidates found"
+                )
         elif pypi_json and pypi_json.exists():
-            tasks = []
-            # We need to buffer more than limit to have something to sort
-            buffer_limit = limit * 10
             for pkg in stream_packages_from_jsonl(pypi_json):
                 if not is_target_category(pkg, include_cli, include_ml, include_dev):
                     continue
 
-                tasks.append(_process_package(pkg, vuln_index, downloads_map, deps_map, candidates, progress, task))
-                if len(tasks) >= 50:
-                    await asyncio.gather(*tasks)
-                    tasks = []
+                pkg_downloads = 0
+                if downloads_map is not None:
+                    pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
 
-                if len(candidates) >= buffer_limit:
-                    break
-
-            if tasks and len(candidates) < buffer_limit:
-                await asyncio.gather(*tasks)
+                candidate = score_candidate(
+                    pkg, vuln_index, downloads=pkg_downloads, repo_stars=0, dependency_map=deps_map
+                )
+                discovered.append((pkg, candidate))
+                progress.update(
+                    scan_task, advance=1, description=f"[green]Scanning: {len(discovered)} candidates found"
+                )
         else:
             console.print("[bold red]Error: Either --pypi-json or --packages must be provided.[/bold red]")
             raise typer.Exit(1)
 
+        # 4. Refinement Pass (Pass 2)
+        if not discovered:
+            console.print("[yellow]No candidates found.[/yellow]")
+            return
+
+        # Sort by preliminary score
+        discovered.sort(key=lambda x: x[1].candidate_score, reverse=True)
+
+        # Select refinement buffer
+        refine_buffer = min(len(discovered), max(limit * 3, 500))
+        to_refine = discovered[:refine_buffer]
+
+        console.print(f"[bold blue]Discovered {len(discovered)} packages. Refining top {len(to_refine)}...[/bold blue]")
+
+        refine_task = progress.add_task("[blue]Refining (fetching stars)...", total=len(to_refine))
+
+        final_candidates: list[CandidateRecord] = []
+
+        # Batch fetching stars to be efficient
+        batch_size = 20
+        for i in range(0, len(to_refine), batch_size):
+            batch = to_refine[i : i + batch_size]
+
+            async def process_refined(pkg_record: tuple[PackageInfo, CandidateRecord]) -> CandidateRecord:
+                pkg, _ = pkg_record
+                stars = 0
+                if pkg.repo_url:
+                    stars = await get_repo_stars(pkg.repo_url)
+
+                pkg_downloads = 0
+                if downloads_map is not None:
+                    pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
+
+                # Re-score with stars
+                candidate = score_candidate(
+                    pkg, vuln_index, downloads=pkg_downloads, repo_stars=stars, dependency_map=deps_map
+                )
+                progress.update(refine_task, advance=1)
+                return candidate
+
+            results = await asyncio.gather(*[process_refined(item) for item in batch])
+            final_candidates.extend(results)
+
     # 4. Sort and output
-    candidates.sort(key=lambda x: x.candidate_score, reverse=True)
-    top_candidates = candidates[:limit]
+    final_candidates.sort(key=lambda x: x.candidate_score, reverse=True)
+    top_candidates = final_candidates[:limit]
 
     console.print(f"[bold green]Writing top {len(top_candidates)} candidates to {out}[/bold green]")
     with out.open("w") as f:
