@@ -52,3 +52,33 @@ def test_get_vulnerability_ids() -> None:
     assert ids["osv_ids"] == ["OSV-1", "OSV-2"]
     assert ids["pysec_ids"] == ["PYSEC-1"]
     assert ids["ghsa_ids"] == ["GHSA-1", "GHSA-2"]
+
+
+def test_is_version_affected_with_local_versions() -> None:
+    # Vulnerability fixed in 1.2.3+local.1
+    # Specifier should be <1.2.3
+    vuln = VulnerabilityRecord(
+        id="CVE-2024-5678",
+        package_name="testpkg",
+        affected_versions=[],
+        ranges=[{"type": "ECOSYSTEM", "events": [{"introduced": "1.0.0"}, {"fixed": "1.2.3+local.1"}]}],
+    )
+
+    # 1.2.2 is affected (1.0.0 <= 1.2.2 < 1.2.3)
+    assert is_version_affected("1.2.2", vuln) is True
+    # 1.2.3 is NOT affected (1.2.3 is not < 1.2.3)
+    assert is_version_affected("1.2.3", vuln) is False
+    # 1.0.0 is affected
+    assert is_version_affected("1.0.0", vuln) is True
+
+    # Test last_affected with local version
+    vuln_la = VulnerabilityRecord(
+        id="CVE-2024-9999",
+        package_name="testpkg",
+        affected_versions=[],
+        ranges=[{"type": "ECOSYSTEM", "events": [{"introduced": "1.0.0"}, {"last_affected": "1.2.3+local.1"}]}],
+    )
+    # 1.2.3 is affected (1.0.0 <= 1.2.3 <= 1.2.3)
+    assert is_version_affected("1.2.3", vuln_la) is True
+    # 1.2.4 is NOT affected
+    assert is_version_affected("1.2.4", vuln_la) is False
