@@ -36,6 +36,27 @@ class VulnerabilityIndex(BaseModel):
     by_package: dict[str, list[VulnerabilityRecord]] = Field(default_factory=dict)
 
 
+class IntentScore(BaseModel):
+    reasoning: str = Field(description="Brief explanation of the intent")
+    score: float = Field(ge=0, le=1, description="Intent score from 0 to 1")
+    is_high_value: bool = Field(description="Whether the project is a high-value security target")
+
+
+class TriageResult(BaseModel):
+    analysis: str = Field(description="Step-by-step analysis of the tainted path")
+    plausibility: float = Field(ge=0, le=1, description="Likelihood of this being a real vulnerability")
+    is_false_positive: bool
+    suggested_cwe: str | None
+
+
+class IndividualTriageResult(TriageResult):
+    slice_id: str
+
+
+class BatchTriageResult(BaseModel):
+    results: list[IndividualTriageResult]
+
+
 class CandidateRecord(BaseModel):
     """Output schema - MUST match spec exactly."""
 
@@ -56,6 +77,8 @@ class CandidateRecord(BaseModel):
     osv_ids: list[str] = Field(default_factory=list)
     pysec_ids: list[str] = Field(default_factory=list)
     ghsa_ids: list[str] = Field(default_factory=list)
+    intent_score: float | None = None
+    intent_reasoning: str | None = None
     candidate_score: float = 0.0
 
 
