@@ -86,6 +86,8 @@ async def run_pipeline(
                         downloads_map[name.lower()] = int(count)
                     except ValueError:
                         continue
+    else:
+        console.print("[yellow]Warning: No downloads CSV provided. Download scores will be 0.0.[/yellow]")
 
     deps_map: Optional[dict[str, int]] = None
     if deps_csv and deps_csv.exists():
@@ -100,6 +102,8 @@ async def run_pipeline(
                         deps_map[name.lower()] = int(count)
                     except ValueError:
                         continue
+    else:
+        console.print("[yellow]Warning: No dependencies CSV provided. Centrality scores will be 0.5.[/yellow]")
 
     # 2.5 Check GITHUB_TOKEN
     import os
@@ -124,6 +128,8 @@ async def run_pipeline(
                 await _process_package(pkg, vuln_index, downloads_map, deps_map, candidates, progress, task)
         elif pypi_json and pypi_json.exists():
             tasks = []
+            # We need to buffer more than limit to have something to sort
+            buffer_limit = limit * 10
             for pkg in stream_packages_from_jsonl(pypi_json):
                 if not is_target_category(pkg, include_cli, include_ml, include_dev):
                     continue
@@ -133,17 +139,17 @@ async def run_pipeline(
                     await asyncio.gather(*tasks)
                     tasks = []
 
-                if len(candidates) >= limit:
+                if len(candidates) >= buffer_limit:
                     break
 
-            if tasks and len(candidates) < limit:
+            if tasks and len(candidates) < buffer_limit:
                 await asyncio.gather(*tasks)
         else:
             console.print("[bold red]Error: Either --pypi-json or --packages must be provided.[/bold red]")
             raise typer.Exit(1)
 
     # 4. Sort and output
-
+    candidates.sort(key=lambda x: x.candidate_score, reverse=True)
     top_candidates = candidates[:limit]
 
     console.print(f"[bold green]Writing top {len(top_candidates)} candidates to {out}[/bold green]")
