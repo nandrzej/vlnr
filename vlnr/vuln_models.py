@@ -23,6 +23,27 @@ class DataflowNode(BaseModel):
     expr: str
 
 
+class TriageInfo(BaseModel):
+    analysis: str
+    plausibility: float
+    is_false_positive: bool
+    suggested_cwe: str | None = None
+
+
+class IndividualTriageResult(TriageInfo):
+    slice_id: str
+
+
+class BatchTriageResult(BaseModel):
+    results: list[IndividualTriageResult]
+
+
+class PoCData(BaseModel):
+    exploit_code: str
+    prerequisites: list[str]
+    verification_steps: str
+
+
 class Slice(BaseModel):
     slice_id: str
     package: str
@@ -39,6 +60,9 @@ class Slice(BaseModel):
     code_snippets: list[dict[str, Any]] = Field(default_factory=list)
     dataflow_summary: list[DataflowNode] = Field(default_factory=list)
     tool_hits: list[ToolHit] = Field(default_factory=list)
+    triage_info: TriageInfo | None = None
+    triage_score: float | None = None
+    poc_data: PoCData | None = None
 
 
 class PackageFindings(BaseModel):
