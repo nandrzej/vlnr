@@ -6,6 +6,7 @@ A high-performance pipeline for identifying high-value Python projects for secur
 
 - **Dual Ingestion**: Stream from bulk PyPI JSONL or fetch directly from PyPI JSON API.
 - **Vulnerability Matching**: Automatic matching against OSV PyPI vulnerability dumps.
+- **Automated Popularity Data**: Automatically fetches Top 15k PyPI package download counts from `hugovk.dev` if no CSV is provided.
 - **Structural Filtering**: Categorizes projects as CLI, ML, or Dev tools using classifiers and heuristics.
 - **Heuristic Scoring**: Ranks projects based on a combination of popularity (downloads, stars) and auditability (vulnerability history).
 
@@ -27,6 +28,8 @@ Projects are tagged and filtered into target categories:
 ### 3. Scoring Formula
 The `candidate_score` [0, 1] is calculated as `popularity_score * audit_score`:
 - **Popularity**: Weighted average of log-normalized Downloads (40%), GitHub Stars (20%), and Centrality (40%).
+  - **Downloads**: Automatically fetched from `hugovk.dev` (top 15k) or provided via `--downloads-csv`.
+  - **Stars**: Fetched from GitHub API (requires `GITHUB_TOKEN`).
   - **Centrality**: Measures ecosystem importance based on dependent count, provided via `--deps-csv`.
 - **Audit**: Penalty-based score starting at 1.0. 
   - 1-2 vulns: 0.8
@@ -40,22 +43,27 @@ uv sync
 
 ## Usage
 
-### Find candidates from bulk dump
+To get the most comprehensive results, ensure you have a `GITHUB_TOKEN` set to avoid rate limits when fetching repository stars.
+
+### 1. Minimal Run (Specific Packages)
+This will use the PyPI API for metadata and automatically fetch popularity data.
 ```bash
-poc-find-candidates --pypi-json path/to/pypi.jsonl --osv-dump path/to/osv-pypi.zip
+export GITHUB_TOKEN=your_token
+uv run poc-find-candidates --packages "requests,flask,rich" --osv-dump path/to/osv-pypi.zip
 ```
 
-### Find candidates for specific packages
+### 2. Full Pipeline (Bulk Ingestion)
+Requires a PyPI bulk JSONL file (e.g. from `pypi-data`).
 ```bash
-poc-find-candidates --packages "requests,flask,rich" --osv-dump path/to/osv-pypi.zip
+uv run poc-find-candidates --pypi-json path/to/pypi.jsonl --osv-dump path/to/osv-pypi.zip
 ```
 
 ### Full Options
 - `--pypi-json`: Path to bulk JSONL.
-- `--packages`: Comma-separated package list.
+- `--packages`: Comma-separated package list for targeted fetching.
 - `--osv-dump`: **(Required)** Path to OSV PyPI ZIP dump.
 - `--pypa-repo`: Path to local clone of `pypa/advisory-database`.
-- `--downloads-csv`: Optional CSV (name,count) for real download data.
+- `--downloads-csv`: Optional CSV (name,count). If omitted, the tool automatically fetches the "Top 15,000" dataset from `hugovk.dev`.
 - `--deps-csv`: Optional CSV (name,count) for package dependents (centrality).
 - `--limit`: Max candidates to output (default 100).
 - `--include-cli / --include-ml / --include-dev`: Category toggles.
