@@ -5,43 +5,19 @@ from typing import Optional
 
 import typer
 from rich.console import Console
-from rich.progress import Progress, TaskID
+from rich.progress import Progress
 
 from vlnr.data import fetch_top_packages
 from vlnr.filters import is_target_category
 from vlnr.github import get_repo_stars
 from vlnr.models import CandidateRecord, PackageInfo, VulnerabilityIndex
+from vlnr.llm import LLMClient
 from vlnr.osv import load_osv_index
 from vlnr.pypi import fetch_packages_from_api, stream_packages_from_jsonl
 from vlnr.scorer import score_candidate
 
 app = typer.Typer(help="Vulnerability-aware Python Project Finder")
 console = Console()
-
-
-async def _process_package(
-    pkg: PackageInfo,
-    vuln_index: VulnerabilityIndex,
-    downloads_map: Optional[dict[str, int]],
-    deps_map: Optional[dict[str, int]],
-    candidates: list[CandidateRecord],
-    progress: Progress,
-    task: TaskID,
-) -> None:
-    """Process a single package."""
-    # Fetch stars
-    stars = 0
-    if pkg.repo_url:
-        stars = await get_repo_stars(pkg.repo_url)
-
-    # Score
-    pkg_downloads = 0
-    if downloads_map is not None:
-        pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
-
-    candidate = score_candidate(pkg, vuln_index, downloads=pkg_downloads, repo_stars=stars, dependency_map=deps_map)
-    candidates.append(candidate)
-    progress.update(task, advance=1)
 
 
 async def run_pipeline(
@@ -55,6 +31,7 @@ async def run_pipeline(
     include_cli: bool = True,
     include_ml: bool = True,
     include_dev: bool = True,
+    llm_discovery: bool = False,
     out: Path = Path("top_candidates.json"),
 ) -> None:
     """Orchestrate the candidate finding pipeline."""
@@ -72,6 +49,19 @@ async def run_pipeline(
 
         console.print(f"[bold blue]Loading PyPA advisories from {pypa_repo}...[/bold blue]")
         load_pypa_advisory_db(pypa_repo, vuln_index)
+
+    # 1.5 Setup LLM Client if discovery enabled
+    llm_client: Optional[LLMClient] = None
+    if llm_discovery:
+        try:
+            llm_client = LLMClient()
+            from vlnr.llm import LLMTier
+
+            model_name = LLMTier.TIER_3.value
+            console.print(f"[bold blue]LLM Discovery enabled. Using {model_name} for intent scoring.[/bold blue]")
+        except Exception as e:
+            console.print(f"[bold red]Error initializing LLM client: {e}. Proceeding without LLM.[/bold red]")
+            llm_discovery = False
 
     # 2. Load downloads and deps data if provided
     downloads_map: Optional[dict[str, int]] = None
@@ -136,7 +126,12 @@ async def run_pipeline(
                     pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
 
                 candidate = score_candidate(
-                    pkg, vuln_index, downloads=pkg_downloads, repo_stars=0, dependency_map=deps_map
+                    pkg,
+                    vuln_index,
+                    downloads=pkg_downloads,
+                    repo_stars=0,
+                    dependency_map=deps_map,
+                    llm_client=llm_client if llm_discovery else None,
                 )
                 discovered.append((pkg, candidate))
                 progress.update(
@@ -152,7 +147,12 @@ async def run_pipeline(
                     pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
 
                 candidate = score_candidate(
-                    pkg, vuln_index, downloads=pkg_downloads, repo_stars=0, dependency_map=deps_map
+                    pkg,
+                    vuln_index,
+                    downloads=pkg_downloads,
+                    repo_stars=0,
+                    dependency_map=deps_map,
+                    llm_client=llm_client if llm_discovery else None,
                 )
                 discovered.append((pkg, candidate))
                 progress.update(
@@ -197,7 +197,12 @@ async def run_pipeline(
 
                 # Re-score with stars
                 candidate = score_candidate(
-                    pkg, vuln_index, downloads=pkg_downloads, repo_stars=stars, dependency_map=deps_map
+                    pkg,
+                    vuln_index,
+                    downloads=pkg_downloads,
+                    repo_stars=stars,
+                    dependency_map=deps_map,
+                    llm_client=llm_client if llm_discovery else None,
                 )
                 progress.update(refine_task, advance=1)
                 return candidate
@@ -226,6 +231,7 @@ def main(
     include_cli: bool = typer.Option(True, help="Include CLI tools"),
     include_ml: bool = typer.Option(True, help="Include ML/AI projects"),
     include_dev: bool = typer.Option(True, help="Include Dev tools"),
+    llm_discovery: bool = typer.Option(False, "--llm-discovery", help="Use LLM to score package intent"),
     out: Path = typer.Option("top_candidates.json", help="Output file path"),
 ) -> None:
     """Find candidate Python projects for security audit."""
@@ -241,6 +247,7 @@ def main(
             include_cli=include_cli,
             include_ml=include_ml,
             include_dev=include_dev,
+            llm_discovery=llm_discovery,
             out=out,
         )
     )

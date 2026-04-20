@@ -1,8 +1,10 @@
 import math
 from datetime import datetime, timezone
 
+from vlnr.llm import LLMClient, LLMTier
 from vlnr.models import (
     CandidateRecord,
+    IntentScore,
     PackageInfo,
     VulnerabilityIndex,
     DEFAULT_WEIGHTS,
@@ -11,6 +13,25 @@ from vlnr.models import (
     HIGH_VULN_BASE_PENALTY,
 )
 from vlnr.osv import get_vulnerability_ids, is_version_affected
+
+
+def get_intent_score(pkg: PackageInfo, client: LLMClient) -> IntentScore:
+    """Get semantic intent score from LLM."""
+    prompt = (
+        f"Analyze the following Python package name and summary. "
+        f"Determine if it belongs to a high-value security category "
+        f"(authentication, cryptography, networking, data parsing, serialization, "
+        f"web frameworks, database drivers, etc.). "
+        f"Provide a score where 1.0 is extremely critical infrastructure and 0.0 is a trivial tool.\n\n"
+        f"Package Name: {pkg.name}\n"
+        f"Summary: {pkg.summary}"
+    )
+
+    return client.completion(
+        messages=[{"role": "user", "content": prompt}],
+        response_model=IntentScore,
+        tier=LLMTier.TIER_3,
+    )
 
 
 def normalize_log(value: float, max_value: float) -> float:
@@ -46,6 +67,7 @@ def score_candidate(
     max_stars: int = 100_000,
     dependency_map: dict[str, int] | None = None,
     max_dependents: int = 10_000,
+    llm_client: LLMClient | None = None,
 ) -> CandidateRecord:
     """Full scoring pipeline for single package."""
     vulns = vuln_index.by_package.get(pkg.name.lower(), [])
@@ -86,6 +108,20 @@ def score_candidate(
     # Audit component
     audit_score = compute_audit_score(len(vulns))
 
+    # LLM Intent Score
+    intent_val = None
+    intent_reasoning = None
+    if llm_client:
+        try:
+            res = get_intent_score(pkg, llm_client)
+            intent_val = res.score
+            intent_reasoning = res.reasoning
+            # Adjust pop_score by intent if present (50% boost/reduction potential)
+            pop_score = (pop_score * 0.5) + (intent_val * 0.5)
+        except Exception:
+            # Fallback to pure popularity on LLM failure
+            pass
+
     # Final candidate score
     candidate_score = pop_score * audit_score
 
@@ -104,6 +140,8 @@ def score_candidate(
         update_recency_days=recency_days,
         known_vuln_count=len(vulns),
         latest_version_vulnerable=latest_vulnerable,
+        intent_score=intent_val,
+        intent_reasoning=intent_reasoning,
         candidate_score=candidate_score,
         **vuln_ids,
     )

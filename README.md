@@ -1,81 +1,120 @@
-# Candidate Python Project Finder (vlnr)
+# Vulnerability Audit Toolkit (vlnr)
 
-A high-performance pipeline for identifying high-value Python projects for security audits by cross-referencing PyPI metadata with OSV vulnerability data.
+A high-performance pipeline for identifying high-value Python projects for security audits and scanning them for vulnerabilities, now augmented with LLM-based semantic discovery and automated triage.
 
-## Features
+## Tools
 
-- **Dual Ingestion**: Stream from bulk PyPI JSONL or fetch directly from PyPI JSON API.
-- **Vulnerability Matching**: Automatic matching against OSV PyPI vulnerability dumps.
-- **Automated Popularity Data**: Automatically fetches Top 15k PyPI package download counts from `hugovk.dev` if no CSV is provided.
-- **Structural Filtering**: Categorizes projects as CLI, ML, or Dev tools using classifiers and heuristics.
-- **Heuristic Scoring**: Ranks projects based on a combination of popularity (downloads, stars) and auditability (vulnerability history).
+The toolkit consists of two primary tools:
+1. **Candidate Finder (`poc-find-candidates`)**: Ranks PyPI projects by audit value using popularity, vulnerability history, and semantic intent.
+2. **Vulnerability Scanner (`poc-scan-vulnerabilities`)**: Scans candidate source code using static analysis, taint tracking, and LLM-powered triage/PoC generation.
 
-## How It Works
+---
 
-### 1. Data Ingestion
-- **Bulk**: Iterates through JSONL records without loading the full set into memory.
-- **API**: Async fetching for specific package names with built-in rate limiting.
-- **Vulnerability Data**:
-  - **OSV Dump**: Processes ZIP-compressed OSV PyPI vulnerability records.
-  - **PyPA Advisories**: Optionally merges advisories from a local clone of `pypa/advisory-database` for enhanced coverage.
+## Configuration & Environment
 
-### 2. Category Filtering
-Projects are tagged and filtered into target categories:
-- **CLI**: `Environment :: Console` classifiers, `cli`/`tool` keywords, or presence of `console_scripts`.
-- **ML**: `Scientific/Engineering :: Artificial Intelligence` classifiers, `ml`/`ai` keywords.
-- **Dev**: `Software Development :: Build Tools` classifiers, `devops`/`ci` keywords.
+The toolkit uses environment variables for API access:
 
-### 3. Scoring Formula
-The `candidate_score` [0, 1] is calculated as `popularity_score * audit_score`:
-- **Popularity**: Weighted average of log-normalized Downloads (40%), GitHub Stars (20%), and Centrality (40%).
-  - **Downloads**: Automatically fetched from `hugovk.dev` (top 15k) or provided via `--downloads-csv`.
-  - **Stars**: Fetched from GitHub API (requires `GITHUB_TOKEN`).
-  - **Centrality**: Measures ecosystem importance based on dependent count, provided via `--deps-csv`.
-- **Audit**: Penalty-based score starting at 1.0. 
-  - 1-2 vulns: 0.8
-  - 3+ vulns: 0.5 base penalty with progressive reduction per additional vulnerability.
+- `GITHUB_TOKEN`: **(Recommended)** Used to fetch repository stars and metadata. Prevents rate-limiting.
+- `LLM_API_KEY`: **(Required for LLM features)** Your NVIDIA NIM API key.
+- `LLM_BASE_URL`: **(Optional)** Base URL for the LLM API (defaults to `https://integrate.api.nvidia.com/v1`).
+- `LLM_MODEL_TIER_1`: **(Optional)** Tier 1 model ID (Deep Reasoning, defaults to `meta/llama-3.1-405b-instruct`).
+- `LLM_MODEL_TIER_2`: **(Optional)** Tier 2 model ID (Triage/Refinement, defaults to `meta/llama-3.1-70b-instruct`).
+- `LLM_MODEL_TIER_3`: **(Optional)** Tier 3 model ID (Metadata/Rapid, defaults to `meta/llama-3.1-8b-instruct`).
 
-## Installation
-
+Create a `.env` file in the root directory:
 ```bash
-uv sync
+GITHUB_TOKEN=ghp_...
+LLM_API_KEY=nvapi-...
+LLM_BASE_URL=https://integrate.api.nvidia.com/v1
+
+# Optional model overrides
+LLM_MODEL_TIER_1=meta/llama-3.1-405b-instruct
+LLM_MODEL_TIER_2=meta/llama-3.1-70b-instruct
+LLM_MODEL_TIER_3=meta/llama-3.1-8b-instruct
 ```
 
-## Usage
+---
 
-To get the most comprehensive results, ensure you have a `GITHUB_TOKEN` set to avoid rate limits when fetching repository stars.
+## 1. Candidate Finder (`poc-find-candidates`)
 
-### 1. Minimal Run (Specific Packages)
-This will use the PyPI API for metadata and automatically fetch popularity data.
+Identifies projects with high popularity but low auditability or high-value security intent.
+
+### Usage
 ```bash
-export GITHUB_TOKEN=your_token
-uv run poc-find-candidates --packages "requests,flask,rich" --osv-dump path/to/osv-pypi.zip
-```
+# Minimal Run (Specific Packages)
+uv run poc-find-candidates --packages "requests,flask,cryptography" --osv-dump path/to/osv-pypi.zip
 
-### 2. Full Pipeline (Bulk Ingestion)
-Requires a PyPI bulk JSONL file (e.g. from `pypi-data`).
-```bash
+# LLM-Augmented Discovery (Semantic Intent Scoring)
+uv run poc-find-candidates --packages "fastapi,django" --osv-dump path/to/osv-pypi.zip --llm-discovery
+
+# Full Pipeline (Bulk Ingestion)
 uv run poc-find-candidates --pypi-json path/to/pypi.jsonl --osv-dump path/to/osv-pypi.zip
 ```
 
-### Full Options
-- `--pypi-json`: Path to bulk JSONL.
+### Options
+- `--pypi-json`: Path to bulk JSONL file from PyPI.
 - `--packages`: Comma-separated package list for targeted fetching.
 - `--osv-dump`: **(Required)** Path to OSV PyPI ZIP dump.
 - `--pypa-repo`: Path to local clone of `pypa/advisory-database`.
-- `--downloads-csv`: Optional CSV (name,count). If omitted, the tool automatically fetches the "Top 15,000" dataset from `hugovk.dev`.
-- `--deps-csv`: Optional CSV (name,count) for package dependents (centrality).
+- `--llm-discovery`: Use Small Language Models (SLMs) to identify high-value targets based on intent (auth, crypto, networking).
 - `--limit`: Max candidates to output (default 100).
 - `--include-cli / --include-ml / --include-dev`: Category toggles.
 - `--out`: Output JSON path (default `top_candidates.json`).
 
-## Development
+---
 
+## 2. Vulnerability Scanner (`poc-scan-vulnerabilities`)
+
+Performs deep static analysis and LLM-powered triage on identified packages.
+
+### Usage
 ```bash
-# Run tests
-PYTHONPATH=. uv run pytest
+# Standard Scan
+uv run poc-scan-vulnerabilities top_candidates.json --out-dir findings
 
-# Linting
-uv run ruff check .
+# Augmented Triage (LLM-based Noise Reduction)
+uv run poc-scan-vulnerabilities top_candidates.json --llm-triage
+
+# Deep Reasoning & PoC Generation (requires --llm-triage)
+uv run poc-scan-vulnerabilities top_candidates.json --llm-triage --llm-poc
+```
+
+### Options
+- `CANDIDATES_FILE`: JSON file generated by `poc-find-candidates`.
+- `--out-dir`: Directory to store findings (default: `findings`).
+- `--max-packages`: Limit the number of packages to scan.
+- `--max-files-per-pkg`: Limit the number of files scanned per package.
+- `--llm-triage`: Filters static analysis noise using contextual LLM evaluation (Tier 3 model).
+- `--llm-poc`: Leverages deep reasoning models (Tier 1) to generate functional exploit scripts for high-confidence findings.
+
+---
+
+## LLM Augmentation Internals
+
+### Model Tier Strategy
+The toolkit uses a tiered model strategy via NVIDIA NIM to balance cost, latency, and reasoning depth:
+- **Tier 3 (Metadata/Rapid)**: `meta/llama-3.1-8b-instruct` - Initial intent scoring and triage.
+- **Tier 2 (Refinement)**: `meta/llama-3.1-70b-instruct` - Complex triage and ranking.
+- **Tier 1 (Deep Reasoning)**: `meta/llama-3.1-405b-instruct` - Exploitability analysis and PoC generation.
+
+### Scoring & Triage
+- **Intent Score**: SLMs analyze package summaries to identify critical infrastructure (e.g., crypto, auth). A high intent score can boost a candidate's priority by up to 50%.
+- **Triage Score**: Analyzes the tainted path (source to sink) to determine plausibility. High-confidence findings (`> 0.7`) trigger the Tier 1 reasoning loop.
+
+---
+
+## Installation
+```bash
+uv sync
+```
+
+## Development
+```bash
+# Run tests (includes VCR cassettes for LLM testing)
+uv run pytest
+
+# Linting & Formatting
+uv run ruff check --fix .
+uv run ruff format .
 uv run mypy --strict vlnr/
 ```
