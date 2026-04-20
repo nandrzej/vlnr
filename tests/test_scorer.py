@@ -14,8 +14,10 @@ def test_compute_audit_score() -> None:
     assert compute_audit_score(0) == 1.0
     assert compute_audit_score(1) == 0.8
     assert compute_audit_score(2) == 0.8
-    # 3 vulns: 1.0 - (0.5 + (3-2)*0.1) = 1.0 - 0.6 = 0.4
-    assert round(compute_audit_score(3), 1) == 0.4
+    # 3 vulns: 1.0 / log2(3+1) = 1.0 / 2.0 = 0.5
+    assert round(compute_audit_score(3), 1) == 0.5
+    # High vuln count should never reach zero
+    assert compute_audit_score(100) > 0.0
 
 
 def test_score_candidate() -> None:
