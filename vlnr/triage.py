@@ -27,7 +27,7 @@ def triage_vulnerability(
     return client.completion(
         messages=[{"role": "user", "content": prompt}],
         response_model=TriageResult,
-        tier=LLMTier.TIER_3,
+        tier=LLMTier.TIER_2,
     )
 
 
@@ -52,12 +52,11 @@ def triage_vulnerabilities_batch(
         f"plausible vulnerabilities or false positives.\n\n"
         f"{batch_str}"
         f"For each SLICE, provide a step-by-step reasoning, a plausibility score (0-1), "
-        f"and indicate if it is a false positive. Map each result back to its slice_id.\n\n"
-        f"OUTPUT ONLY VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."
+        "and indicate if it is a false positive. Map each result back to its slice_id."
     )
 
     return client.completion(
         messages=[{"role": "user", "content": prompt}],
         response_model=BatchTriageResult,
-        tier=LLMTier.TIER_3,
+        tier=LLMTier.TIER_2,
     )
