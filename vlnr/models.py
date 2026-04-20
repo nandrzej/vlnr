@@ -1,7 +1,15 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+
+VexStatus = Literal[
+    "not_affected",
+    "affected",
+    "fixed",
+    "under_investigation",
+]
 
 
 class PackageInfo(BaseModel):
@@ -28,6 +36,9 @@ class VulnerabilityRecord(BaseModel):
     package_name: str
     affected_versions: list[str] = Field(default_factory=list)
     ranges: list[dict[str, Any]] = Field(default_factory=list)
+    cvss_score: float | None = None
+    epss_score: float | None = None
+    vex_status: VexStatus = "under_investigation"
 
 
 class VulnerabilityIndex(BaseModel):
@@ -80,6 +91,7 @@ class CandidateRecord(BaseModel):
     intent_score: float | None = None
     intent_reasoning: str | None = None
     candidate_score: float = 0.0
+    audit_interest_score: float = 0.0
 
 
 # Hardcoded defaults - no config file needed

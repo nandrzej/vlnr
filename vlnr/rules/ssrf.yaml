@@ -1,0 +1,44 @@
+rules:
+  - id: python-ssrf-urllib
+    patterns:
+      - pattern-either:
+          - pattern: urllib.request.urlopen($URL, ...)
+          - pattern: urllib.request.Request($URL, ...)
+      - pattern-not:
+          - pattern: urllib.request.urlopen("...", ...)
+      - pattern-not:
+          - pattern: urllib.request.Request("...", ...)
+    message: Potential SSRF via urllib
+    languages: [python]
+    severity: ERROR
+
+  - id: python-ssrf-httpx
+    patterns:
+      - pattern-either:
+          - pattern: httpx.get($URL, ...)
+          - pattern: httpx.post($URL, ...)
+          - pattern: httpx.put($URL, ...)
+          - pattern: httpx.delete($URL, ...)
+          - pattern: httpx.patch($URL, ...)
+          - pattern: httpx.request($METHOD, $URL, ...)
+          - pattern: httpx.Client().get($URL, ...)
+          - pattern: httpx.AsyncClient().get($URL, ...)
+      - pattern-not:
+          - pattern: httpx.get("...", ...)
+      - pattern-not:
+          - pattern: httpx.post("...", ...)
+    message: Potential SSRF via httpx
+    languages: [python]
+    severity: ERROR
+
+  - id: python-ssrf-aiohttp
+    patterns:
+      - pattern-either:
+          - pattern: aiohttp.ClientSession().get($URL, ...)
+          - pattern: aiohttp.ClientSession().post($URL, ...)
+          - pattern: aiohttp.request($METHOD, $URL, ...)
+      - pattern-not:
+          - pattern: aiohttp.ClientSession().get("...", ...)
+    message: Potential SSRF via aiohttp
+    languages: [python]
+    severity: ERROR

@@ -23,7 +23,6 @@ SINKS = {
     "os.remove": [0],
     "os.rename": [0, 1],
     "shutil.rmtree": [0],
-    "yaml.safe_load": [0],
 }
 
 SOURCES = {
@@ -158,7 +157,7 @@ def ast_taint_scan(tree: ast.AST, package: str, version: str, filename: str) -> 
 
                             # Heuristic for obvious vs suspicious
                             static_class: Literal["obvious_vuln", "suspicious", "benign"] = "suspicious"
-                            if is_sink_sanitized or call_name == "yaml.safe_load":
+                            if is_sink_sanitized:
                                 static_class = "benign"
                             elif call_name in [
                                 "os.system",
@@ -189,7 +188,6 @@ def ast_taint_scan(tree: ast.AST, package: str, version: str, filename: str) -> 
                                 "pickle.loads",
                                 "yaml.load",
                                 "yaml.unsafe_load",
-                                "yaml.safe_load",
                                 "eval",
                                 "exec",
                             ]:

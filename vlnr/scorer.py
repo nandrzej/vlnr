@@ -145,5 +145,6 @@ def score_candidate(
         intent_score=intent_val,
         intent_reasoning=intent_reasoning,
         candidate_score=candidate_score,
+        audit_interest_score=0.0,  # TODO: Implement actual audit interest logic
         **vuln_ids,
     )
