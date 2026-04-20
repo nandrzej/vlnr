@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -17,15 +18,30 @@ class RepoSource:
     local_path: str
 
 
+def refine_repo_url(url: str) -> str:
+    """
+    Strips "/tree/..." or "/blob/..." from GitHub/GitLab URLs to get the base repo URL.
+    """
+    if not url:
+        return ""
+    # Matches github.com/user/repo/tree/branch or /blob/branch/...
+    # Also handles gitlab.com with /-/tree or /-/blob
+    # We use /(-/)?(tree|blob)/ to handle both.
+    refined = re.sub(r"/(?:-/)?(?:tree|blob)/.*$", "", url)
+    if refined != url:
+        logger.info(f"Refined repo URL: {url} -> {refined}")
+    return refined
+
+
 def fetch_source(package: str, version: str, repo_url: str) -> Optional[RepoSource]:
     """
     Clones the repository and checks out the specified version.
     Returns RepoSource if successful, None otherwise.
     """
+    repo_url = refine_repo_url(repo_url)
     if not repo_url:
         logger.warning(f"No repo_url for {package}")
         return None
-
     temp_dir = tempfile.mkdtemp(prefix=f"vlnr-{package}-")
     try:
         # Clone with depth 1

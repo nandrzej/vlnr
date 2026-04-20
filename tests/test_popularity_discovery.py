@@ -6,7 +6,7 @@ from vlnr.cli import run_pipeline
 
 
 @pytest.fixture
-def mock_pypi_jsonl(tmp_path):
+def mock_pypi_jsonl(tmp_path: Path) -> Path:
     path = tmp_path / "mock_pypi.jsonl"
     packages = [
         # 10 low-download packages
@@ -39,7 +39,7 @@ def mock_pypi_jsonl(tmp_path):
 
 
 @pytest.fixture
-def mock_downloads_csv(tmp_path):
+def mock_downloads_csv(tmp_path: Path) -> Path:
     path = tmp_path / "downloads.csv"
     with open(path, "w") as f:
         for i in range(10):
@@ -49,7 +49,9 @@ def mock_downloads_csv(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_high_pop_package_discovery_at_end(mock_pypi_jsonl, mock_downloads_csv, tmp_path):
+async def test_high_pop_package_discovery_at_end(
+    mock_pypi_jsonl: Path, mock_downloads_csv: Path, tmp_path: Path
+) -> None:
     out_path = tmp_path / "top.json"
 
     # Mock get_repo_stars to avoid network calls and verify it's called

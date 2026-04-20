@@ -1,0 +1,416 @@
+interactions:
+- request:
+    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
+      return a JSON object matching this schema:\n\n        {\n  \"properties\": {\n    \"analysis\":
+      {\n      \"description\": \"Step-by-step analysis of the tainted path\",\n      \"title\":
+      \"Analysis\",\n      \"type\": \"string\"\n    },\n    \"plausibility\": {\n      \"description\":
+      \"Likelihood of this being a real vulnerability\",\n      \"maximum\": 1,\n      \"minimum\":
+      0,\n      \"title\": \"Plausibility\",\n      \"type\": \"number\"\n    },\n    \"is_false_positive\":
+      {\n      \"title\": \"Is False Positive\",\n      \"type\": \"boolean\"\n    },\n    \"suggested_cwe\":
+      {\n      \"anyOf\": [\n        {\n          \"type\": \"string\"\n        },\n        {\n          \"type\":
+      \"null\"\n        }\n      ],\n      \"title\": \"Suggested Cwe\"\n    }\n  },\n  \"required\":
+      [\n    \"analysis\",\n    \"plausibility\",\n    \"is_false_positive\",\n    \"suggested_cwe\"\n  ],\n  \"title\":
+      \"TriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid JSON
+      instance, not the schema definition."},{"role":"user","content":"You are a security
+      expert triaging static analysis results. Analyze the following tainted path
+      and determine if it is a plausible vulnerability or a false positive.\n\nTool
+      Hit: Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning and a plausibility score (0-1)."}],"model":"meta/llama-3.1-8b-instruct","response_format":{"type":"json_object"}}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1664'
+      Content-Type:
+      - application/json
+      Host:
+      - integrate.api.nvidia.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://integrate.api.nvidia.com/v1/chat/completions
+  response:
+    body:
+      string: '{"id":"chatcmpl-83eb3eb3-eb68-46f9-b476-897a7c9b2ac2","choices":[{"index":0,"message":{"content":"**Tainted
+        Path Analysis**\n\n**Tool Hit:** Possible SQL injection\n**Source Code:**
+        `user_input = request.args.get(''id'')`\n**Sink Code:** `db.execute(f''SELECT
+        * FROM users WHERE id = {user_input}'')`\n**Additional Context:** \n\nBased
+        on the provided information, I will perform a step-by-step analysis of the
+        tainted path to determine its plausibility.\n\n**Step 1: Flow Analysis**\n\nThe
+        tainted path starts at the user-provided input `user_input = request.args.get(''id'')`.
+        This input is obtained from the URL query string, which is a common source
+        of user input. The input is then passed to the `db.execute()` function, which
+        executes a SQL query.\n\n**Step 2: Sanitization Analysis**\n\nThere is no
+        explicit sanitization of the `user_input` variable. However, the `request.args.get()`
+        method is used to retrieve the input, which may perform some basic sanitization
+        (e.g., URL encoding). Nevertheless, this sanitization is not sufficient to
+        prevent SQL injection attacks.\n\n**Step 3: Reachability Analysis**\n\nThe
+        `db.execute()` function is executed with the tainted input, which allows an
+        attacker to inject malicious SQL code. The `f''SELECT * FROM users WHERE id
+        = {user_input}''` string concatenation can lead to a SQL injection vulnerability
+        if the input is not properly sanitized.\n\n**Conclusion**\n\nBased on the
+        analysis, the tainted path is vulnerable to a SQL injection attack. The lack
+        of explicit sanitization and the reachability of the `db.execute()` function
+        make it possible for an attacker to inject malicious SQL code. However, the
+        `request.args.get()` method may perform some basic sanitization, which could
+        reduce the attack surface.\n\n**Plausibility Score**\n\nGiven the analysis,
+        I would assign a plausibility score of 0.8 (out of 1). The vulnerability is
+        plausible because:\n\n* The tainted path starts at a user-provided input,
+        which is a common source of vulnerabilities.\n* There is no explicit sanitization
+        of the input.\n* The `db.execute()` function is executed with the tainted
+        input, making it possible for an attacker to inject malicious SQL code.\n\nHowever,
+        the plausibility score is not 1 because:\n\n* The `request.args.get()` method
+        may perform some basic sanitization, which could reduce the attack surface.\n*
+        The vulnerability may be mitigated by using parameterized queries or prepared
+        statements.\n\n**Recommendation**\n\nTo mitigate this vulnerability, I recommend
+        using parameterized queries or prepared statements to prevent SQL injection
+        attacks. Additionally, consider implementing additional sanitization mechanisms
+        to ensure the input is properly validated and sanitized.","role":"assistant","reasoning_content":null},"finish_reason":"stop"}],"created":1776613352,"model":"meta/llama-3.1-8b-instruct","object":"chat.completion","usage":{"prompt_tokens":379,"completion_tokens":540,"total_tokens":919,"prompt_tokens_details":{"audio_tokens":null,"cached_tokens":32}},"nvext":{"worker_id":{"prefill_worker_id":7587894239496826897,"decode_worker_id":7587894239496826897}}}'
+    headers:
+      Access-Control-Expose-Headers:
+      - nvcf-reqid
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '3120'
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 19 Apr 2026 15:42:36 GMT
+      Nvcf-Reqid:
+      - ac219ccd-c569-40b8-8ac6-1b688cb2b7e0
+      Nvcf-Status:
+      - fulfilled
+      Vary:
+      - Origin
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
+      return a JSON object matching this schema:\n\n        {\n  \"properties\": {\n    \"analysis\":
+      {\n      \"description\": \"Step-by-step analysis of the tainted path\",\n      \"title\":
+      \"Analysis\",\n      \"type\": \"string\"\n    },\n    \"plausibility\": {\n      \"description\":
+      \"Likelihood of this being a real vulnerability\",\n      \"maximum\": 1,\n      \"minimum\":
+      0,\n      \"title\": \"Plausibility\",\n      \"type\": \"number\"\n    },\n    \"is_false_positive\":
+      {\n      \"title\": \"Is False Positive\",\n      \"type\": \"boolean\"\n    },\n    \"suggested_cwe\":
+      {\n      \"anyOf\": [\n        {\n          \"type\": \"string\"\n        },\n        {\n          \"type\":
+      \"null\"\n        }\n      ],\n      \"title\": \"Suggested Cwe\"\n    }\n  },\n  \"required\":
+      [\n    \"analysis\",\n    \"plausibility\",\n    \"is_false_positive\",\n    \"suggested_cwe\"\n  ],\n  \"title\":
+      \"TriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid JSON
+      instance, not the schema definition."},{"role":"user","content":"You are a security
+      expert triaging static analysis results. Analyze the following tainted path
+      and determine if it is a plausible vulnerability or a false positive.\n\nTool
+      Hit: Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning and a plausibility score (0-1)."},{"role":"assistant","content":"**Tainted
+      Path Analysis**\n\n**Tool Hit:** Possible SQL injection\n**Source Code:** `user_input
+      = request.args.get(''id'')`\n**Sink Code:** `db.execute(f''SELECT * FROM users
+      WHERE id = {user_input}'')`\n**Additional Context:** \n\nBased on the provided
+      information, I will perform a step-by-step analysis of the tainted path to determine
+      its plausibility.\n\n**Step 1: Flow Analysis**\n\nThe tainted path starts at
+      the user-provided input `user_input = request.args.get(''id'')`. This input
+      is obtained from the URL query string, which is a common source of user input.
+      The input is then passed to the `db.execute()` function, which executes a SQL
+      query.\n\n**Step 2: Sanitization Analysis**\n\nThere is no explicit sanitization
+      of the `user_input` variable. However, the `request.args.get()` method is used
+      to retrieve the input, which may perform some basic sanitization (e.g., URL
+      encoding). Nevertheless, this sanitization is not sufficient to prevent SQL
+      injection attacks.\n\n**Step 3: Reachability Analysis**\n\nThe `db.execute()`
+      function is executed with the tainted input, which allows an attacker to inject
+      malicious SQL code. The `f''SELECT * FROM users WHERE id = {user_input}''` string
+      concatenation can lead to a SQL injection vulnerability if the input is not
+      properly sanitized.\n\n**Conclusion**\n\nBased on the analysis, the tainted
+      path is vulnerable to a SQL injection attack. The lack of explicit sanitization
+      and the reachability of the `db.execute()` function make it possible for an
+      attacker to inject malicious SQL code. However, the `request.args.get()` method
+      may perform some basic sanitization, which could reduce the attack surface.\n\n**Plausibility
+      Score**\n\nGiven the analysis, I would assign a plausibility score of 0.8 (out
+      of 1). The vulnerability is plausible because:\n\n* The tainted path starts
+      at a user-provided input, which is a common source of vulnerabilities.\n* There
+      is no explicit sanitization of the input.\n* The `db.execute()` function is
+      executed with the tainted input, making it possible for an attacker to inject
+      malicious SQL code.\n\nHowever, the plausibility score is not 1 because:\n\n*
+      The `request.args.get()` method may perform some basic sanitization, which could
+      reduce the attack surface.\n* The vulnerability may be mitigated by using parameterized
+      queries or prepared statements.\n\n**Recommendation**\n\nTo mitigate this vulnerability,
+      I recommend using parameterized queries or prepared statements to prevent SQL
+      injection attacks. Additionally, consider implementing additional sanitization
+      mechanisms to ensure the input is properly validated and sanitized."},{"role":"user","content":"Correct
+      your JSON ONLY RESPONSE, based on the following errors:\n<failed_attempts>\n\n<generation
+      number=\"1\">\n<exception>\n    1 validation error for TriageResult\n  Invalid
+      JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value=\"{user_input}'')`\\n**Addit...WHERE
+      id = {user_input}\", input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''chatcmpl-83eb3eb3-eb68-46f9-b476-897a7c9b2ac2'',
+      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=\"**Tainted
+      Path Analysis**\\n\\n**Tool Hit:** Possible SQL injection\\n**Source Code:**
+      `user_input = request.args.get(''id'')`\\n**Sink Code:** `db.execute(f''SELECT
+      * FROM users WHERE id = {user_input}'')`\\n**Additional Context:** \\n\\nBased
+      on the provided information, I will perform a step-by-step analysis of the tainted
+      path to determine its plausibility.\\n\\n**Step 1: Flow Analysis**\\n\\nThe
+      tainted path starts at the user-provided input `user_input = request.args.get(''id'')`.
+      This input is obtained from the URL query string, which is a common source of
+      user input. The input is then passed to the `db.execute()` function, which executes
+      a SQL query.\\n\\n**Step 2: Sanitization Analysis**\\n\\nThere is no explicit
+      sanitization of the `user_input` variable. However, the `request.args.get()`
+      method is used to retrieve the input, which may perform some basic sanitization
+      (e.g., URL encoding). Nevertheless, this sanitization is not sufficient to prevent
+      SQL injection attacks.\\n\\n**Step 3: Reachability Analysis**\\n\\nThe `db.execute()`
+      function is executed with the tainted input, which allows an attacker to inject
+      malicious SQL code. The `f''SELECT * FROM users WHERE id = {user_input}''` string
+      concatenation can lead to a SQL injection vulnerability if the input is not
+      properly sanitized.\\n\\n**Conclusion**\\n\\nBased on the analysis, the tainted
+      path is vulnerable to a SQL injection attack. The lack of explicit sanitization
+      and the reachability of the `db.execute()` function make it possible for an
+      attacker to inject malicious SQL code. However, the `request.args.get()` method
+      may perform some basic sanitization, which could reduce the attack surface.\\n\\n**Plausibility
+      Score**\\n\\nGiven the analysis, I would assign a plausibility score of 0.8
+      (out of 1). The vulnerability is plausible because:\\n\\n* The tainted path
+      starts at a user-provided input, which is a common source of vulnerabilities.\\n*
+      There is no explicit sanitization of the input.\\n* The `db.execute()` function
+      is executed with the tainted input, making it possible for an attacker to inject
+      malicious SQL code.\\n\\nHowever, the plausibility score is not 1 because:\\n\\n*
+      The `request.args.get()` method may perform some basic sanitization, which could
+      reduce the attack surface.\\n* The vulnerability may be mitigated by using parameterized
+      queries or prepared statements.\\n\\n**Recommendation**\\n\\nTo mitigate this
+      vulnerability, I recommend using parameterized queries or prepared statements
+      to prevent SQL injection attacks. Additionally, consider implementing additional
+      sanitization mechanisms to ensure the input is properly validated and sanitized.\",
+      refusal=None, role=''assistant'', annotations=None, audio=None, function_call=None,
+      tool_calls=None, reasoning_content=None))], created=1776613352, model=''meta/llama-3.1-8b-instruct'',
+      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=540,
+      prompt_tokens=379, total_tokens=919, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
+      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
+      cached_tokens=32)), nvext={''worker_id'': {''prefill_worker_id'': 7587894239496826897,
+      ''decode_worker_id'': 7587894239496826897}})\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    1
+      validation error for TriageResult\n  Invalid JSON: key must be a string at line
+      1 column 2 [type=json_invalid, input_value=\"{user_input}'')`\\n**Addit...WHERE
+      id = {user_input}\", input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</last_exception>"}],"model":"meta/llama-3.1-8b-instruct","response_format":{"type":"json_object"}}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '8679'
+      Content-Type:
+      - application/json
+      Host:
+      - integrate.api.nvidia.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://integrate.api.nvidia.com/v1/chat/completions
+  response:
+    body:
+      string: '{"id":"chatcmpl-dce07816-a5c9-43a4-952d-367d5fdadd93","choices":[{"index":0,"message":{"content":"```json\n{\n  \"analysis\":
+        \"**Tainted Path Analysis**\\n\\n**Tool Hit:** Possible SQL injection\\n**Source
+        Code:** `user_input = request.args.get(''id'')`\\n**Sink Code:** `db.execute(f''SELECT
+        * FROM users WHERE id = {user_input}'')`\\n**Additional Context:** \\n\\nBased
+        on the provided information, I will perform a step-by-step analysis of the
+        tainted path to determine its plausibility.\\n\\n**Step 1: Flow Analysis**\\n\\nThe
+        tainted path starts at the user-provided input `user_input = request.args.get(''id'')`.
+        This input is obtained from the URL query string, which is a common source
+        of user input. The input is then passed to the `db.execute()` function, which
+        executes a SQL query.\\n\\n**Step 2: Sanitization Analysis**\\n\\nThere is
+        no explicit sanitization of the `user_input` variable. However, the `request.args.get()`
+        method is used to retrieve the input, which may perform some basic sanitization
+        (e.g., URL encoding). Nevertheless, this sanitization is not sufficient to
+        prevent SQL injection attacks.\\n\\n**Step 3: Reachability Analysis**\\n\\nThe
+        `db.execute()` function is executed with the tainted input, which allows an
+        attacker to inject malicious SQL code. The `f''SELECT * FROM users WHERE id
+        = {user_input}''` string concatenation can lead to a SQL injection vulnerability
+        if the input is not properly sanitized.\\n\\n**Conclusion**\\n\\nBased on
+        the analysis, the tainted path is vulnerable to a SQL injection attack. The
+        lack of explicit sanitization and the reachability of the `db.execute()` function
+        make it possible for an attacker to inject malicious SQL code. However, the
+        `request.args.get()` method may perform some basic sanitization, which could
+        reduce the attack surface.\\n\\n**Plausibility Score**\\n\\nGiven the analysis,
+        I would assign a plausibility score of 0.8 (out of 1). The vulnerability is
+        plausible because:\\n\\n* The tainted path starts at a user-provided input,
+        which is a common source of vulnerabilities.\\n* There is no explicit sanitization
+        of the input.\\n* The `db.execute()` function is executed with the tainted
+        input, making it possible for an attacker to inject malicious SQL code.\\n\\nHowever,
+        the plausibility score is not 1 because:\\n\\n* The `request.args.get()` method
+        may perform some basic sanitization, which could reduce the attack surface.\\n*
+        The vulnerability may be mitigated by using parameterized queries or prepared
+        statements.\\n\\n**Recommendation**\\n\\nTo mitigate this vulnerability, I
+        recommend using parameterized queries or prepared statements to prevent SQL
+        injection attacks. Additionally, consider implementing additional sanitization
+        mechanisms to ensure the input is properly validated and sanitized.\",\n  \"plausibility\":
+        0.8,\n  \"is_false_positive\": false,\n  \"suggested_cwe\": \"CWE-89: Improper
+        Neutralization of Input During SQL Command or Query Construction\"\n}\n```","role":"assistant","reasoning_content":null},"finish_reason":"stop"}],"created":1776613356,"model":"meta/llama-3.1-8b-instruct","object":"chat.completion","usage":{"prompt_tokens":1933,"completion_tokens":641,"total_tokens":2574,"prompt_tokens_details":{"audio_tokens":null,"cached_tokens":912}},"nvext":{"worker_id":{"prefill_worker_id":7587894239496826897,"decode_worker_id":7587894239496826897}}}'
+    headers:
+      Access-Control-Expose-Headers:
+      - nvcf-reqid
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '3371'
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 19 Apr 2026 15:42:40 GMT
+      Nvcf-Reqid:
+      - 4822a32f-ed25-4042-9a5c-071feed46a71
+      Nvcf-Status:
+      - fulfilled
+      Vary:
+      - Origin
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning and a plausibility score (0-1)."}],"model":"models/gemma-4-31b-it","tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1307'
+      Content-Type:
+      - application/json
+      Host:
+      - generativelanguage.googleapis.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAC/2RUbVPbOBD+Kzv6ErhxcklDSpoZPnTA5colcIVcGbh0bEXe2KKy5EoywWT837sy
+        KdzNfYmVR/vy7LO72jFRGCnQsdk/O7aRWroiscid0WzGvDEqEVwpxyImdYZPbDaMWInO8RzZbMes
+        UfRl3DnpPNee7P7lFGLik7c8EUZ7pGtyyY3JVefsC1PnhU+czDX3tQ2RYnn358X5383lWf68OI/H
+        8+XXh/uzO395dlHe3wwnV8tCzm+/qsvlYnK/FM3dg3pYbE9OWNtGbFNr4WWgvmPc5nVJKYkF260Y
+        11w1RHLFZiu2LBBqhxakrmoPaTgn3TkF6cCitxIfMYNMWhReNbCxpgRPbhZ/1Og8vIaHg3SPDQhz
+        gxz9QU9mvcP0MIJtIUURQnINtfa2dp6iOlNbgQOgUhw8clVjMKHo+i0hlmvMMjKW2hvgcPNlDpTF
+        NuCInM6Jf/iluJv+HjlIN72beB6fLuE3+HR9tehqdHD7R3wdg8zgBHZvlba99HBPIfADoUITBeAT
+        LyuFYDZdTqkfsNM02KLtmGoDjmvp5TMPN1GoQWb7s7EhbXCvuOUlerTymeoI5CWSXEHFMCsZtxls
+        eQNUX2VJbu3/m5HofdTAvefiO/VKmFplZGkeZYZE+EW4DeVLZZaCq0lp7iAdwdU1jE5GaQi8bioq
+        C3gd1PVSdCQDx24shQeH2lEljwhUAB+sWLRi0iUbrhwmlXm5o6HpALqrFCfl11JJ3xA8IsjVeY6h
+        sYnYYjdfp7dxf/phBp9LolsR90usKZ3aCxbE+T9yU6GQXEGs8GWwSMbQ/tDjoMupKUtSDQ564d/n
+        Xyr1DlespbXTpDWN+tJKWs1rdLXyjFZCZgQOf+B0/WFrw3Y2VTB73ZT2W9t+i5ignacKqKDj4/fv
+        j8bT0bu97+T8WPG7ZHxxJEfaxX/5+btPzccFhSpNhoosuq/7PUfi1z/qj0frvgwPgVkHimQgCu4H
+        woSx6nJGrP71fryhiTffqRfEYDqJGOlWVv4VGw+H4WHxXL1CR9NJ2/4EAAD//wMAwrhfbL8EAAA=
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Cache-Control:
+      - private
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 20 Apr 2026 00:10:12 GMT
+      Expires:
+      - Mon, 20 Apr 2026 00:10:12 GMT
+      P3P:
+      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=5811
+      Set-Cookie:
+      - NID=530=I7llE4crYv6GJq8ky0m6IbKC2RcFeOYYo-3tCq6DxJSo13M3pz1pyUODKN_fRfrWcv5JlbyXznO2AYGo06-CnleAVDOArJ54_LCOgRzJJAE02pfQfzWh-R5hTaI-FLDiC4zDJU2ZSJRqOws6h0Yi5PUGKAlSlzwmwlJ-wFKI2JUAUZPQ09xnz8lehkseOUTZ4w;
+        expires=Tue, 20-Oct-2026 00:10:06 GMT; path=/; domain=.generativelanguage.googleapis.com;
+        HttpOnly
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+    status:
+      code: 200
+      message: OK
+version: 1

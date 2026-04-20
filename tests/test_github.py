@@ -1,9 +1,10 @@
 import pytest
+from typing import Any, Dict, List, Optional, Generator
 from vlnr import github
 
 
 @pytest.fixture
-def clean_gh_cache(monkeypatch):
+def clean_gh_cache(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
     """Ensure cache is empty and file removed before/after tests."""
     # Reset internal state
     monkeypatch.setattr(github, "_STARS_CACHE", {})
@@ -15,34 +16,34 @@ def clean_gh_cache(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_get_repo_stars_caching(monkeypatch, clean_gh_cache):
+async def test_get_repo_stars_caching(monkeypatch: pytest.MonkeyPatch, clean_gh_cache: Any) -> None:
     # Mock aiohttp
     call_count = 0
 
     class MockResponse:
-        def __init__(self, data, status=200):
+        def __init__(self, data: Dict[str, Any], status: int = 200) -> None:
             self.data = data
             self.status = status
 
-        async def __aenter__(self):
+        async def __aenter__(self) -> "MockResponse":
             return self
 
-        async def __aexit__(self, *args):
+        async def __aexit__(self, *args: Any) -> None:
             pass
 
-        async def json(self):
+        async def json(self) -> Dict[str, Any]:
             return self.data
 
     class MockSession:
-        def get(self, url, headers=None):
+        def get(self, url: str, headers: Optional[Dict[str, str]] = None) -> MockResponse:
             nonlocal call_count
             call_count += 1
             return MockResponse({"stargazers_count": 100})
 
-        async def __aenter__(self):
+        async def __aenter__(self) -> "MockSession":
             return self
 
-        async def __aexit__(self, *args):
+        async def __aexit__(self, *args: Any) -> None:
             pass
 
     monkeypatch.setattr("aiohttp.ClientSession", lambda: MockSession())
@@ -62,46 +63,49 @@ async def test_get_repo_stars_caching(monkeypatch, clean_gh_cache):
 
 
 @pytest.mark.asyncio
-async def test_get_repo_stars_rate_limit(monkeypatch, clean_gh_cache):
+async def test_get_repo_stars_rate_limit(monkeypatch: pytest.MonkeyPatch, clean_gh_cache: Any) -> None:
     # Mock aiohttp to return 429 once then 200
-    responses = [{"status": 429, "headers": {"Retry-After": "1"}}, {"status": 200, "data": {"stargazers_count": 50}}]
+    responses: List[Dict[str, Any]] = [
+        {"status": 429, "headers": {"Retry-After": "1"}},
+        {"status": 200, "data": {"stargazers_count": 50}},
+    ]
 
     class MockResponse:
-        def __init__(self, r):
+        def __init__(self, r: Dict[str, Any]) -> None:
             self.status = r["status"]
             self.headers = r.get("headers", {})
             self._data = r.get("data")
 
-        async def __aenter__(self):
+        async def __aenter__(self) -> "MockResponse":
             return self
 
-        async def __aexit__(self, *args):
+        async def __aexit__(self, *args: Any) -> None:
             pass
 
-        async def json(self):
+        async def json(self) -> Any:
             return self._data
 
     class MockSession:
-        def __init__(self):
+        def __init__(self) -> None:
             self.idx = 0
 
-        def get(self, url, headers=None):
+        def get(self, url: str, headers: Optional[Dict[str, str]] = None) -> MockResponse:
             resp = MockResponse(responses[self.idx])
             self.idx += 1
             return resp
 
-        async def __aenter__(self):
+        async def __aenter__(self) -> "MockSession":
             return self
 
-        async def __aexit__(self, *args):
+        async def __aexit__(self, *args: Any) -> None:
             pass
 
     monkeypatch.setattr("aiohttp.ClientSession", lambda: MockSession())
 
     # Mock sleep to avoid waiting
-    sleep_calls = []
+    sleep_calls: List[float] = []
 
-    async def mock_sleep(seconds):
+    async def mock_sleep(seconds: float) -> None:
         sleep_calls.append(seconds)
 
     monkeypatch.setattr("asyncio.sleep", mock_sleep)

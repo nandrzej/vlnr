@@ -12,18 +12,26 @@ def test_extract_repo_url() -> None:
     }
     assert extract_repo_url(urls) == "https://github.com/user/project-source"
 
-    urls = {"Homepage": "https://gitlab.com/user/project"}
+    urls = {
+        "Homepage": "https://gitlab.com/user/project",
+    }
     assert extract_repo_url(urls) == "https://gitlab.com/user/project"
 
-    urls = {"Documentation": "https://docs.io"}
+    urls = {
+        "Documentation": "https://docs.io",
+    }
     assert extract_repo_url(urls) is None
 
     # Test with .git suffix and trailing slash
-    urls = {"Repository": "https://github.com/user/project.git/"}
+    urls = {
+        "Repository": "https://github.com/user/project.git/",
+    }
     assert extract_repo_url(urls) == "https://github.com/user/project"
 
     # Test Case Insensitivity
-    urls = {"source": "https://GITHUB.COM/user/PROJECT"}
+    urls = {
+        "source": "https://GITHUB.COM/user/PROJECT",
+    }
     assert extract_repo_url(urls) == "https://GITHUB.COM/user/PROJECT"
 
 
@@ -55,18 +63,21 @@ def test_stream_packages_datetime_parsing(tmp_path: Path) -> None:
 
     pkgs = list(stream_packages_from_jsonl(p))
     assert len(pkgs) == 1
-    assert pkgs[0].upload_time is not None
-    assert pkgs[0].upload_time.year == 2023
-    assert pkgs[0].upload_time.month == 1
-    assert pkgs[0].upload_time.day == 1
+    upload_time = pkgs[0].upload_time
+    assert upload_time is not None
+    assert upload_time.year == 2023
+    assert upload_time.month == 1
+    assert upload_time.day == 1
 
     # Test with +00:00 format
     pkg["upload_time"] = "2023-05-15T10:30:00+00:00"
     with open(p, "w") as f:
         f.write(json.dumps(pkg) + "\n")
     pkgs = list(stream_packages_from_jsonl(p))
-    assert pkgs[0].upload_time.month == 5
-    assert pkgs[0].upload_time.day == 15
+    upload_time = pkgs[0].upload_time
+    assert upload_time is not None
+    assert upload_time.month == 5
+    assert upload_time.day == 15
 
     # Test with invalid date
     pkg["upload_time"] = "invalid-date"
@@ -84,7 +95,7 @@ async def test_fetch_packages_from_api(monkeypatch: pytest.MonkeyPatch) -> None:
             self.data = data
             self.status = status
 
-        async def __aenter__(self) -> typing.Any:
+        async def __aenter__(self) -> "MockResponse":
             return self
 
         async def __aexit__(self, *args: typing.Any) -> None:
@@ -101,7 +112,7 @@ async def test_fetch_packages_from_api(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             return MockResponse({}, status=404)
 
-        async def __aenter__(self) -> typing.Any:
+        async def __aenter__(self) -> "MockSession":
             return self
 
         async def __aexit__(self, *args: typing.Any) -> None:
@@ -120,5 +131,6 @@ async def test_fetch_packages_from_api(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert len(pkgs) == 1
     assert pkgs[0].name == "exists"
-    assert pkgs[0].upload_time is not None
-    assert pkgs[0].upload_time.year == 2024
+    upload_time = pkgs[0].upload_time
+    assert upload_time is not None
+    assert upload_time.year == 2024
