@@ -10,7 +10,6 @@ from vlnr.models import (
     DEFAULT_WEIGHTS,
     VULN_THRESHOLD_K,
     LOW_VULN_PENALTY,
-    HIGH_VULN_BASE_PENALTY,
 )
 from vlnr.osv import get_vulnerability_ids, is_version_affected
 
@@ -45,17 +44,20 @@ def normalize_log(value: float, max_value: float) -> float:
 
 def compute_audit_score(vuln_count: int) -> float:
     """
+    Audit quality based on known vulnerability count.
+    Uses log-decay so the score asymptotically approaches 0 but never reaches it,
+    ensuring high-vuln packages remain visible for triage.
+
     - 0 vulns: 1.0 (no penalty)
     - 1-2 vulns: 0.8 (small penalty)
-    - 3+ vulns: 0.5 - (count - 2) * 0.1 (larger penalty)
+    - 3+ vulns: 1.0 / log2(count + 1) (log decay, e.g. 28 vulns -> 0.20)
     """
     if vuln_count == 0:
         return 1.0
     if vuln_count <= VULN_THRESHOLD_K:
         return 1.0 - LOW_VULN_PENALTY
 
-    penalty = HIGH_VULN_BASE_PENALTY + (vuln_count - VULN_THRESHOLD_K) * 0.1
-    return max(0.0, 1.0 - penalty)
+    return 1.0 / math.log2(vuln_count + 1)
 
 
 def score_candidate(

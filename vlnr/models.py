@@ -86,4 +86,3 @@ class CandidateRecord(BaseModel):
 DEFAULT_WEIGHTS = {"downloads": 0.4, "centrality": 0.4, "stars": 0.2}
 VULN_THRESHOLD_K = 2
 LOW_VULN_PENALTY = 0.2
-HIGH_VULN_BASE_PENALTY = 0.5

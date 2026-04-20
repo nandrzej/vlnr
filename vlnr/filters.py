@@ -10,16 +10,30 @@ DEV_CLASSIFIERS = {
     "Topic :: Software Development :: Build Tools",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Libraries",
 }
+
 ML_CLASSIFIERS = {
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Information Analysis",
+}
+
+WEB_CLASSIFIERS = {
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Framework :: Django",
+    "Framework :: FastAPI",
+    "Framework :: Pyramid",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Internet",
 }
 
 CATEGORY_KEYWORDS = {
     "cli": ["cli", "tool", "runner", "backup", "monitor", "lint", "format", "shell", "terminal"],
     "ml": ["ml", "ai", "model", "training", "dataset", "pipeline", "neural", "tensor"],
     "dev": ["deploy", "devops", "manager", "builder", "scaffold", "ci", "cd", "test", "lint"],
+    "web": ["http", "web", "api", "rest", "flask", "django", "fastapi", "request", "server", "framework"],
 }
 
 
@@ -35,6 +49,8 @@ def categorize_package(pkg: PackageInfo) -> list[str]:
         tags.add("dev")
     if classifiers & ML_CLASSIFIERS:
         tags.add("ml")
+    if classifiers & WEB_CLASSIFIERS:
+        tags.add("web")
 
     # Check keywords in summary and name
     text = (pkg.name + " " + pkg.summary).lower()
@@ -50,7 +66,11 @@ def categorize_package(pkg: PackageInfo) -> list[str]:
 
 
 def is_target_category(
-    pkg: PackageInfo, include_cli: bool = True, include_ml: bool = True, include_dev: bool = True
+    pkg: PackageInfo,
+    include_cli: bool = True,
+    include_ml: bool = True,
+    include_dev: bool = True,
+    include_web: bool = True,
 ) -> bool:
     """Check if package matches any enabled category."""
     # Ensure category_tags are populated
@@ -63,6 +83,8 @@ def is_target_category(
     if include_ml and "ml" in tags:
         return True
     if include_dev and "dev" in tags:
+        return True
+    if include_web and "web" in tags:
         return True
 
     return False
