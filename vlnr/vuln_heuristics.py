@@ -65,9 +65,18 @@ def run_ruff(local_path: str) -> list[ToolHit]:
 def run_semgrep(local_path: str) -> list[ToolHit]:
     hits = []
     try:
-        result = subprocess.run(
-            ["semgrep", "scan", local_path, "--config", "p/python", "--json", "-q"], capture_output=True, text=True
-        )
+        cmd = [
+            "semgrep",
+            "scan",
+            local_path,
+            "--config",
+            "p/python",
+            "--config",
+            "vlnr/rules/",
+            "--json",
+            "-q",
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
         if result.stdout:
             data = json.loads(result.stdout)
             for issue in data.get("results", []):

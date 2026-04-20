@@ -60,3 +60,19 @@ def process():
     assert s.static_class == "obvious_vuln"
     assert s.sink_api == "subprocess.run"
     assert "sys.argv" in s.source_types
+
+
+def test_yaml_safe_load_is_ignored() -> None:
+    code = """
+import yaml
+import sys
+
+def main():
+    data = sys.argv[1]
+    yaml.safe_load(data)
+"""
+    tree = ast.parse(code)
+    slices = ast_taint_scan(tree, "test-pkg", "1.0.0", "test_file.py")
+
+    # yaml.safe_load is no longer in SINKS, so it should not produce a slice
+    assert len(slices) == 0
