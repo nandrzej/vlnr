@@ -4,6 +4,7 @@ import os
 import ast
 import signal
 import uuid
+from pathlib import Path
 from datetime import datetime
 from typing import Any, Optional
 
@@ -12,6 +13,7 @@ from vlnr.triage import triage_vulnerabilities_batch
 from vlnr.vuln_reasoner import generate_poc
 from vlnr.vuln_fetch import fetch_source, cleanup_source
 from vlnr.vuln_entrypoints import discover_entrypoints
+from vlnr.vuln_metadata import scan_metadata
 from vlnr.vuln_heuristics import get_external_hits
 from vlnr.vuln_ast import ast_taint_scan
 from vlnr.vuln_slice import construct_slices
@@ -116,6 +118,15 @@ def process_package(
         # 1. Entry points
         eps = discover_entrypoints(local_path)
         logger.info(f"Discovered {len(eps)} entry points for {name}")
+
+        # 1.5 Metadata scan
+        # Search for .dist-info/METADATA
+        metadata_signals = []
+        for dist_info in Path(local_path).rglob("*.dist-info"):
+            if dist_info.is_dir():
+                metadata_signals.extend(scan_metadata(dist_info))
+        if metadata_signals:
+            logger.info(f"Metadata scan found {len(metadata_signals)} signals for {name}")
 
         # 2. External hits
         external_hits = get_external_hits(local_path)
@@ -267,6 +278,7 @@ def process_package(
         findings = PackageFindings(
             package=pkg,
             sinks=[s.model_dump() for s in all_slices],
+            metadata_signals=[s.__dict__ for s in metadata_signals],
             stats={
                 "num_sinks_total": len(all_slices),
                 "num_obvious_vuln": len([s for s in all_slices if s.static_class == "obvious_vuln"]),

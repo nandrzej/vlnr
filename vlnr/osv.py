@@ -1,57 +1,61 @@
 import json
 import zipfile
+import gzip
+import shutil
 from pathlib import Path
+from datetime import date
 
-import yaml
+import requests
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
 from pydantic import ValidationError
 
 from vlnr.models import VulnerabilityIndex, VulnerabilityRecord
 
+EPSS_URL = "https://epss.cyentia.com/epss_scores-current.csv.gz"
 
-def load_pypa_advisory_db(repo_path: Path, index: VulnerabilityIndex) -> None:
-    """Load vulnerabilities from a local clone of pypa/advisory-database."""
-    vulns_dir = repo_path / "vulns"
-    if not vulns_dir.exists():
-        return
 
-    for yaml_path in vulns_dir.rglob("*.yaml"):
-        with yaml_path.open("r", encoding="utf-8") as f:
-            try:
-                data = yaml.safe_load(f)
-                if not isinstance(data, dict):
-                    continue
-                vuln = VulnerabilityRecord(
-                    id=data.get("id", ""),
-                    aliases=data.get("aliases", []),
-                    package_name="",
-                    affected_versions=[],
-                    ranges=[],
-                )
+def load_epss_scores(cache_dir: Path) -> dict[str, float]:
+    """
+    Load EPSS scores from cache or download fresh.
+    Cache path: cache_dir / "epss_scores-current.csv.gz"
+    TTL: today's date.
+    """
+    cache_path = cache_dir / "epss_scores-current.csv.gz"
 
-                for affected in data.get("affected", []):
-                    package = affected.get("package", {})
-                    if package.get("ecosystem") != "PyPI":
-                        continue
+    # Check if cache is fresh (mtime date == today)
+    needs_download = True
+    if cache_path.exists():
+        mtime_date = date.fromtimestamp(cache_path.stat().st_mtime)
+        if mtime_date == date.today():
+            needs_download = False
 
-                    pkg_name = package.get("name", "").lower()
-                    if not pkg_name:
-                        continue
+    if needs_download:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        resp = requests.get(EPSS_URL, stream=True)
+        resp.raise_for_status()
+        with cache_path.open("wb") as f:
+            shutil.copyfileobj(resp.raw, f)
 
-                    vuln.package_name = pkg_name
-                    vuln.affected_versions = affected.get("versions", [])
-                    vuln.ranges = affected.get("ranges", [])
-
-                    if pkg_name not in index.by_package:
-                        index.by_package[pkg_name] = []
-                    index.by_package[pkg_name].append(vuln.model_copy())
-            except yaml.YAMLError, KeyError, ValidationError:
+    scores: dict[str, float] = {}
+    with gzip.open(cache_path, "rt") as f:
+        # Skip header lines (first 2 lines usually: version/date, header)
+        for line in f:
+            if line.startswith("#") or line.startswith("cve,epss"):
                 continue
+            parts = line.strip().split(",")
+            if len(parts) >= 2:
+                cve_id = parts[0]
+                try:
+                    score = float(parts[1])
+                    scores[cve_id] = score
+                except ValueError:
+                    continue
+    return scores
 
 
-def load_osv_index(zip_path: Path) -> VulnerabilityIndex:
-    """Load OSV PyPI vulnerabilities from ZIP."""
+def load_osv_index(zip_path: Path, epss_scores: dict[str, float] | None = None) -> VulnerabilityIndex:
+    """Load OSV vulnerabilities from ZIP, including cross-ecosystem ones."""
     index = VulnerabilityIndex()
     with zipfile.ZipFile(zip_path, "r") as z:
         for filename in z.namelist():
@@ -60,51 +64,64 @@ def load_osv_index(zip_path: Path) -> VulnerabilityIndex:
             with z.open(filename) as f:
                 try:
                     data = json.load(f)
-                    vuln = VulnerabilityRecord(
-                        id=data["id"],
-                        aliases=data.get("aliases", []),
-                        package_name="",  # Will fill below
-                        affected_versions=[],
-                        ranges=[],
-                    )
+
+                    # CVSS extraction
+                    cvss_score = None
+                    severity = data.get("severity", [])
+                    for sev in severity:
+                        if sev.get("type") == "CVSS_V3":
+                            # Extract score from CVSS string or explicit field if present
+                            # Most OSVs have "score" in severity if it's there
+                            score = sev.get("score")
+                            if score is not None:
+                                cvss_score = float(score)
+                                break
+
+                    # EPSS cross-ref
+                    epss_score = None
+                    if epss_scores:
+                        cve_ids = [data["id"]] + data.get("aliases", [])
+                        for cid in cve_ids:
+                            if cid in epss_scores:
+                                epss_score = epss_scores[cid]
+                                break
 
                     for affected in data.get("affected", []):
                         package = affected.get("package", {})
-                        if package.get("ecosystem") != "PyPI":
-                            continue
+                        ecosystem = package.get("ecosystem")
+                        is_cross = ecosystem != "PyPI"
 
                         pkg_name = package.get("name", "").lower()
                         if not pkg_name:
                             continue
 
-                        # Update vuln record with specific package info
-                        vuln.package_name = pkg_name
-                        vuln.affected_versions = affected.get("versions", [])
-                        vuln.ranges = affected.get("ranges", [])
+                        vuln = VulnerabilityRecord(
+                            id=data["id"],
+                            aliases=data.get("aliases", []),
+                            package_name=pkg_name,
+                            affected_versions=affected.get("versions", []),
+                            ranges=affected.get("ranges", []),
+                            cvss_score=cvss_score,
+                            epss_score=epss_score,
+                            is_cross_ecosystem=is_cross,
+                        )
 
                         if pkg_name not in index.by_package:
                             index.by_package[pkg_name] = []
-                        index.by_package[pkg_name].append(vuln.model_copy())
+                        index.by_package[pkg_name].append(vuln)
 
-                except json.JSONDecodeError, KeyError, ValidationError:
+                except json.JSONDecodeError, KeyError, ValidationError, ValueError:
                     continue
     return index
 
 
-def _normalize_version_for_specifier(v_str: str) -> str:
-    """Normalize version string for packaging.specifiers.Specifier.
-
-    Specifiers do not allow local versions (PEP 440).
-    We extract the public part.
-    """
-    try:
-        return str(Version(v_str).public)
-    except InvalidVersion:
-        return v_str
-
-
 def is_version_affected(version_str: str, vuln: VulnerabilityRecord) -> bool:
     """Check if version falls within affected ranges or specific versions."""
+    if vuln.is_cross_ecosystem:
+        # Cross-ecosystem advisories are informative signals, not hard escalations
+        # We don't try to match versions strictly as ecosystems differ
+        return False
+
     try:
         version = Version(version_str)
     except InvalidVersion:
@@ -117,14 +134,9 @@ def is_version_affected(version_str: str, vuln: VulnerabilityRecord) -> bool:
     # Check semantic ranges
     for r in vuln.ranges:
         if r.get("type") != "ECOSYSTEM":
-            # For simplicity, we mostly care about ecosystem versions
-            # but we can also handle SEMVER if needed.
-            # PyPI uses PEP 440, which ECOSYSTEM covers.
             continue
 
         events = r.get("events", [])
-        # We need a specifier string to use SpecifierSet
-        # OSV ranges are [introduced, fixed/last_affected]
         introduced = None
         fixed = None
         last_affected = None
@@ -156,6 +168,13 @@ def is_version_affected(version_str: str, vuln: VulnerabilityRecord) -> bool:
             continue
 
     return False
+
+
+def _normalize_version_for_specifier(v_str: str) -> str:
+    try:
+        return str(Version(v_str).public)
+    except InvalidVersion:
+        return v_str
 
 
 def get_vulnerability_ids(vulns: list[VulnerabilityRecord]) -> dict[str, list[str]]:

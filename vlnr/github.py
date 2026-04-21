@@ -3,12 +3,13 @@ import json
 import os
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 import aiohttp
 
 _CACHE_FILE = Path(".gh_stars_cache.json")
 _STARS_CACHE: dict[str, int] = {}
-_GITHUB_SEMAPHORE = asyncio.Semaphore(3)
+_API_SEMAPHORE = asyncio.Semaphore(3)
 
 
 def _load_cache() -> None:
@@ -33,68 +34,79 @@ def _save_cache() -> None:
 _load_cache()
 
 
-async def get_repo_stars(repo_url: str) -> int:
+async def get_repo_stars(repo_url: str) -> int | None:
     """
-    Fetch star count from GitHub API.
-    Requires GITHUB_TOKEN env var for higher limits.
-    Returns 0 on failure.
+    Fetch star count from GitHub or GitLab API.
+    Returns None for unsupported hosts or failure.
     """
-    if not repo_url or "github.com" not in repo_url.lower():
-        return 0
+    if not repo_url:
+        return None
+
+    repo_url_lower = repo_url.lower()
+    is_github = "github.com" in repo_url_lower
+    is_gitlab = "gitlab.com" in repo_url_lower
+
+    if not is_github and not is_gitlab:
+        return None
 
     if repo_url in _STARS_CACHE:
         return _STARS_CACHE[repo_url]
 
     # Extract owner/repo from URL
-    # https://github.com/owner/repo[/...]
     parts = repo_url.rstrip("/").split("/")
     if len(parts) < 5:
-        return 0
+        return None
 
     owner = parts[3]
     repo = parts[4]
 
-    api_url = f"https://api.github.com/repos/{owner}/{repo}"
+    if is_github:
+        api_url = f"https://api.github.com/repos/{owner}/{repo}"
+        headers = {"Accept": "application/vnd.github.v3+json", "User-Agent": "vlnr-candidate-finder"}
+        token = os.environ.get("GITHUB_TOKEN")
+        if token:
+            headers["Authorization"] = f"token {token}"
+        star_key = "stargazers_count"
+    else:  # is_gitlab
+        # GitLab API uses project ID or URL-encoded path
+        project_path = quote(f"{owner}/{repo}", safe="")
+        api_url = f"https://gitlab.com/api/v4/projects/{project_path}"
+        headers = {"User-Agent": "vlnr-candidate-finder"}
+        token = os.environ.get("GITLAB_TOKEN")
+        if token:
+            headers["PRIVATE-TOKEN"] = token
+        star_key = "star_count"
 
-    headers = {"Accept": "application/vnd.github.v3+json", "User-Agent": "vlnr-candidate-finder"}
-
-    token = os.environ.get("GITHUB_TOKEN")
-    if token:
-        headers["Authorization"] = f"token {token}"
-
-    async with _GITHUB_SEMAPHORE:
+    async with _API_SEMAPHORE:
         try:
             async with aiohttp.ClientSession() as session:
                 while True:
                     async with session.get(api_url, headers=headers) as resp:
                         if resp.status == 200:
                             data = await resp.json()
-                            stars = int(data.get("stargazers_count", 0))
+                            stars = int(data.get(star_key, 0))
                             _STARS_CACHE[repo_url] = stars
                             _save_cache()
                             return stars
 
                         if resp.status in (403, 429):
-                            # Rate limit handling
-                            reset_time = resp.headers.get("X-RateLimit-Reset")
-                            remaining = resp.headers.get("X-RateLimit-Remaining")
-
-                            if remaining == "0" and reset_time:
-                                sleep_time = int(reset_time) - int(time.time()) + 1
-                                if sleep_time > 0:
-                                    # Don't sleep for too long in a CLI tool, but honor it if reasonable
-                                    if sleep_time < 60:
-                                        await asyncio.sleep(sleep_time)
-                                        continue
-                                    else:
-                                        return 0
-
-                            # Secondary rate limit / abuse
+                            # Rate limit handling (common patterns)
                             retry_after = resp.headers.get("Retry-After")
                             if retry_after:
                                 await asyncio.sleep(int(retry_after) + 1)
                                 continue
 
-                        return 0
+                            if is_github:
+                                reset_time = resp.headers.get("X-RateLimit-Reset")
+                                remaining = resp.headers.get("X-RateLimit-Remaining")
+                                if remaining == "0" and reset_time:
+                                    sleep_time = int(reset_time) - int(time.time()) + 1
+                                    if 0 < sleep_time < 60:
+                                        await asyncio.sleep(sleep_time)
+                                        continue
+                                    else:
+                                        return None
+
+                        return None
         except aiohttp.ClientError, ValueError, KeyError:
-            return 0
+            return None

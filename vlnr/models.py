@@ -22,6 +22,7 @@ class PackageInfo(BaseModel):
     project_urls: dict[str, str] = Field(default_factory=dict)
     upload_time: datetime | None = None
     console_scripts: list[str] = Field(default_factory=list)
+    requires_dist: list[str] = Field(default_factory=list)
 
     # Derived after extraction
     repo_url: str | None = None
@@ -39,6 +40,7 @@ class VulnerabilityRecord(BaseModel):
     cvss_score: float | None = None
     epss_score: float | None = None
     vex_status: VexStatus = "under_investigation"
+    is_cross_ecosystem: bool = False
 
 
 class VulnerabilityIndex(BaseModel):
@@ -79,8 +81,8 @@ class CandidateRecord(BaseModel):
     pypi_url: str
     repo_url: str | None
     pop_downloads: float = 0.0
-    centrality_dep: float = 0.5  # Fixed neutral value
-    pop_repo_stars: float = 0.0
+    centrality_dep: float = 0.0
+    pop_repo_stars: float | None = None
     age_years: float = 0.0
     update_recency_days: int = 0
     known_vuln_count: int = 0
@@ -92,9 +94,3 @@ class CandidateRecord(BaseModel):
     intent_reasoning: str | None = None
     candidate_score: float = 0.0
     audit_interest_score: float = 0.0
-
-
-# Hardcoded defaults - no config file needed
-DEFAULT_WEIGHTS = {"downloads": 0.4, "centrality": 0.4, "stars": 0.2}
-VULN_THRESHOLD_K = 2
-LOW_VULN_PENALTY = 0.2
