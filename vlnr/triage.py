@@ -40,11 +40,10 @@ def triage_vulnerabilities_batch(
     items: List[Dict[str, str]],
     client: LLMClient,
 ) -> BatchTriageResult:
-    """Triage multiple vulnerabilities in a single LLM call. Max batch size 5."""
-    if len(items) > 5:
-        logger.warning(f"Batch size {len(items)} exceeds recommended max of 5. Capping.")
-        items = items[:5]
-
+    """Triage multiple vulnerabilities in a single LLM call."""
+    # Items should be chunked by the caller if needed. No silent truncation.
+    if len(items) > 10:
+        logger.warning(f"Batch size {len(items)} is large. Accuracy may decrease.")
     batch_str = ""
     for item in items:
         batch_str += (
