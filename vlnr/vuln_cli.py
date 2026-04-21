@@ -15,7 +15,7 @@ from vlnr.vuln_fetch import fetch_source, cleanup_source
 from vlnr.vuln_entrypoints import discover_entrypoints
 from vlnr.vuln_metadata import scan_metadata
 from vlnr.vuln_heuristics import get_external_hits
-from vlnr.vuln_ast import ast_taint_scan
+from vlnr.vuln_ast import ast_taint_scan, ast_bypass_scan
 from vlnr.vuln_slice import construct_slices
 from vlnr.vuln_scorer import score_slice
 from vlnr.vuln_models import PackageFindings, TriageInfo, PoCData, Slice, ToolHit, DataflowNode
@@ -163,6 +163,18 @@ def process_package(
 
                             slices = ast_taint_scan(tree, name, version, rel_p)
                             all_slices.extend(slices)
+
+                            # Bypass scan for top-level execution
+                            # Target __init__.py, tests/, conftest.py, and other sensitive areas
+                            if (
+                                f == "__init__.py"
+                                or "tests/" in rel_p
+                                or f == "conftest.py"
+                                or f == "setup.py"
+                                or f == "METADATA"
+                            ):
+                                bypass_slices = ast_bypass_scan(tree, name, version, rel_p)
+                                all_slices.extend(bypass_slices)
                     except TimeoutException:
                         logger.error(f"Parsing timed out for {full_p}")
                     except Exception as e:
@@ -187,6 +199,31 @@ def process_package(
                 all_slices.append(create_slice_from_hit(hit, name, version, local_path))
 
         # 4. Refine slices with external hits and scoring
+        # 4.1 Conjunctive Bypass Logic: Escalation for co-occurring signals
+        # We look for signals in the same file or package that reinforce each other
+        signals_by_file: dict[str, list[Slice]] = {}
+        for s in all_slices:
+            if s.dataflow_summary:
+                fname = s.dataflow_summary[-1].file
+                signals_by_file.setdefault(fname, []).append(s)
+
+        for fname, signals in signals_by_file.items():
+            # Example pairs: base64 + exec/eval, network call + dynamic import
+            has_obfuscation = any("base64" in s.sink_api or "b64" in s.sink_api for s in signals)
+            has_execution = any(s.sink_api in ["eval", "exec", "os.system"] for s in signals)
+            has_network = any("requests" in s.sink_api or "urllib" in s.sink_api for s in signals)
+            
+            # Check for metadata signals too
+            has_suspicious_metadata = any(sig.severity == "HIGH" for sig in metadata_signals)
+
+            if (has_obfuscation and has_execution) or (has_network and has_execution) or (has_suspicious_metadata and has_execution):
+                for s in signals:
+                    if s.sink_api in ["eval", "exec", "os.system", "base64.b64decode"]:
+                        s.static_class = "obvious_vuln"
+                        s.risk_score_static = 0.95
+                        if "Conjunctive Escalation" not in s.category:
+                            s.category.append("Conjunctive Escalation")
+
         for s in all_slices:
             # Match external hits by file and line
             s.tool_hits = (
