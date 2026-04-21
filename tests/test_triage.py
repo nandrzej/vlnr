@@ -1,16 +1,17 @@
 import pytest
 from unittest.mock import patch
+
 from vlnr.llm import LLMClient
 from vlnr.triage import triage_vulnerabilities_batch, filter_plausible_findings
 from vlnr.models import BatchTriageResult, IndividualTriageResult
 
 
 @pytest.fixture
-def llm_client():
+def llm_client() -> LLMClient:
     return LLMClient(config_path="llm_config.yaml")
 
 
-def test_triage_batch_logic(llm_client):
+def test_triage_batch_logic(llm_client: LLMClient) -> None:
     items = [
         {"slice_id": "1", "hit_message": "test", "source_code": "src", "sink_code": "sink"},
         {"slice_id": "2", "hit_message": "test2", "source_code": "src2", "sink_code": "sink2"},
@@ -42,7 +43,7 @@ def test_triage_batch_logic(llm_client):
         assert plausible[0].slice_id == "1"
 
 
-def test_triage_batch_max_size(llm_client):
+def test_triage_batch_no_truncation(llm_client: LLMClient) -> None:
     # Create 7 items
     items = [{"slice_id": str(i), "hit_message": "test", "source_code": "src", "sink_code": "sink"} for i in range(7)]
 
@@ -52,9 +53,9 @@ def test_triage_batch_max_size(llm_client):
 
         triage_vulnerabilities_batch(items, llm_client)
 
-        # Verify only first 5 items were included in the prompt
+        # Verify all 7 items were included in the prompt
         args, kwargs = mock_completion.call_args
         messages = kwargs["messages"]
         content = messages[0]["content"]
-        assert "Analyze each of the following 5 tainted paths" in content
-        assert "SLICE 5" not in content
+        assert "Analyze each of the following 7 tainted paths" in content
+        assert "SLICE 6" in content

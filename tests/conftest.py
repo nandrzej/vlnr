@@ -21,8 +21,8 @@ def my_vcr() -> vcr.VCR:
 
 @pytest.fixture(autouse=True)
 def env_setup() -> None:
-    # Ensure LLM_API_KEY is present for tests but use a dummy if not in CI/Local
+    # LM Studio local server for tests
+    if not os.environ.get("CUSTOM_OPENAI_API_KEY"):
+        os.environ["CUSTOM_OPENAI_API_KEY"] = "lm-studio"
     if not os.environ.get("LLM_API_KEY"):
-        os.environ["LLM_API_KEY"] = "nvapi-dummy-key-for-tests"
-    if not os.environ.get("LLM_BASE_URL"):
-        os.environ["LLM_BASE_URL"] = "https://integrate.api.nvidia.com/v1"
+        os.environ["LLM_API_KEY"] = "lm-studio"
