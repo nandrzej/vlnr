@@ -1,1249 +1,5 @@
 interactions:
 - request:
-    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
-      return a JSON object matching this schema:\n\n        {\n  \"$defs\": {\n    \"IndividualTriageResult\":
-      {\n      \"properties\": {\n        \"analysis\": {\n          \"description\":
-      \"Step-by-step analysis of the tainted path\",\n          \"title\": \"Analysis\",\n          \"type\":
-      \"string\"\n        },\n        \"plausibility\": {\n          \"description\":
-      \"Likelihood of this being a real vulnerability\",\n          \"maximum\": 1,\n          \"minimum\":
-      0,\n          \"title\": \"Plausibility\",\n          \"type\": \"number\"\n        },\n        \"is_false_positive\":
-      {\n          \"title\": \"Is False Positive\",\n          \"type\": \"boolean\"\n        },\n        \"suggested_cwe\":
-      {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\":
-      \"null\"\n            }\n          ],\n          \"title\": \"Suggested Cwe\"\n        },\n        \"slice_id\":
-      {\n          \"title\": \"Slice Id\",\n          \"type\": \"string\"\n        }\n      },\n      \"required\":
-      [\n        \"analysis\",\n        \"plausibility\",\n        \"is_false_positive\",\n        \"suggested_cwe\",\n        \"slice_id\"\n      ],\n      \"title\":
-      \"IndividualTriageResult\",\n      \"type\": \"object\"\n    }\n  },\n  \"properties\":
-      {\n    \"results\": {\n      \"items\": {\n        \"$ref\": \"#/$defs/IndividualTriageResult\"\n      },\n      \"title\":
-      \"Results\",\n      \"type\": \"array\"\n    }\n  },\n  \"required\": [\n    \"results\"\n  ],\n  \"title\":
-      \"BatchTriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid
-      JSON instance, not the schema definition."},{"role":"user","content":"You are
-      a security expert triaging multiple static analysis results. Analyze each of
-      the following 2 tainted paths and determine if they are plausible vulnerabilities
-      or false positives.\n\n--- SLICE slice-1 ---\nLocation: unknown\nHit: Possible
-      SQL injection\nSource:\nuser_id = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT
-      * FROM users WHERE id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit:
-      Hardcoded password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor
-      each SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and
-      indicate if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT
-      ONLY VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."}],"model":"models/gemma-4-31b-it","response_format":{"type":"json_object"}}'
-    headers:
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '2591'
-      Content-Type:
-      - application/json
-      Host:
-      - generativelanguage.googleapis.com
-      User-Agent:
-      - OpenAI/Python 2.32.0
-      X-Stainless-Arch:
-      - arm64
-      X-Stainless-Async:
-      - 'false'
-      X-Stainless-Lang:
-      - python
-      X-Stainless-OS:
-      - MacOS
-      X-Stainless-Package-Version:
-      - 2.32.0
-      X-Stainless-Runtime:
-      - CPython
-      X-Stainless-Runtime-Version:
-      - 3.14.3
-      authorization:
-      - Bearer <REDACTED>
-      x-stainless-read-timeout:
-      - '600'
-      x-stainless-retry-count:
-      - '0'
-    method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
-  response:
-    body:
-      string: !!binary |
-        H4sIAAAAAAAC/7xX23IaORD9lS694GwBMfiaqXirvF5cca2z69hO5SGkQGjEoLUYTSQNNkvx79ut
-        uXDxLU/mAWqknm51n3O6xYKJiVFCOhZ9X7CxSpWbDKzkzqQsYs6bjDWZSmP5wKLdJptK53giWbRg
-        wqReph6tPvqJyZOJ//03ALjR6A06Edx8uQSV/iuFVyZt91MoP8HI5FbICIa5k3agYjgBK3/m0vk2
-        t4lrJ9LvNFTceDeEna9o0qJg1mgtY/SZ5f7dtkOV3qE7kVtnbFs+SJF7uTNu3PQue2e3aHJ+/c9n
-        oGgOvn3qXfdAxSeLMvoyxBm3nLcqTTCAlzYzmtPB6cmEXPB4dr4d9zTleu6Ui+B2IoujwdiaKXh8
-        LFMCTCmfYqkcKAexslgSPUdjjO5DQhiB7OsocK+opB4cT5VX/xUnMRYybvlU4vHKtTaGVcEtB6G5
-        c0ps1h1muU6l5SOllZ9vHf5K89ypYiuCTnt3a/+cayfhyjg8wwzR+ttsGZx960X01Tr+ADsU96KK
-        S3UqbFec6EbwidtYmBiTzvCw98bGzxHj6vTmBlnR6HT39g8aCM/q1QKm5xhg0hSPsFP5PyFHJY1i
-        4FSoagvGWFGsW/FGeeinwT1dvUQQStRJ5Q1fd56nvjwWYDGx3hohCJjSkYGnMT2kREDCeyMqjPNU
-        PAZTcguTOmdhZYwMUuj4bRA9+nAcagZmvIbaWX0Mt4nw0BHErc4weq6EfUYK4VmGhgWfrcSKyZmk
-        fGdc53KlHNL+I/mEMq7Jp1IpOlC+UBFf01CJB9YDvzmWudR3WWautbl3tMG95+JOWkAHUxRclpPT
-        LUWO5pBZM1MxeZtyTEKZ3JWKL7EOp64l2u6zV8DZ3L5wj+AZ0/MWzfMkwaIQFgRVnxXy245VKO7i
-        T7IooSGTR4B1XwJsk/UrMgbeb9G9FGrAiPpQQgIp+9qMW8VHGjNDLTbhfqLEhDyuJIGGmBTa4PTZ
-        EEe7Ih/FWomACg8u9IpCYUE0Dru+xeKCVe6OTokB5iAQ4pEEHGkKaRMrJ8xMoqc3xAfF9DpA3U2A
-        eqnLLSbmG5Ta8A/uxeQW65jIa+ly7YdgRtRsw6wgCxuW3RD1YnnVGNY8IeGDpFBA2PqU1DE6xvUM
-        X8Sqtj++r8b4gt7ts9Jhn0XwvfC2qHLoM17yhHZfkvZjXawk/MKgJBq9qvAnpI1TQBTSLZXpIDX1
-        HMXEN4eojJsbHYC4Usgc81mTeUl2iq8pBQpQd5lceKxvE7Blx5XVy1OYNVeFzNZYR8VE3q3tKjcI
-        JBtkJenIJKysGbmKcwNxLwtAqq6wbkUsw9tOYbDWFGh72fwFhIPSiuFX9OxS1g3SdaMi4mRrUJe9
-        fb1BoOaJGQhO7aNQ66rh1E3/V6ZlwSi6UeEkFmFmFdx4aoBu9463giM0gVfw6NZ40M+PfrrE27d8
-        8JYP6uv2giXGJDrcwUvFsghZKJfLJsM7Mm4w6sDhVsKWyx9NhsmjiGIWdY6ODg/3jo8Oj/FSj8/s
-        8/lMczk4+Osy/zqLL65+jo7GyZc7jDrF0mi0CL/ufSKnU97ab+11Ri3lcb/oPmggJty3hZlmWhIu
-        uJWv/iJUqwNv7mSKfzK6+3tNhhKbZr5eO9zDNW881/VSZ3/3YLn8HwAA//8DAAp1Cq+dDAAA
-    headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Date:
-      - Sun, 19 Apr 2026 22:46:08 GMT
-      Expires:
-      - Sun, 19 Apr 2026 22:46:08 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
-      Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=22259
-      Set-Cookie:
-      - NID=530=BSnzK5vJXaxRFw482kBtGCggK1m9yMiF5jFY7is5mdgcrHsbZMKZT-53i9OebANeQhx7PZW71EposyTlfgR9MnTweluEqYfuyEWcuB_G2kbPNGEYPIo4x9fOEKtbzsikU9esw_83cJGwweEepniDc6dNKK80tVegkEHx3DQxgEk3QFKlxODsP73O5LtXftoZhQo;
-        expires=Mon, 19-Oct-2026 22:45:46 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      - X-Origin
-      - Referer
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
-      return a JSON object matching this schema:\n\n        {\n  \"$defs\": {\n    \"IndividualTriageResult\":
-      {\n      \"properties\": {\n        \"analysis\": {\n          \"description\":
-      \"Step-by-step analysis of the tainted path\",\n          \"title\": \"Analysis\",\n          \"type\":
-      \"string\"\n        },\n        \"plausibility\": {\n          \"description\":
-      \"Likelihood of this being a real vulnerability\",\n          \"maximum\": 1,\n          \"minimum\":
-      0,\n          \"title\": \"Plausibility\",\n          \"type\": \"number\"\n        },\n        \"is_false_positive\":
-      {\n          \"title\": \"Is False Positive\",\n          \"type\": \"boolean\"\n        },\n        \"suggested_cwe\":
-      {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\":
-      \"null\"\n            }\n          ],\n          \"title\": \"Suggested Cwe\"\n        },\n        \"slice_id\":
-      {\n          \"title\": \"Slice Id\",\n          \"type\": \"string\"\n        }\n      },\n      \"required\":
-      [\n        \"analysis\",\n        \"plausibility\",\n        \"is_false_positive\",\n        \"suggested_cwe\",\n        \"slice_id\"\n      ],\n      \"title\":
-      \"IndividualTriageResult\",\n      \"type\": \"object\"\n    }\n  },\n  \"properties\":
-      {\n    \"results\": {\n      \"items\": {\n        \"$ref\": \"#/$defs/IndividualTriageResult\"\n      },\n      \"title\":
-      \"Results\",\n      \"type\": \"array\"\n    }\n  },\n  \"required\": [\n    \"results\"\n  ],\n  \"title\":
-      \"BatchTriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid
-      JSON instance, not the schema definition."},{"role":"user","content":"You are
-      a security expert triaging multiple static analysis results. Analyze each of
-      the following 2 tainted paths and determine if they are plausible vulnerabilities
-      or false positives.\n\n--- SLICE slice-1 ---\nLocation: unknown\nHit: Possible
-      SQL injection\nSource:\nuser_id = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT
-      * FROM users WHERE id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit:
-      Hardcoded password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor
-      each SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and
-      indicate if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT
-      ONLY VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."},{"role":"assistant","content":"<thought>*   Slice
-      1: SQL injection.\n        *   Source: `user_id = request.args.get(''id'')`
-      (User-controlled input).\n        *   Sink: `cursor.execute(f''SELECT * FROM
-      users WHERE id={user_id}'')` (f-string interpolation into SQL query).\n        *   Analysis:
-      The input from the request arguments is directly inserted into the SQL query
-      without sanitization or parameterization. This is a classic SQL injection vulnerability.\n        *   Plausibility:
-      1.0.\n        *   False Positive: No.\n        *   CWE: CWE-89 (SQL Injection).\n\n    *   Slice
-      2: Hardcoded password.\n        *   Source: `PASS = ''12345''` (Hardcoded string).\n        *   Sink:
-      `connect(password=PASS)` (Used as a password for a connection).\n        *   Analysis:
-      A password is defined as a constant string literal in the code and then used
-      in a connection function. This is a clear hardcoded credential vulnerability.\n        *   Plausibility:
-      1.0.\n        *   False Positive: No.\n        *   CWE: CWE-798 (Use of Hardcoded
-      Credentials).\n\n    *   `slice-1`:\n        *   Analysis: \"The application
-      retrieves a value from the ''id'' request argument and directly interpolates
-      it into a SQL query string using an f-string. This allows an attacker to manipulate
-      the SQL query by providing malicious input in the ''id'' parameter.\"\n        *   Plausibility:
-      1.0\n        *   Is False Positive: false\n        *   Suggested CWE: \"CWE-89\"\n        *   Slice
-      ID: \"slice-1\"\n\n    *   `slice-2`:\n        *   Analysis: \"A password is
-      hardcoded as a string literal ''12345'' and assigned to the variable PASS, which
-      is then used to establish a connection. Hardcoding credentials in source code
-      is a security risk as they can be easily discovered.\"\n        *   Plausibility:
-      1.0\n        *   Is False Positive: false\n        *   Suggested CWE: \"CWE-798\"\n        *   Slice
-      ID: \"slice-2\"\n\n    *   Ensure it''s a `BatchTriageResult` object with a
-      `results` array.\n    *   Ensure all required fields are present.</thought>{\n  \"results\":
-      [\n    {\n      \"analysis\": \"The application retrieves the ''id'' parameter
-      directly from the request arguments and interpolates it into a SQL query using
-      an f-string. Since the input is not sanitized or parameterized, an attacker
-      can provide a malicious string to alter the query structure, leading to a SQL
-      injection vulnerability.\",\n      \"plausibility\": 1.0,\n      \"is_false_positive\":
-      false,\n      \"suggested_cwe\": \"CWE-89\",\n      \"slice_id\": \"slice-1\"\n    },\n    {\n      \"analysis\":
-      \"The code defines a variable ''PASS'' with a hardcoded string value ''12345''
-      and uses this variable as the password argument in a connection function. This
-      is a direct instance of using hardcoded credentials in source code.\",\n      \"plausibility\":
-      1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\": \"CWE-798\",\n      \"slice_id\":
-      \"slice-2\"\n    }\n  ]\n}"},{"role":"user","content":"Correct your JSON ONLY
-      RESPONSE, based on the following errors:\n<failed_attempts>\n\n<generation number=\"1\">\n<exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')` (f-string
-      ...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''MFvlae_5KLuUvdIPqb7fgQk'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=''<thought>*   Slice
-      1: SQL injection.\\n        *   Source: `user_id = request.args.get(\\''id\\'')`
-      (User-controlled input).\\n        *   Sink: `cursor.execute(f\\''SELECT * FROM
-      users WHERE id={user_id}\\'')` (f-string interpolation into SQL query).\\n        *   Analysis:
-      The input from the request arguments is directly inserted into the SQL query
-      without sanitization or parameterization. This is a classic SQL injection vulnerability.\\n        *   Plausibility:
-      1.0.\\n        *   False Positive: No.\\n        *   CWE: CWE-89 (SQL Injection).\\n\\n    *   Slice
-      2: Hardcoded password.\\n        *   Source: `PASS = \\''12345\\''` (Hardcoded
-      string).\\n        *   Sink: `connect(password=PASS)` (Used as a password for
-      a connection).\\n        *   Analysis: A password is defined as a constant string
-      literal in the code and then used in a connection function. This is a clear
-      hardcoded credential vulnerability.\\n        *   Plausibility: 1.0.\\n        *   False
-      Positive: No.\\n        *   CWE: CWE-798 (Use of Hardcoded Credentials).\\n\\n    *   `slice-1`:\\n        *   Analysis:
-      \"The application retrieves a value from the \\''id\\'' request argument and
-      directly interpolates it into a SQL query string using an f-string. This allows
-      an attacker to manipulate the SQL query by providing malicious input in the
-      \\''id\\'' parameter.\"\\n        *   Plausibility: 1.0\\n        *   Is False
-      Positive: false\\n        *   Suggested CWE: \"CWE-89\"\\n        *   Slice
-      ID: \"slice-1\"\\n\\n    *   `slice-2`:\\n        *   Analysis: \"A password
-      is hardcoded as a string literal \\''12345\\'' and assigned to the variable
-      PASS, which is then used to establish a connection. Hardcoding credentials in
-      source code is a security risk as they can be easily discovered.\"\\n        *   Plausibility:
-      1.0\\n        *   Is False Positive: false\\n        *   Suggested CWE: \"CWE-798\"\\n        *   Slice
-      ID: \"slice-2\"\\n\\n    *   Ensure it\\''s a `BatchTriageResult` object with
-      a `results` array.\\n    *   Ensure all required fields are present.</thought>{\\n  \"results\":
-      [\\n    {\\n      \"analysis\": \"The application retrieves the \\''id\\'' parameter
-      directly from the request arguments and interpolates it into a SQL query using
-      an f-string. Since the input is not sanitized or parameterized, an attacker
-      can provide a malicious string to alter the query structure, leading to a SQL
-      injection vulnerability.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"The code defines a variable \\''PASS\\'' with a hardcoded string value \\''12345\\''
-      and uses this variable as the password argument in a connection function. This
-      is a direct instance of using hardcoded credentials in source code.\",\\n      \"plausibility\":
-      1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\": \"CWE-798\",\\n      \"slice_id\":
-      \"slice-2\"\\n    }\\n  ]\\n}'', refusal=None, role=''assistant'', annotations=None,
-      audio=None, function_call=None, tool_calls=None, extra_content={''google'':
-      {''thought'': True}}))], created=1776638768, model=''models/gemma-4-31b-it'',
-      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=243,
-      prompt_tokens=633, total_tokens=1405, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=0)))\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')` (f-string
-      ...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</last_exception>"}],"model":"models/gemma-4-31b-it","response_format":{"type":"json_object"}}'
-    headers:
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '10120'
-      Content-Type:
-      - application/json
-      Cookie:
-      - NID=530=BSnzK5vJXaxRFw482kBtGCggK1m9yMiF5jFY7is5mdgcrHsbZMKZT-53i9OebANeQhx7PZW71EposyTlfgR9MnTweluEqYfuyEWcuB_G2kbPNGEYPIo4x9fOEKtbzsikU9esw_83cJGwweEepniDc6dNKK80tVegkEHx3DQxgEk3QFKlxODsP73O5LtXftoZhQo
-      Host:
-      - generativelanguage.googleapis.com
-      User-Agent:
-      - OpenAI/Python 2.32.0
-      X-Stainless-Arch:
-      - arm64
-      X-Stainless-Async:
-      - 'false'
-      X-Stainless-Lang:
-      - python
-      X-Stainless-OS:
-      - MacOS
-      X-Stainless-Package-Version:
-      - 2.32.0
-      X-Stainless-Runtime:
-      - CPython
-      X-Stainless-Runtime-Version:
-      - 3.14.3
-      authorization:
-      - Bearer <REDACTED>
-      x-stainless-read-timeout:
-      - '600'
-      x-stainless-retry-count:
-      - '0'
-    method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
-  response:
-    body:
-      string: !!binary |
-        H4sIAAAAAAAC/9RWbW/bNhD+Kwd9cTLYau10TSq0A7I0xTJkTVqnLYa6sGmJtllTpEZScR3D/33P
-        UYqdohuG7VP3xbLI091zb8/dJskXVuXSJ9nHTTJTRvnF2EnhrUmyxAdbJd1EmUJ+SbLH3aSU3ou5
-        TLJNklsTpAmQeh4Wtp4vwk83C0m1l46UJycr64IycxL06/DqNd0KrQoRlDUknbOOZs6WuKycvFW2
-        9iRCkGUV0pFhPY1Ma48mFyZ+H1VltJRrKmsfaCqhwQcX7QTSykjqU251XRoaTMjX87n0wVNY4DpA
-        r61DVQdaCU/GBny910t2+lnmoUuV9V5N9RrqcwGHyM7it5OdpxMKYu5xz4aVyXVdyIIA2NsS4hB2
-        DKvOQ+2ERjx8LeHYyFxau2zBssad87ktKy1jdCpnbxWrU6axOhNKy2LcxsdPsiZCpS2k3hvfg0vT
-        9Pmjb5DOrJNR3wNXU7qJIGA8kPxSaZWrAL99EEH6jEbJSxvD1FohYdaQC05QwIOD6QH1Pj5Rc5ON
-        dJRAuICGq3c31+9u6Or15e/0/vTy4mUUwz2Hg83PbYwQBXvvelTmRcn2hF57XE5rBtEmO2eMlXBe
-        iqluzcK9UiB3K8Weh4i0jYHvcnhLFCv+cVEJtyzsytBU23zp23ShQszeCxW81LOYsmstDELeT+mt
-        7EVAd0CHUMlenw6Gby7VYXS1ORrQwS/CFbnlnFwL71fWFYdQNEjpzJqmKPZ2hHMCdSY8l49pa6LN
-        v88XshT49Cilc+Nr5E9MPWo7SPhvbJMDlFAuC+nZs5nV2q78Tn3EP2Rc6IrTNpbwpUdDW7tcZjRx
-        8o8aHZIKN/fpXIaDjio6h5Moo8wSEnntvHWp/CJzWD6YdYbnl+dnN/QDvXp79VtseE8ffjl/e06q
-        eLHh97Eqtq2S97U20omp0iqsM0K46MJw7XGpH5x9OO+dPOPw9AhxrtF2rWA/fRxPXwmNBry2XgV1
-        C8Dx/YFfg7/x6/p0OKQX1OkPjp782PnKH2sM7B9UbXJesOhfgt0n8swhxCYoGG9AHz87+W+oY9aH
-        LTVIYJ5MJp/BtiOzGRlCvzjpax38KMnoI58QbZoHX973A9+OEjT6KOnub6sHWFgCaB7cKj+eMYxx
-        1cJikXjyQKglTNBNvpKNlSZHXxmKpY4kNwJtL3BH8/W2+93ARpb+Efdgh5sfn0ZmG3OyZ9B/nxdm
-        NVExmzbzLogl+pMbo+drPo/kzmMozsDONz04GsHvgn8PO5FbCoUuZ9aT5VQWHvQEBSBMERsKX7s1
-        9MfBYmjWazkY7A7q1IJJDqxS8VASBkG8a3CBMcCi4NkgXXvWBTvGAQULvva5rIJijoUttqR2rYtp
-        FPWuwJ3M0+0BTOR4KWGmqjWmSOQizH3BHNcg/V8W7Sl5aRoIdM8c9+zC02ux4wpsFrudBE7JuAA0
-        1O4jOxHLxbTizHBdFBxfUfNr4KLhraalKcS6zSPms/WyIfd8x0fxS7O2WHx49JHIsczFYRrlYIkD
-        /303HFbMuFSMdzvlJplbO9dx0Wz7MMlAmnK77SbO8kWCJCgsKhDfbj91E4QEgSuSrH98/PTp0clJ
-        H/uqwnvyQd9qMbvTP3t1cVtcXD+Wd7PhGxiNGxQE4tM/msuyFL0nvaP+tKcC7pslCQI5tsd0v6Lh
-        qt6vwfen42CXKJEkGxwdd5NmqdqfPT151k2CDULvzo6e9I+32z8BAAD//wMAa/+ItoILAAA=
-    headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Date:
-      - Sun, 19 Apr 2026 22:46:50 GMT
-      Expires:
-      - Sun, 19 Apr 2026 22:46:50 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
-      Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=21258
-      Set-Cookie:
-      - NID=530=ZfpfiA7sAaGdpOhkcLmfXCPI0XFQXq1c5WzIXDaSdyZTYqsEv5h9TjTBUjVfmWdzitlDX0cjYZigRLyZduocNQQFwPtpWbFQiFNdVPdyZY4ksZG_Eh-DMNYM7LJWFCkZxTj51Q5SSvAyu8Ct7qMFcVoiLrhmSkUW4oEeWhvsOIWEpbyhXqYcXY_KFs73He0skOM;
-        expires=Mon, 19-Oct-2026 22:45:46 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      - X-Origin
-      - Referer
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
-      return a JSON object matching this schema:\n\n        {\n  \"$defs\": {\n    \"IndividualTriageResult\":
-      {\n      \"properties\": {\n        \"analysis\": {\n          \"description\":
-      \"Step-by-step analysis of the tainted path\",\n          \"title\": \"Analysis\",\n          \"type\":
-      \"string\"\n        },\n        \"plausibility\": {\n          \"description\":
-      \"Likelihood of this being a real vulnerability\",\n          \"maximum\": 1,\n          \"minimum\":
-      0,\n          \"title\": \"Plausibility\",\n          \"type\": \"number\"\n        },\n        \"is_false_positive\":
-      {\n          \"title\": \"Is False Positive\",\n          \"type\": \"boolean\"\n        },\n        \"suggested_cwe\":
-      {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\":
-      \"null\"\n            }\n          ],\n          \"title\": \"Suggested Cwe\"\n        },\n        \"slice_id\":
-      {\n          \"title\": \"Slice Id\",\n          \"type\": \"string\"\n        }\n      },\n      \"required\":
-      [\n        \"analysis\",\n        \"plausibility\",\n        \"is_false_positive\",\n        \"suggested_cwe\",\n        \"slice_id\"\n      ],\n      \"title\":
-      \"IndividualTriageResult\",\n      \"type\": \"object\"\n    }\n  },\n  \"properties\":
-      {\n    \"results\": {\n      \"items\": {\n        \"$ref\": \"#/$defs/IndividualTriageResult\"\n      },\n      \"title\":
-      \"Results\",\n      \"type\": \"array\"\n    }\n  },\n  \"required\": [\n    \"results\"\n  ],\n  \"title\":
-      \"BatchTriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid
-      JSON instance, not the schema definition."},{"role":"user","content":"You are
-      a security expert triaging multiple static analysis results. Analyze each of
-      the following 2 tainted paths and determine if they are plausible vulnerabilities
-      or false positives.\n\n--- SLICE slice-1 ---\nLocation: unknown\nHit: Possible
-      SQL injection\nSource:\nuser_id = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT
-      * FROM users WHERE id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit:
-      Hardcoded password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor
-      each SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and
-      indicate if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT
-      ONLY VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."},{"role":"assistant","content":"<thought>*   Slice
-      1: SQL injection.\n        *   Source: `user_id = request.args.get(''id'')`
-      (User-controlled input).\n        *   Sink: `cursor.execute(f''SELECT * FROM
-      users WHERE id={user_id}'')` (f-string interpolation into SQL query).\n        *   Analysis:
-      The input from the request arguments is directly inserted into the SQL query
-      without sanitization or parameterization. This is a classic SQL injection vulnerability.\n        *   Plausibility:
-      1.0.\n        *   False Positive: No.\n        *   CWE: CWE-89 (SQL Injection).\n\n    *   Slice
-      2: Hardcoded password.\n        *   Source: `PASS = ''12345''` (Hardcoded string).\n        *   Sink:
-      `connect(password=PASS)` (Used as a password for a connection).\n        *   Analysis:
-      A password is defined as a constant string literal in the code and then used
-      in a connection function. This is a clear hardcoded credential vulnerability.\n        *   Plausibility:
-      1.0.\n        *   False Positive: No.\n        *   CWE: CWE-798 (Use of Hardcoded
-      Credentials).\n\n    *   `slice-1`:\n        *   Analysis: \"The application
-      retrieves a value from the ''id'' request argument and directly interpolates
-      it into a SQL query string using an f-string. This allows an attacker to manipulate
-      the SQL query by providing malicious input in the ''id'' parameter.\"\n        *   Plausibility:
-      1.0\n        *   Is False Positive: false\n        *   Suggested CWE: \"CWE-89\"\n        *   Slice
-      ID: \"slice-1\"\n\n    *   `slice-2`:\n        *   Analysis: \"A password is
-      hardcoded as a string literal ''12345'' and assigned to the variable PASS, which
-      is then used to establish a connection. Hardcoding credentials in source code
-      is a security risk as they can be easily discovered.\"\n        *   Plausibility:
-      1.0\n        *   Is False Positive: false\n        *   Suggested CWE: \"CWE-798\"\n        *   Slice
-      ID: \"slice-2\"\n\n    *   Ensure it''s a `BatchTriageResult` object with a
-      `results` array.\n    *   Ensure all required fields are present.</thought>{\n  \"results\":
-      [\n    {\n      \"analysis\": \"The application retrieves the ''id'' parameter
-      directly from the request arguments and interpolates it into a SQL query using
-      an f-string. Since the input is not sanitized or parameterized, an attacker
-      can provide a malicious string to alter the query structure, leading to a SQL
-      injection vulnerability.\",\n      \"plausibility\": 1.0,\n      \"is_false_positive\":
-      false,\n      \"suggested_cwe\": \"CWE-89\",\n      \"slice_id\": \"slice-1\"\n    },\n    {\n      \"analysis\":
-      \"The code defines a variable ''PASS'' with a hardcoded string value ''12345''
-      and uses this variable as the password argument in a connection function. This
-      is a direct instance of using hardcoded credentials in source code.\",\n      \"plausibility\":
-      1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\": \"CWE-798\",\n      \"slice_id\":
-      \"slice-2\"\n    }\n  ]\n}"},{"role":"user","content":"Correct your JSON ONLY
-      RESPONSE, based on the following errors:\n<failed_attempts>\n\n<generation number=\"1\">\n<exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')` (f-string
-      ...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''MFvlae_5KLuUvdIPqb7fgQk'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=''<thought>*   Slice
-      1: SQL injection.\\n        *   Source: `user_id = request.args.get(\\''id\\'')`
-      (User-controlled input).\\n        *   Sink: `cursor.execute(f\\''SELECT * FROM
-      users WHERE id={user_id}\\'')` (f-string interpolation into SQL query).\\n        *   Analysis:
-      The input from the request arguments is directly inserted into the SQL query
-      without sanitization or parameterization. This is a classic SQL injection vulnerability.\\n        *   Plausibility:
-      1.0.\\n        *   False Positive: No.\\n        *   CWE: CWE-89 (SQL Injection).\\n\\n    *   Slice
-      2: Hardcoded password.\\n        *   Source: `PASS = \\''12345\\''` (Hardcoded
-      string).\\n        *   Sink: `connect(password=PASS)` (Used as a password for
-      a connection).\\n        *   Analysis: A password is defined as a constant string
-      literal in the code and then used in a connection function. This is a clear
-      hardcoded credential vulnerability.\\n        *   Plausibility: 1.0.\\n        *   False
-      Positive: No.\\n        *   CWE: CWE-798 (Use of Hardcoded Credentials).\\n\\n    *   `slice-1`:\\n        *   Analysis:
-      \"The application retrieves a value from the \\''id\\'' request argument and
-      directly interpolates it into a SQL query string using an f-string. This allows
-      an attacker to manipulate the SQL query by providing malicious input in the
-      \\''id\\'' parameter.\"\\n        *   Plausibility: 1.0\\n        *   Is False
-      Positive: false\\n        *   Suggested CWE: \"CWE-89\"\\n        *   Slice
-      ID: \"slice-1\"\\n\\n    *   `slice-2`:\\n        *   Analysis: \"A password
-      is hardcoded as a string literal \\''12345\\'' and assigned to the variable
-      PASS, which is then used to establish a connection. Hardcoding credentials in
-      source code is a security risk as they can be easily discovered.\"\\n        *   Plausibility:
-      1.0\\n        *   Is False Positive: false\\n        *   Suggested CWE: \"CWE-798\"\\n        *   Slice
-      ID: \"slice-2\"\\n\\n    *   Ensure it\\''s a `BatchTriageResult` object with
-      a `results` array.\\n    *   Ensure all required fields are present.</thought>{\\n  \"results\":
-      [\\n    {\\n      \"analysis\": \"The application retrieves the \\''id\\'' parameter
-      directly from the request arguments and interpolates it into a SQL query using
-      an f-string. Since the input is not sanitized or parameterized, an attacker
-      can provide a malicious string to alter the query structure, leading to a SQL
-      injection vulnerability.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"The code defines a variable \\''PASS\\'' with a hardcoded string value \\''12345\\''
-      and uses this variable as the password argument in a connection function. This
-      is a direct instance of using hardcoded credentials in source code.\",\\n      \"plausibility\":
-      1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\": \"CWE-798\",\\n      \"slice_id\":
-      \"slice-2\"\\n    }\\n  ]\\n}'', refusal=None, role=''assistant'', annotations=None,
-      audio=None, function_call=None, tool_calls=None, extra_content={''google'':
-      {''thought'': True}}))], created=1776638768, model=''models/gemma-4-31b-it'',
-      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=243,
-      prompt_tokens=633, total_tokens=1405, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=0)))\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')` (f-string
-      ...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</last_exception>"},{"role":"assistant","content":"<thought>The
-      user is reporting a JSON validation error from a previous attempt.\nThe error
-      message `Invalid JSON: key must be a string at line 1 column 2` suggests that
-      the output was not a valid JSON object, possibly because of the `<thought>`
-      tags being included or some other structural issue.\n\nLooking at the previous
-      completion provided in the `failed_attempts`:\nThe model included `<thought>...</thought>`
-      tags before the JSON object. The prompt explicitly states: \"Do not include
-      any extra text outside of the JSON string.\" and \"OUTPUT ONLY VALID JSON.\"\n\nThe
-      goal is to provide the same analysis but in a strictly parseable JSON format,
-      without any thoughts, comments, or markdown blocks other than the JSON itself.\n\nPlan:\n1.
-      Re-analyze slice-1 (SQLi) and slice-2 (Hardcoded Password).\n2. Construct the
-      JSON array based on the provided schema.\n3. Ensure absolutely no text precedes
-      or follows the JSON.\n\nSlice 1 Analysis:\n- Source: `request.args.get(''id'')`\n-
-      Sink: `cursor.execute(f''SELECT * FROM users WHERE id={user_id}'')`\n- Vulnerability:
-      SQL Injection (CWE-89).\n- Plausibility: 1.0.\n- False Positive: False.\n\nSlice
-      2 Analysis:\n- Source: `PASS = ''12345''`\n- Sink: `connect(password=PASS)`\n-
-      Vulnerability: Hardcoded Credentials (CWE-798).\n- Plausibility: 1.0.\n- False
-      Positive: False.\n\nJSON Structure:\n```json\n{\n  \"results\": [\n    {\n      \"analysis\":
-      \"...\",\n      \"plausibility\": 1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\":
-      \"CWE-89\",\n      \"slice_id\": \"slice-1\"\n    },\n    {\n      \"analysis\":
-      \"...\",\n      \"plausibility\": 1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\":
-      \"CWE-798\",\n      \"slice_id\": \"slice-2\"\n    }\n  ]\n}\n```</thought>{\n  \"results\":
-      [\n    {\n      \"analysis\": \"The application takes user-supplied input from
-      ''request.args.get(\\\"id\\\")'' and directly embeds it into a SQL query using
-      an f-string. This lacks proper sanitization or parameterization, making it susceptible
-      to SQL injection attacks where an attacker can manipulate the database query.\",\n      \"plausibility\":
-      1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\": \"CWE-89\",\n      \"slice_id\":
-      \"slice-1\"\n    },\n    {\n      \"analysis\": \"A sensitive password ''12345''
-      is hardcoded as a string literal in the source code and then used to authenticate
-      a connection. This exposes the credential to anyone with access to the codebase.\",\n      \"plausibility\":
-      1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\": \"CWE-798\",\n      \"slice_id\":
-      \"slice-2\"\n    }\n  ]\n}"},{"role":"user","content":"Correct your JSON ONLY
-      RESPONSE, based on the following errors:\n<failed_attempts>\n\n<generation number=\"1\">\n<exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')` (f-string
-      ...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''MFvlae_5KLuUvdIPqb7fgQk'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=''<thought>*   Slice
-      1: SQL injection.\\n        *   Source: `user_id = request.args.get(\\''id\\'')`
-      (User-controlled input).\\n        *   Sink: `cursor.execute(f\\''SELECT * FROM
-      users WHERE id={user_id}\\'')` (f-string interpolation into SQL query).\\n        *   Analysis:
-      The input from the request arguments is directly inserted into the SQL query
-      without sanitization or parameterization. This is a classic SQL injection vulnerability.\\n        *   Plausibility:
-      1.0.\\n        *   False Positive: No.\\n        *   CWE: CWE-89 (SQL Injection).\\n\\n    *   Slice
-      2: Hardcoded password.\\n        *   Source: `PASS = \\''12345\\''` (Hardcoded
-      string).\\n        *   Sink: `connect(password=PASS)` (Used as a password for
-      a connection).\\n        *   Analysis: A password is defined as a constant string
-      literal in the code and then used in a connection function. This is a clear
-      hardcoded credential vulnerability.\\n        *   Plausibility: 1.0.\\n        *   False
-      Positive: No.\\n        *   CWE: CWE-798 (Use of Hardcoded Credentials).\\n\\n    *   `slice-1`:\\n        *   Analysis:
-      \"The application retrieves a value from the \\''id\\'' request argument and
-      directly interpolates it into a SQL query string using an f-string. This allows
-      an attacker to manipulate the SQL query by providing malicious input in the
-      \\''id\\'' parameter.\"\\n        *   Plausibility: 1.0\\n        *   Is False
-      Positive: false\\n        *   Suggested CWE: \"CWE-89\"\\n        *   Slice
-      ID: \"slice-1\"\\n\\n    *   `slice-2`:\\n        *   Analysis: \"A password
-      is hardcoded as a string literal \\''12345\\'' and assigned to the variable
-      PASS, which is then used to establish a connection. Hardcoding credentials in
-      source code is a security risk as they can be easily discovered.\"\\n        *   Plausibility:
-      1.0\\n        *   Is False Positive: false\\n        *   Suggested CWE: \"CWE-798\"\\n        *   Slice
-      ID: \"slice-2\"\\n\\n    *   Ensure it\\''s a `BatchTriageResult` object with
-      a `results` array.\\n    *   Ensure all required fields are present.</thought>{\\n  \"results\":
-      [\\n    {\\n      \"analysis\": \"The application retrieves the \\''id\\'' parameter
-      directly from the request arguments and interpolates it into a SQL query using
-      an f-string. Since the input is not sanitized or parameterized, an attacker
-      can provide a malicious string to alter the query structure, leading to a SQL
-      injection vulnerability.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"The code defines a variable \\''PASS\\'' with a hardcoded string value \\''12345\\''
-      and uses this variable as the password argument in a connection function. This
-      is a direct instance of using hardcoded credentials in source code.\",\\n      \"plausibility\":
-      1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\": \"CWE-798\",\\n      \"slice_id\":
-      \"slice-2\"\\n    }\\n  ]\\n}'', refusal=None, role=''assistant'', annotations=None,
-      audio=None, function_call=None, tool_calls=None, extra_content={''google'':
-      {''thought'': True}}))], created=1776638768, model=''models/gemma-4-31b-it'',
-      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=243,
-      prompt_tokens=633, total_tokens=1405, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=0)))\n</completion>\n</generation>\n\n<generation number=\"2\">\n<exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')`\\n- Vulnera...slice-2\"\\n    }\\n  ]\\n}'',
-      input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''WlvlafzlBsiIvdIP0ezfSQ'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=''<thought>The
-      user is reporting a JSON validation error from a previous attempt.\\nThe error
-      message `Invalid JSON: key must be a string at line 1 column 2` suggests that
-      the output was not a valid JSON object, possibly because of the `<thought>`
-      tags being included or some other structural issue.\\n\\nLooking at the previous
-      completion provided in the `failed_attempts`:\\nThe model included `<thought>...</thought>`
-      tags before the JSON object. The prompt explicitly states: \"Do not include
-      any extra text outside of the JSON string.\" and \"OUTPUT ONLY VALID JSON.\"\\n\\nThe
-      goal is to provide the same analysis but in a strictly parseable JSON format,
-      without any thoughts, comments, or markdown blocks other than the JSON itself.\\n\\nPlan:\\n1.
-      Re-analyze slice-1 (SQLi) and slice-2 (Hardcoded Password).\\n2. Construct the
-      JSON array based on the provided schema.\\n3. Ensure absolutely no text precedes
-      or follows the JSON.\\n\\nSlice 1 Analysis:\\n- Source: `request.args.get(\\''id\\'')`\\n-
-      Sink: `cursor.execute(f\\''SELECT * FROM users WHERE id={user_id}\\'')`\\n-
-      Vulnerability: SQL Injection (CWE-89).\\n- Plausibility: 1.0.\\n- False Positive:
-      False.\\n\\nSlice 2 Analysis:\\n- Source: `PASS = \\''12345\\''`\\n- Sink: `connect(password=PASS)`\\n-
-      Vulnerability: Hardcoded Credentials (CWE-798).\\n- Plausibility: 1.0.\\n- False
-      Positive: False.\\n\\nJSON Structure:\\n```json\\n{\\n  \"results\": [\\n    {\\n      \"analysis\":
-      \"...\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\":
-      \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"...\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\":
-      \"CWE-798\",\\n      \"slice_id\": \"slice-2\"\\n    }\\n  ]\\n}\\n```</thought>{\\n  \"results\":
-      [\\n    {\\n      \"analysis\": \"The application takes user-supplied input
-      from \\''request.args.get(\\\\\"id\\\\\")\\'' and directly embeds it into a
-      SQL query using an f-string. This lacks proper sanitization or parameterization,
-      making it susceptible to SQL injection attacks where an attacker can manipulate
-      the database query.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"A sensitive password \\''12345\\'' is hardcoded as a string literal in the
-      source code and then used to authenticate a connection. This exposes the credential
-      to anyone with access to the codebase.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-798\",\\n      \"slice_id\": \"slice-2\"\\n    }\\n  ]\\n}'',
-      refusal=None, role=''assistant'', annotations=None, audio=None, function_call=None,
-      tool_calls=None, extra_content={''google'': {''thought'': True}}))], created=1776638810,
-      model=''models/gemma-4-31b-it'', object=''chat.completion'', service_tier=None,
-      system_fingerprint=None, usage=CompletionUsage(completion_tokens=480, prompt_tokens=3322,
-      total_tokens=4822, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=0)))\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')`\\n- Vulnera...slice-2\"\\n    }\\n  ]\\n}'',
-      input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</last_exception>"}],"model":"models/gemma-4-31b-it","response_format":{"type":"json_object"}}'
-    headers:
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '21209'
-      Content-Type:
-      - application/json
-      Cookie:
-      - NID=530=ZfpfiA7sAaGdpOhkcLmfXCPI0XFQXq1c5WzIXDaSdyZTYqsEv5h9TjTBUjVfmWdzitlDX0cjYZigRLyZduocNQQFwPtpWbFQiFNdVPdyZY4ksZG_Eh-DMNYM7LJWFCkZxTj51Q5SSvAyu8Ct7qMFcVoiLrhmSkUW4oEeWhvsOIWEpbyhXqYcXY_KFs73He0skOM
-      Host:
-      - generativelanguage.googleapis.com
-      User-Agent:
-      - OpenAI/Python 2.32.0
-      X-Stainless-Arch:
-      - arm64
-      X-Stainless-Async:
-      - 'false'
-      X-Stainless-Lang:
-      - python
-      X-Stainless-OS:
-      - MacOS
-      X-Stainless-Package-Version:
-      - 2.32.0
-      X-Stainless-Runtime:
-      - CPython
-      X-Stainless-Runtime-Version:
-      - 3.14.3
-      authorization:
-      - Bearer <REDACTED>
-      x-stainless-read-timeout:
-      - '600'
-      x-stainless-retry-count:
-      - '0'
-    method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
-  response:
-    body:
-      string: !!binary |
-        H4sIAAAAAAAC/+xW34/aOBD+V0Z+YXcFtLDdH426J1U9VuW0bbdlperUVMQkk8TF2KntwHKI//3G
-        ToBFp9Pt0z31hRB7xjPzzfc5s2FpqUWKlkXfNiwXSthyapBbrVjErNMV6zKhMnxk0csuW6C1vEAW
-        bViqlUPlyOqNK3VdlO63hxKhtmhAWDBYIXeYyTX9TVEshSqAwx+TTx9hyaXIuBNaARqjTT9Wd1rP
-        g4UDR6ckORcSsyl3DheVs0k3LC90hhLmiJUFoVJZZ94n2SeQgOOFhRnm2mDwCPH07AemjqL4BENE
-        SMYqZBEMIjpyDYvaOnKlJK0zbS5SKIQBpFrWCwXDxFem07Q2wWCGKad6Q6CKm7ZyZ9Z+02kqnGdN
-        OccZwol13DhvtRKupO3kFLgNubRZ2rWlyqlIyqVOPVQWONW0RLOGVCI3EcTsdw1KuxYKylytAR+d
-        4eDoAbp2VtCyzg9QNKX1Y0bG2eGEAhUaalc4ItWLBXXWQxz8vfMPIgTMpE7n5BurWI0bvChGVTs4
-        00quz/6BOHzUsOBmnulV6227FA9aNEK3wgI+VpKrQIm+P/2t4nJtCUxqJEwkERQGUax6MNG1STGC
-        xODPGq3rc1PYfoHupCOyzmkSbISakwV1yRK38BHT2uFJ3pmM7kbvHuAMbr98+hCIauHr+9GXEYjs
-        ZuPfpyLbtoeMra0pzuTzHYyVL8azdSk45L0dhmT17uso8j+969fh/V4SIcRMSOHWEQz6L8Pq7X0E
-        OZcW/6224XFt928nE7iBzmB4/uqic1STVopyOam4tSttshtvepTwe26ylGSSwc7mONGr19fPzvRW
-        UKp73hANa4OUaZIkng6x2sQKiEMGbS2djVkE3/wKwKZ5+E3eVut3Y+apzauKim7kb5CwxCXaQB3f
-        Qi8kvkBHWsqNXoT1ttckgKJumOnJmwm6WBzdL4IuIlNpSfwlzno5kPZ4aB35kV6oUC9ndegdPJTU
-        AC6lXvnDSOqOp3OKSZ4itJuCzQRJidz9QV4TFJTYStrLWn03McSBHrX0MmpAJZ10DzBUT+D2UBDg
-        T3aFnQbUp5W2woklepOw8sTI1kVBKNCtmK6wgbNh3lEg6wlFPG4Mwltv4CXrt7fdZ/RnyY3gM0nt
-        8OTq+CuNmCQKRZziUO751d6SLUu7sCpFWoYLsETl5ZX5O43veUhAhW7uOHwKea0CcP0da/15qcGM
-        eiyoeu9hgyjAhwyZgM9E5EQg5cCStA0hCkbY+f8FOCnoPxEf7hH3j++x2gbZvHmx+w78ks4v6fyS
-        zvOkQxNomGqm+5FzwwqtCxnm0FZRLKIvFG63XWa032AeeBqzyHy7/d5lhI0fR1k0uLq6vDy/vr4Y
-        0GBL76wYLCX/k6fjOr9XdnT/V74Y688fKGoYN8kiPO2LAonIvVe988GsJxztN1MOGaQld33ieSXR
-        N4W26sOYvFudOj1HRYP2cHjZZRUptHL7tYvrwVWXOe243K9dXlxcbbd/AwAA//8DALi5z/miCwAA
-    headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Date:
-      - Sun, 19 Apr 2026 22:47:31 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=21284
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      - X-Origin
-      - Referer
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
-      return a JSON object matching this schema:\n\n        {\n  \"$defs\": {\n    \"IndividualTriageResult\":
-      {\n      \"properties\": {\n        \"analysis\": {\n          \"description\":
-      \"Step-by-step analysis of the tainted path\",\n          \"title\": \"Analysis\",\n          \"type\":
-      \"string\"\n        },\n        \"plausibility\": {\n          \"description\":
-      \"Likelihood of this being a real vulnerability\",\n          \"maximum\": 1,\n          \"minimum\":
-      0,\n          \"title\": \"Plausibility\",\n          \"type\": \"number\"\n        },\n        \"is_false_positive\":
-      {\n          \"title\": \"Is False Positive\",\n          \"type\": \"boolean\"\n        },\n        \"suggested_cwe\":
-      {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\":
-      \"null\"\n            }\n          ],\n          \"title\": \"Suggested Cwe\"\n        },\n        \"slice_id\":
-      {\n          \"title\": \"Slice Id\",\n          \"type\": \"string\"\n        }\n      },\n      \"required\":
-      [\n        \"analysis\",\n        \"plausibility\",\n        \"is_false_positive\",\n        \"suggested_cwe\",\n        \"slice_id\"\n      ],\n      \"title\":
-      \"IndividualTriageResult\",\n      \"type\": \"object\"\n    }\n  },\n  \"properties\":
-      {\n    \"results\": {\n      \"items\": {\n        \"$ref\": \"#/$defs/IndividualTriageResult\"\n      },\n      \"title\":
-      \"Results\",\n      \"type\": \"array\"\n    }\n  },\n  \"required\": [\n    \"results\"\n  ],\n  \"title\":
-      \"BatchTriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid
-      JSON instance, not the schema definition."},{"role":"user","content":"You are
-      a security expert triaging multiple static analysis results. Analyze each of
-      the following 2 tainted paths and determine if they are plausible vulnerabilities
-      or false positives.\n\n--- SLICE slice-1 ---\nLocation: unknown\nHit: Possible
-      SQL injection\nSource:\nuser_id = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT
-      * FROM users WHERE id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit:
-      Hardcoded password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor
-      each SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and
-      indicate if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT
-      ONLY VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."}],"model":"models/gemma-4-31b-it","response_format":{"type":"json_object"}}'
-    headers:
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '2591'
-      Content-Type:
-      - application/json
-      Host:
-      - generativelanguage.googleapis.com
-      User-Agent:
-      - OpenAI/Python 2.32.0
-      X-Stainless-Arch:
-      - arm64
-      X-Stainless-Async:
-      - 'false'
-      X-Stainless-Lang:
-      - python
-      X-Stainless-OS:
-      - MacOS
-      X-Stainless-Package-Version:
-      - 2.32.0
-      X-Stainless-Runtime:
-      - CPython
-      X-Stainless-Runtime-Version:
-      - 3.14.3
-      authorization:
-      - Bearer <REDACTED>
-      x-stainless-read-timeout:
-      - '600'
-      x-stainless-retry-count:
-      - '0'
-    method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
-  response:
-    body:
-      string: !!binary |
-        H4sIAAAAAAAC/7xVbW/bNhD+Kwd+sTPYbm13eRGaAUPgIQWyLY3TBkNd2DR1krhQpMYXJ4bh/76j
-        ZMWOh6IDBswfJIt3vJfnuYfcMFEYKdCx5MuGZVJLV8wtcmc0S5jzpmI9JnWKzyx522MlOsdzZMmG
-        CaM9ak9e731hQl74n34AgKmiaDBMZhp2v3rVBCswgUVwaOcyhUuw+FdA5wfc5m6Qo+92ZNo5WUD3
-        E7n0Y3RrlMIUpK6Ch8yaEmiHXUPFLS/Ro3Ung6M0Uj9SEhGsM3aAzyiCx27WmU5uJlf35PLL3e+/
-        QqzBwcP15G4CMr3c7Gra1tmn3kqdQ2Zsyb2Pf8mcgjewDFKlwGH68aYp5Dj756A0Wr6USvp1AleK
-        OydF7f9B/4nCS6OPttwqHpxsd1zLvIDucPD2OPLVwySJj/75BVka2x7s0bfAvv15OiWkO8PR+N2P
-        HWrumttUmJT6cXWb38LPaE3lditq4MnY9DIGaqiJgPgCoTiKBNwRNO2G7yBDDIPJIFbTb4JcWUxp
-        mCRX7j8idHZx/hoiUWDJ62mTFh11R8+gvFsAt5avIU4ap7mnHhYfdCpXMg1c3VtJc35Xuy7ALCN9
-        bWkx7ISLYrcMGjGNgbnmau2kW/RgUR2UHb+lm2fUHM4r46SXK4yLLuQ5SQDTuXhqFiKfNIqLwfs3
-        rag2MemM7aqesQS+NGVsWgRmrM0crTN2T/zwqqJYPI4c9U4U4QojQyuuAjZiijRGzbVKJDzyUBIL
-        wHUKKaElvFoDlktqD6QnIZIKDuaflFEzryHrN1MwgPtCUhqlzJOLBpIQF49oo35KrmUVFPdYp96H
-        WZKkrSHcYzRXoaAxoMTC8sy3+u+BQl471DWIA23JVluwOhyzwYz19ggd8hFRohE6sP6DnehSrxw4
-        vWKrQbqR5KtELYWNQ/3VH85Y47Dt/QvqVpxmb6mInCi7DkRAqdlcYzx9nCdSRau6hs7uTuEnNXMu
-        LF1kVEf26sPrlTYJrwhgI/GIWhZ0czQ15MV0hC9yS56UTYtarHvBi71We/BUSBJCvSeWKDMaOpog
-        RyevJajBSvf4fzFB0v8uFaMXKuLr60xv6X7DZ2/5/OVC27DcmFzVt9xOhSzxNuB222N0KZGBRUYi
-        OJ5tt197jDChuU5ZMjw7Oz0dX5yPx3Rt0jd7+DxXPNPFb6b/x2P66Ta/OZ3nHyeUtSQ0FXnUb/cm
-        x7Lk/Xf98XDZl57szelCDqLgfiBMWSmMPJEp7C/hdnXuzSNqusZpEnqM9FRW/mXtNJbjjefqZWk4
-        HI22278BAAD//wMAtTpUbf8HAAA=
-    headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Date:
-      - Sun, 19 Apr 2026 23:03:53 GMT
-      Expires:
-      - Sun, 19 Apr 2026 23:03:53 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
-      Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=14411
-      Set-Cookie:
-      - NID=530=Axq-qNm2_wUssXpQIGa38y4IzVULDywMVYLcdrAuBG__PYPWF2JIT2-M6ZUI2sWdRZJPpieiYRLEqIFIsm6ZRgyK99vTXK6tXfsKP1UbJ9X-Aza1jmt8ORjImddQjjKUkJwQ-t2LXvl6KnYY1QGm9RLNo7SmmzBEUUfCSPTZRD1EEzDniMRGVLGTTpB9-r4CpA;
-        expires=Mon, 19-Oct-2026 23:03:39 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      - X-Origin
-      - Referer
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
-      return a JSON object matching this schema:\n\n        {\n  \"$defs\": {\n    \"IndividualTriageResult\":
-      {\n      \"properties\": {\n        \"analysis\": {\n          \"description\":
-      \"Step-by-step analysis of the tainted path\",\n          \"title\": \"Analysis\",\n          \"type\":
-      \"string\"\n        },\n        \"plausibility\": {\n          \"description\":
-      \"Likelihood of this being a real vulnerability\",\n          \"maximum\": 1,\n          \"minimum\":
-      0,\n          \"title\": \"Plausibility\",\n          \"type\": \"number\"\n        },\n        \"is_false_positive\":
-      {\n          \"title\": \"Is False Positive\",\n          \"type\": \"boolean\"\n        },\n        \"suggested_cwe\":
-      {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\":
-      \"null\"\n            }\n          ],\n          \"title\": \"Suggested Cwe\"\n        },\n        \"slice_id\":
-      {\n          \"title\": \"Slice Id\",\n          \"type\": \"string\"\n        }\n      },\n      \"required\":
-      [\n        \"analysis\",\n        \"plausibility\",\n        \"is_false_positive\",\n        \"suggested_cwe\",\n        \"slice_id\"\n      ],\n      \"title\":
-      \"IndividualTriageResult\",\n      \"type\": \"object\"\n    }\n  },\n  \"properties\":
-      {\n    \"results\": {\n      \"items\": {\n        \"$ref\": \"#/$defs/IndividualTriageResult\"\n      },\n      \"title\":
-      \"Results\",\n      \"type\": \"array\"\n    }\n  },\n  \"required\": [\n    \"results\"\n  ],\n  \"title\":
-      \"BatchTriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid
-      JSON instance, not the schema definition."},{"role":"user","content":"You are
-      a security expert triaging multiple static analysis results. Analyze each of
-      the following 2 tainted paths and determine if they are plausible vulnerabilities
-      or false positives.\n\n--- SLICE slice-1 ---\nLocation: unknown\nHit: Possible
-      SQL injection\nSource:\nuser_id = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT
-      * FROM users WHERE id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit:
-      Hardcoded password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor
-      each SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and
-      indicate if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT
-      ONLY VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."},{"role":"assistant","content":"<thought>*   Slice
-      1:\n        *   Source: `user_id = request.args.get(''id'')` (User-controlled
-      input from query parameters).\n        *   Sink: `cursor.execute(f''SELECT *
-      FROM users WHERE id={user_id}'')` (String formatting used to build a SQL query).\n        *   Vulnerability:
-      Classic SQL Injection.\n        *   Plausibility: High (1.0).\n        *   CWE:
-      CWE-89.\n\n    *   Slice 2:\n        *   Source: `PASS = ''12345''` (Hardcoded
-      string).\n        *   Sink: `connect(password=PASS)` (Using the hardcoded string
-      as a password).\n        *   Vulnerability: Use of Hard-coded Credentials.\n        *   Plausibility:
-      High (1.0).\n        *   CWE: CWE-798.\n\n    *   Schema requires: `results`
-      array containing `IndividualTriageResult` objects.\n    *   Each object needs:
-      `analysis`, `plausibility`, `is_false_positive`, `suggested_cwe`, `slice_id`.</thought>{\n  \"results\":
-      [\n    {\n      \"analysis\": \"The application retrieves a value from the ''id''
-      request argument and directly embeds it into a SQL query using an f-string.
-      This allows an attacker to manipulate the SQL query by providing specially crafted
-      input, leading to a classic SQL injection vulnerability.\",\n      \"plausibility\":
-      1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\": \"CWE-89\",\n      \"slice_id\":
-      \"slice-1\"\n    },\n    {\n      \"analysis\": \"The variable ''PASS'' is assigned
-      a static string value (''12345'') and subsequently used as a password in a connection
-      function. This is a clear instance of hardcoded credentials, which is a significant
-      security risk.\",\n      \"plausibility\": 1.0,\n      \"is_false_positive\":
-      false,\n      \"suggested_cwe\": \"CWE-798\",\n      \"slice_id\": \"slice-2\"\n    }\n  ]\n}"},{"role":"user","content":"Correct
-      your JSON ONLY RESPONSE, based on the following errors:\n<failed_attempts>\n\n<generation
-      number=\"1\">\n<exception>\n    1 validation error for BatchTriageResult\n  Invalid
-      JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')`
-      (String fo...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further
-      information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''WV_lafnhNo-YkdUPgL6_gQE'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=''<thought>*   Slice
-      1:\\n        *   Source: `user_id = request.args.get(\\''id\\'')` (User-controlled
-      input from query parameters).\\n        *   Sink: `cursor.execute(f\\''SELECT
-      * FROM users WHERE id={user_id}\\'')` (String formatting used to build a SQL
-      query).\\n        *   Vulnerability: Classic SQL Injection.\\n        *   Plausibility:
-      High (1.0).\\n        *   CWE: CWE-89.\\n\\n    *   Slice 2:\\n        *   Source:
-      `PASS = \\''12345\\''` (Hardcoded string).\\n        *   Sink: `connect(password=PASS)`
-      (Using the hardcoded string as a password).\\n        *   Vulnerability: Use
-      of Hard-coded Credentials.\\n        *   Plausibility: High (1.0).\\n        *   CWE:
-      CWE-798.\\n\\n    *   Schema requires: `results` array containing `IndividualTriageResult`
-      objects.\\n    *   Each object needs: `analysis`, `plausibility`, `is_false_positive`,
-      `suggested_cwe`, `slice_id`.</thought>{\\n  \"results\": [\\n    {\\n      \"analysis\":
-      \"The application retrieves a value from the \\''id\\'' request argument and
-      directly embeds it into a SQL query using an f-string. This allows an attacker
-      to manipulate the SQL query by providing specially crafted input, leading to
-      a classic SQL injection vulnerability.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"The variable \\''PASS\\'' is assigned a static string value (\\''12345\\'')
-      and subsequently used as a password in a connection function. This is a clear
-      instance of hardcoded credentials, which is a significant security risk.\",\\n      \"plausibility\":
-      1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\": \"CWE-798\",\\n      \"slice_id\":
-      \"slice-2\"\\n    }\\n  ]\\n}'', refusal=None, role=''assistant'', annotations=None,
-      audio=None, function_call=None, tool_calls=None, extra_content={''google'':
-      {''thought'': True}}))], created=1776639833, model=''models/gemma-4-31b-it'',
-      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=234,
-      prompt_tokens=633, total_tokens=1122, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=0)))\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')` (String
-      fo...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</last_exception>"}],"model":"models/gemma-4-31b-it","response_format":{"type":"json_object"}}'
-    headers:
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '7726'
-      Content-Type:
-      - application/json
-      Cookie:
-      - NID=530=Axq-qNm2_wUssXpQIGa38y4IzVULDywMVYLcdrAuBG__PYPWF2JIT2-M6ZUI2sWdRZJPpieiYRLEqIFIsm6ZRgyK99vTXK6tXfsKP1UbJ9X-Aza1jmt8ORjImddQjjKUkJwQ-t2LXvl6KnYY1QGm9RLNo7SmmzBEUUfCSPTZRD1EEzDniMRGVLGTTpB9-r4CpA
-      Host:
-      - generativelanguage.googleapis.com
-      User-Agent:
-      - OpenAI/Python 2.32.0
-      X-Stainless-Arch:
-      - arm64
-      X-Stainless-Async:
-      - 'false'
-      X-Stainless-Lang:
-      - python
-      X-Stainless-OS:
-      - MacOS
-      X-Stainless-Package-Version:
-      - 2.32.0
-      X-Stainless-Runtime:
-      - CPython
-      X-Stainless-Runtime-Version:
-      - 3.14.3
-      authorization:
-      - Bearer <REDACTED>
-      x-stainless-read-timeout:
-      - '600'
-      x-stainless-retry-count:
-      - '0'
-    method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
-  response:
-    body:
-      string: !!binary |
-        H4sIAAAAAAAC/7xV227bOBD9lQFfnC5stXbuRlOgCLxoF2mT1imKog5sWhpLXEukSlJxvIb/fQ8l
-        2W4KLBb7sk8SyeFczjkz3Ig4MypmJ4bfN2KhtHLZ1LJ0RouhcN6UoiuUTvhJDF91RcHOyZTFcCNi
-        oz1rD6vXPjNVmvk39xlT5djSSmrvSNKjzFVCf4xvP5KpfFl5mkvHCRlNHralNY8qwdpxXFnl1+Ty
-        kEs00ff1MT8qU8GR91yUnhZS5bCecywRhpQnpeO8Ch5m+yRm5GWKOzqh0oQMlczzNRkEtKSN7tXp
-        tNl3aZWpOKPaYYKM68NSWqd0SmytsW0y9T+19dPsvT7UNqQlr6moHMpj+HDehtvSU640Ux/B8qrQ
-        NJgh30TF0rND/TivQUAwZMY6NhVysgEOU7DPgg+UmKhEdzzxU8mxp/aS89J6Mot2Ucc7Cv+/4PAC
-        2U/0XS71cKL7Eb3VMl//xTQOOFN/SLPA1xSFXJHlHxU7H0mbuihlf9RRSefFjHpvaAZ6HKDgJxDl
-        +WjRGY9uRtf39Bv9/vn2Q026o6/vRp9HpJKrTet0i+sR3WfKkQpyiHOWlsafboDDn6hGGR0Rkquc
-        mqs88N+PXnXp+uuod3GJzAe/JjxAwndvx2Nk2+kPjk9OO216Rmv4Oyqlcytjk6tg9Dx2Jm0SmyCV
-        ndE/hT6/vEDs44iujQa0VdxAXitDxjFuBrS9abCPMy4k0tpMhGVX5d5NxJC+R1H0sJ3Bz0lEI+0q
-        y/TxthWh5ycILzZFAQW6LkFXjWRtrXmH3ej1yx2Pm4kmeu487BBtmk84lAElp+rTiQhylWWZB6Wp
-        0GpyCcEFTnr7jlM6dOPCmqIuI1C9EwDySKuQWt1DXMw5cY0QLTBGKymN4mXNIy7Y9U6AVd00UtOi
-        1+y0+KP/zCp0ZGhkGS8DBKaVAILNlbcSXoK/AAqiAhRIZYezfC4ZeqxyzVY2vEUT0T0AUf7EaAAj
-        kHo4VW66kLnjaWmc8uqRg0m985ORq9IUKHAyjVfcANoI8lmgelBB4o1Bver1J6Ix2Hb/I0Pg5rlG
-        W0RbkZMMpzvd0gKCkdRqvu6hd83FcCXGAGmGHkjTGCWVReMEr00f7EetVW4ZHIPZPUFrg3m1Uj4L
-        Qseo26m8vo5/M/dStbN710X/E/7oyn8lYLAnIHweJnqLxwvNZuV0/1ptRGpMmtdPWNtiYogu5+22
-        K6wJBwKlKUxYmG+3D10BSDGyEzHsn5+fnR1fXpyd403EWnB/mkt5vbr5du2XyZe7H/HtafXpPaIW
-        QCyHRf11L1OGrnsnveP+vKc8zs08qBkGMd6BCLIvcw5c4qg6vLC73ak3S9Z4owfHeITRxHgND3v9
-        /qArvPEyP+ydnp9st38DAAD//wMAWACiUN0HAAA=
-    headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Date:
-      - Sun, 19 Apr 2026 23:04:27 GMT
-      Expires:
-      - Sun, 19 Apr 2026 23:04:27 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
-      Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=13658
-      Set-Cookie:
-      - NID=530=ltk7fpSD_PtUk7R7041OBAkOypSNAT1HzM9Q4s9hT-F5DHW8joy5BpCcqzynBrZi0MSM0u16IX21adWocdSHe4XkQZHYOikQjklsIqpyxXz1-dOTXM8rlYynHtXy0-ED2OzrAnLH52s_3MT_BHoL89NxMoxxiarcPF5xiT402h2blhCYE26aKC9AbiKQx19TsA;
-        expires=Mon, 19-Oct-2026 23:03:39 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      - X-Origin
-      - Referer
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
-      return a JSON object matching this schema:\n\n        {\n  \"$defs\": {\n    \"IndividualTriageResult\":
-      {\n      \"properties\": {\n        \"analysis\": {\n          \"description\":
-      \"Step-by-step analysis of the tainted path\",\n          \"title\": \"Analysis\",\n          \"type\":
-      \"string\"\n        },\n        \"plausibility\": {\n          \"description\":
-      \"Likelihood of this being a real vulnerability\",\n          \"maximum\": 1,\n          \"minimum\":
-      0,\n          \"title\": \"Plausibility\",\n          \"type\": \"number\"\n        },\n        \"is_false_positive\":
-      {\n          \"title\": \"Is False Positive\",\n          \"type\": \"boolean\"\n        },\n        \"suggested_cwe\":
-      {\n          \"anyOf\": [\n            {\n              \"type\": \"string\"\n            },\n            {\n              \"type\":
-      \"null\"\n            }\n          ],\n          \"title\": \"Suggested Cwe\"\n        },\n        \"slice_id\":
-      {\n          \"title\": \"Slice Id\",\n          \"type\": \"string\"\n        }\n      },\n      \"required\":
-      [\n        \"analysis\",\n        \"plausibility\",\n        \"is_false_positive\",\n        \"suggested_cwe\",\n        \"slice_id\"\n      ],\n      \"title\":
-      \"IndividualTriageResult\",\n      \"type\": \"object\"\n    }\n  },\n  \"properties\":
-      {\n    \"results\": {\n      \"items\": {\n        \"$ref\": \"#/$defs/IndividualTriageResult\"\n      },\n      \"title\":
-      \"Results\",\n      \"type\": \"array\"\n    }\n  },\n  \"required\": [\n    \"results\"\n  ],\n  \"title\":
-      \"BatchTriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid
-      JSON instance, not the schema definition."},{"role":"user","content":"You are
-      a security expert triaging multiple static analysis results. Analyze each of
-      the following 2 tainted paths and determine if they are plausible vulnerabilities
-      or false positives.\n\n--- SLICE slice-1 ---\nLocation: unknown\nHit: Possible
-      SQL injection\nSource:\nuser_id = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT
-      * FROM users WHERE id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit:
-      Hardcoded password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor
-      each SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and
-      indicate if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT
-      ONLY VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."},{"role":"assistant","content":"<thought>*   Slice
-      1:\n        *   Source: `user_id = request.args.get(''id'')` (User-controlled
-      input from query parameters).\n        *   Sink: `cursor.execute(f''SELECT *
-      FROM users WHERE id={user_id}'')` (String formatting used to build a SQL query).\n        *   Vulnerability:
-      Classic SQL Injection.\n        *   Plausibility: High (1.0).\n        *   CWE:
-      CWE-89.\n\n    *   Slice 2:\n        *   Source: `PASS = ''12345''` (Hardcoded
-      string).\n        *   Sink: `connect(password=PASS)` (Using the hardcoded string
-      as a password).\n        *   Vulnerability: Use of Hard-coded Credentials.\n        *   Plausibility:
-      High (1.0).\n        *   CWE: CWE-798.\n\n    *   Schema requires: `results`
-      array containing `IndividualTriageResult` objects.\n    *   Each object needs:
-      `analysis`, `plausibility`, `is_false_positive`, `suggested_cwe`, `slice_id`.</thought>{\n  \"results\":
-      [\n    {\n      \"analysis\": \"The application retrieves a value from the ''id''
-      request argument and directly embeds it into a SQL query using an f-string.
-      This allows an attacker to manipulate the SQL query by providing specially crafted
-      input, leading to a classic SQL injection vulnerability.\",\n      \"plausibility\":
-      1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\": \"CWE-89\",\n      \"slice_id\":
-      \"slice-1\"\n    },\n    {\n      \"analysis\": \"The variable ''PASS'' is assigned
-      a static string value (''12345'') and subsequently used as a password in a connection
-      function. This is a clear instance of hardcoded credentials, which is a significant
-      security risk.\",\n      \"plausibility\": 1.0,\n      \"is_false_positive\":
-      false,\n      \"suggested_cwe\": \"CWE-798\",\n      \"slice_id\": \"slice-2\"\n    }\n  ]\n}"},{"role":"user","content":"Correct
-      your JSON ONLY RESPONSE, based on the following errors:\n<failed_attempts>\n\n<generation
-      number=\"1\">\n<exception>\n    1 validation error for BatchTriageResult\n  Invalid
-      JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')`
-      (String fo...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further
-      information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''WV_lafnhNo-YkdUPgL6_gQE'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=''<thought>*   Slice
-      1:\\n        *   Source: `user_id = request.args.get(\\''id\\'')` (User-controlled
-      input from query parameters).\\n        *   Sink: `cursor.execute(f\\''SELECT
-      * FROM users WHERE id={user_id}\\'')` (String formatting used to build a SQL
-      query).\\n        *   Vulnerability: Classic SQL Injection.\\n        *   Plausibility:
-      High (1.0).\\n        *   CWE: CWE-89.\\n\\n    *   Slice 2:\\n        *   Source:
-      `PASS = \\''12345\\''` (Hardcoded string).\\n        *   Sink: `connect(password=PASS)`
-      (Using the hardcoded string as a password).\\n        *   Vulnerability: Use
-      of Hard-coded Credentials.\\n        *   Plausibility: High (1.0).\\n        *   CWE:
-      CWE-798.\\n\\n    *   Schema requires: `results` array containing `IndividualTriageResult`
-      objects.\\n    *   Each object needs: `analysis`, `plausibility`, `is_false_positive`,
-      `suggested_cwe`, `slice_id`.</thought>{\\n  \"results\": [\\n    {\\n      \"analysis\":
-      \"The application retrieves a value from the \\''id\\'' request argument and
-      directly embeds it into a SQL query using an f-string. This allows an attacker
-      to manipulate the SQL query by providing specially crafted input, leading to
-      a classic SQL injection vulnerability.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"The variable \\''PASS\\'' is assigned a static string value (\\''12345\\'')
-      and subsequently used as a password in a connection function. This is a clear
-      instance of hardcoded credentials, which is a significant security risk.\",\\n      \"plausibility\":
-      1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\": \"CWE-798\",\\n      \"slice_id\":
-      \"slice-2\"\\n    }\\n  ]\\n}'', refusal=None, role=''assistant'', annotations=None,
-      audio=None, function_call=None, tool_calls=None, extra_content={''google'':
-      {''thought'': True}}))], created=1776639833, model=''models/gemma-4-31b-it'',
-      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=234,
-      prompt_tokens=633, total_tokens=1122, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=0)))\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')` (String
-      fo...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</last_exception>"},{"role":"assistant","content":"<thought>The
-      user wants a valid JSON output based on the provided security slices.\nThe previous
-      attempt failed because it included `<thought>` tags and potentially other non-JSON
-      content, which caused a JSON parsing error.\nThe error message `Invalid JSON:
-      key must be a string at line 1 column 2` indicates that the parser encountered
-      something it didn''t expect at the start of the string (the `<thought>` tag).\n\nPlan:\n1.
-      Analyze Slice 1: `user_id = request.args.get(''id'')` -> `cursor.execute(f''SELECT
-      * FROM users WHERE id={user_id}'')`. This is a clear SQL injection. Plausibility
-      1.0, CWE-89.\n2. Analyze Slice 2: `PASS = ''12345''` -> `connect(password=PASS)`.
-      This is a hardcoded password. Plausibility 1.0, CWE-798.\n3. Construct the JSON
-      according to the schema: `{\"results\": [...]}`.\n4. Ensure NO other text, comments,
-      or tags are present.</thought>{\n  \"results\": [\n    {\n      \"analysis\":
-      \"The application takes user-provided input from the ''id'' request argument
-      and embeds it directly into a SQL query string using an f-string. This allows
-      an attacker to inject arbitrary SQL commands, leading to a SQL injection vulnerability.\",\n      \"plausibility\":
-      1.0,\n      \"is_false_positive\": false,\n      \"suggested_cwe\": \"CWE-89\",\n      \"slice_id\":
-      \"slice-1\"\n    },\n    {\n      \"analysis\": \"The application uses a hardcoded
-      string ''12345'' as a password for a connection. Hardcoding credentials in source
-      code is a security risk as it allows anyone with access to the code to obtain
-      the password.\",\n      \"plausibility\": 1.0,\n      \"is_false_positive\":
-      false,\n      \"suggested_cwe\": \"CWE-798\",\n      \"slice_id\": \"slice-2\"\n    }\n  ]\n}"},{"role":"user","content":"Correct
-      your JSON ONLY RESPONSE, based on the following errors:\n<failed_attempts>\n\n<generation
-      number=\"1\">\n<exception>\n    1 validation error for BatchTriageResult\n  Invalid
-      JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')`
-      (String fo...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further
-      information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''WV_lafnhNo-YkdUPgL6_gQE'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=''<thought>*   Slice
-      1:\\n        *   Source: `user_id = request.args.get(\\''id\\'')` (User-controlled
-      input from query parameters).\\n        *   Sink: `cursor.execute(f\\''SELECT
-      * FROM users WHERE id={user_id}\\'')` (String formatting used to build a SQL
-      query).\\n        *   Vulnerability: Classic SQL Injection.\\n        *   Plausibility:
-      High (1.0).\\n        *   CWE: CWE-89.\\n\\n    *   Slice 2:\\n        *   Source:
-      `PASS = \\''12345\\''` (Hardcoded string).\\n        *   Sink: `connect(password=PASS)`
-      (Using the hardcoded string as a password).\\n        *   Vulnerability: Use
-      of Hard-coded Credentials.\\n        *   Plausibility: High (1.0).\\n        *   CWE:
-      CWE-798.\\n\\n    *   Schema requires: `results` array containing `IndividualTriageResult`
-      objects.\\n    *   Each object needs: `analysis`, `plausibility`, `is_false_positive`,
-      `suggested_cwe`, `slice_id`.</thought>{\\n  \"results\": [\\n    {\\n      \"analysis\":
-      \"The application retrieves a value from the \\''id\\'' request argument and
-      directly embeds it into a SQL query using an f-string. This allows an attacker
-      to manipulate the SQL query by providing specially crafted input, leading to
-      a classic SQL injection vulnerability.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"The variable \\''PASS\\'' is assigned a static string value (\\''12345\\'')
-      and subsequently used as a password in a connection function. This is a clear
-      instance of hardcoded credentials, which is a significant security risk.\",\\n      \"plausibility\":
-      1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\": \"CWE-798\",\\n      \"slice_id\":
-      \"slice-2\"\\n    }\\n  ]\\n}'', refusal=None, role=''assistant'', annotations=None,
-      audio=None, function_call=None, tool_calls=None, extra_content={''google'':
-      {''thought'': True}}))], created=1776639833, model=''models/gemma-4-31b-it'',
-      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=234,
-      prompt_tokens=633, total_tokens=1122, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=0)))\n</completion>\n</generation>\n\n<generation number=\"2\">\n<exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')`. This is
-      a...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''e1_laaCwLYCtkdUPqcO5uQI'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=''<thought>The
-      user wants a valid JSON output based on the provided security slices.\\nThe
-      previous attempt failed because it included `<thought>` tags and potentially
-      other non-JSON content, which caused a JSON parsing error.\\nThe error message
-      `Invalid JSON: key must be a string at line 1 column 2` indicates that the parser
-      encountered something it didn\\''t expect at the start of the string (the `<thought>`
-      tag).\\n\\nPlan:\\n1. Analyze Slice 1: `user_id = request.args.get(\\''id\\'')`
-      -> `cursor.execute(f\\''SELECT * FROM users WHERE id={user_id}\\'')`. This is
-      a clear SQL injection. Plausibility 1.0, CWE-89.\\n2. Analyze Slice 2: `PASS
-      = \\''12345\\''` -> `connect(password=PASS)`. This is a hardcoded password.
-      Plausibility 1.0, CWE-798.\\n3. Construct the JSON according to the schema:
-      `{\"results\": [...]}`.\\n4. Ensure NO other text, comments, or tags are present.</thought>{\\n  \"results\":
-      [\\n    {\\n      \"analysis\": \"The application takes user-provided input
-      from the \\''id\\'' request argument and embeds it directly into a SQL query
-      string using an f-string. This allows an attacker to inject arbitrary SQL commands,
-      leading to a SQL injection vulnerability.\",\\n      \"plausibility\": 1.0,\\n      \"is_false_positive\":
-      false,\\n      \"suggested_cwe\": \"CWE-89\",\\n      \"slice_id\": \"slice-1\"\\n    },\\n    {\\n      \"analysis\":
-      \"The application uses a hardcoded string \\''12345\\'' as a password for a
-      connection. Hardcoding credentials in source code is a security risk as it allows
-      anyone with access to the code to obtain the password.\",\\n      \"plausibility\":
-      1.0,\\n      \"is_false_positive\": false,\\n      \"suggested_cwe\": \"CWE-798\",\\n      \"slice_id\":
-      \"slice-2\"\\n    }\\n  ]\\n}'', refusal=None, role=''assistant'', annotations=None,
-      audio=None, function_call=None, tool_calls=None, extra_content={''google'':
-      {''thought'': True}}))], created=1776639867, model=''models/gemma-4-31b-it'',
-      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=464,
-      prompt_tokens=2745, total_tokens=3696, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=0)))\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    1
-      validation error for BatchTriageResult\n  Invalid JSON: key must be a string
-      at line 1 column 2 [type=json_invalid, input_value=''{user_id}\\'')`. This is
-      a...slice-2\"\\n    }\\n  ]\\n}'', input_type=str]\n    For further information
-      visit https://errors.pydantic.dev/2.13/v/json_invalid\n</last_exception>"}],"model":"models/gemma-4-31b-it","response_format":{"type":"json_object"}}'
-    headers:
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '15693'
-      Content-Type:
-      - application/json
-      Cookie:
-      - NID=530=ltk7fpSD_PtUk7R7041OBAkOypSNAT1HzM9Q4s9hT-F5DHW8joy5BpCcqzynBrZi0MSM0u16IX21adWocdSHe4XkQZHYOikQjklsIqpyxXz1-dOTXM8rlYynHtXy0-ED2OzrAnLH52s_3MT_BHoL89NxMoxxiarcPF5xiT402h2blhCYE26aKC9AbiKQx19TsA
-      Host:
-      - generativelanguage.googleapis.com
-      User-Agent:
-      - OpenAI/Python 2.32.0
-      X-Stainless-Arch:
-      - arm64
-      X-Stainless-Async:
-      - 'false'
-      X-Stainless-Lang:
-      - python
-      X-Stainless-OS:
-      - MacOS
-      X-Stainless-Package-Version:
-      - 2.32.0
-      X-Stainless-Runtime:
-      - CPython
-      X-Stainless-Runtime-Version:
-      - 3.14.3
-      authorization:
-      - Bearer <REDACTED>
-      x-stainless-read-timeout:
-      - '600'
-      x-stainless-retry-count:
-      - '0'
-    method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
-  response:
-    body:
-      string: !!binary |
-        H4sIAAAAAAAC/8RXbW/bNhD+Kwd9WJJCVuu89MVoO3RtgWRou2wuVhR1YdESbbOWSJWk4niB//ue
-        IyU7aVFs+7Qvsc073tvz3B1zkxRLowrpktGnm2SutHLLqZXCGZ2MEudNk6SJ0qW8TkYP0qSWzomF
-        TEY3SWG0l9pD66lfmnax9M/fLyW1TlpSjqxsjPVKL/ibFF6W9Ov4t3d0JSpVCq+MJmmtsS4jvha+
-        U36hgzyojmglN1S3ztNMkiDnLZsTniqlJQ2pMFVbazrOWWT0otqQaxcL6bwjv4Seh+HalLLigJQu
-        qrZkC/ku4JxmlSlWjuDbQNuSNnoQ4vTy2tO9mZwbK+8FS+HYzL7IwsOhsL4LvRGWc5bXDSQuqM6V
-        RdTFUlhReMi84RTym5wd5Z9yglVkdNsiH1grNtlET/RFTJszLjzSMq1vWoRjdLXZB5PRO0NeLFyK
-        sHGq9IrTa6wBnvGwFnZVmrXu81Rzvr2BKwmxBzZfW9QL4BzGmgTjsFA3noTDDY50kgRU0piqmFXR
-        /yRJAXcrKkQI745qKbRDXlasY24dZDCxVhwfZCGQlGat71zJK2Va+BGqaq105JZmHeGTV1IDNhRQ
-        iwpBdKhNEqrETFYuZDEDWUPabM1tkEt94DpMjkIxPwjl09t5ObFxMPfKhBJEXoBgegMMvRURepTc
-        KRyb+R78mE6GAIQu9xYWUksLhgcThalrtAXzLdzny1/QTTFx3OWQxhVajoYjGv/+hi40EwANkVHe
-        4ZEJu3DZQvrDA1UeHOU0eE550VpnbCavZdF6eTg/yLLshtttqsotlDK6rETr1ExVym9omD3I6OWH
-        14PHT7Le4/GIzoUtC/RESZfCubWxJdxevhiP6RkdDI9PTs8OOndGa8R12HRqz1jpx14ePXkcqv3S
-        aJRJADZ6uZTFqlIg8k+E4znKoRHEuEBLjSZ6mNGfu2b/mT5KBwPHsN+TrD87yeiVaXEw+Noa5mrE
-        wfXy09AIfeH707OMxtDquBqb635stl7lYbj4Pei9/FFGb4UvlsxK/K1FLwhp3s2Hzu6fBclbBAG6
-        jkGRmblGngN6rV0bGu7O6OHOzb4R53ngyq5t11Y0jbRd4woPaq/jR8EgdLRXzrUyJVF1Pdw1ZUqK
-        NVmj89qNgYzOzRrdZWNbdLP3X0/b2OZ+P/rQ+pUxq05/PwDncr0fgvB6MUdE5CTqyYUAf3OOMfR+
-        LMUFBkVVcaNe9c2zGya3Ry+74pHCMzVUPRIE3kC53TQImAGB/BdG8b1VWF1/SNdWPlLchu8up8PA
-        Du51bKBSwTcKeEf/CFZ+IAqmBEbUxim2FSt3lFLe3OoUCHRbzzCUIFBuOheVk9PGOOXVlYR0ZkyF
-        wrK422KynBZrubPIY1S3VRU0uJ3R93t3oQpvJANu5Zwh4xL0YfUt020i9HahnAxjTFwZ9GAYXTuo
-        4vytFVOGVz61TWSKK0TDofTbAmDoEhOFylj/0KBxMHMMR9nT+z3hbyaaMDO7mk+SEX3iE6Kb+MHC
-        PlyWThJerqA/Uo3vBSuRBGgbuceTkQkoaskrtlRWhl05x5CPxImzFMEs2jiSOd2wTxpTCY5T8fhH
-        SUQYxFC3G4ptJTTNB928x5ZHBdFRZs02wHEvilVc67XQqmnZWvAZTeBeW3j0dEqANLw5dk5UP+3p
-        qq14b0R6YDGk+zrcJg7XAlP2lvQ79rBKOLmldIdDsZ5xGdxx1PMoKoRfgyHvKBZv0/8IEDaFWoQX
-        AHjhVdEPkW6vcBG4SFcC7cNsOeCVchBgwR4LcAi+3a+c8PjgG90uonmru00ZIGFUqECJLW9bULEI
-        +7pDkJa7VdcbTDE9VbHsLloUr8CodliolpfZ/4IIFuc/QnK8g4Q/Pk/0Fq/ysLemu2f4TbIwBuuO
-        v3U9l4xARLndpok1LEgYIK6TT7bbz2lS2PAwT0bDR48ePjx58mSIJ77Cb6Q7rYQ8P39hxn9p9/py
-        ejn+uHpxAa/hPQ2N8OnuL2Rdi8Hp4GQ4GygPeZzSUMA08RmWclNJhgyidv+vQ3869WYlNf75OD4Z
-        pkl8n+3OTk8eP/7mcFpKz8siWBGY7+XewoMHp8jUG2zf3eHZ8OHxdvs3AAAA//8DANDqwL7lDAAA
-    headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Date:
-      - Sun, 19 Apr 2026 23:05:10 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=22210
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      - X-Origin
-      - Referer
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
-    status:
-      code: 200
-      message: OK
-- request:
     body: '{"messages":[{"role":"user","content":"You are a security expert triaging
       multiple static analysis results. Analyze each of the following 2 tainted paths
       and determine if they are plausible vulnerabilities or false positives.\n\n---
@@ -1251,9 +7,9 @@ interactions:
       = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT * FROM users WHERE
       id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit: Hardcoded
       password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor each
-      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and indicate
-      if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT ONLY
-      VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."}],"model":"models/gemma-4-31b-it","tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
+      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), indicate
+      if it is a false positive, and suggest a CWE if applicable. Map each result
+      back to its slice_id."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
       extracted `BatchTriageResult` with all the required parameters with correct
       types","parameters":{"$defs":{"IndividualTriageResult":{"properties":{"analysis":{"description":"Step-by-step
       analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
@@ -1268,11 +24,11 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '1871'
+      - '1819'
       Content-Type:
       - application/json
       Host:
-      - generativelanguage.googleapis.com
+      - api.openai.com
       User-Agent:
       - OpenAI/Python 2.32.0
       X-Stainless-Arch:
@@ -1285,6 +41,8 @@ interactions:
       - MacOS
       X-Stainless-Package-Version:
       - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
       X-Stainless-Runtime:
       - CPython
       X-Stainless-Runtime-Version:
@@ -1292,68 +50,53 @@ interactions:
       authorization:
       - Bearer <REDACTED>
       x-stainless-read-timeout:
-      - '600'
+      - '600.0'
       x-stainless-retry-count:
       - '0'
     method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+    uri: https://api.openai.com/v1/chat/completions
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAC/4RUbW8bNwz+K4K+ZANsL35J0gToh24JsnVJli1eu2QuzrSOvlOsk66izu7V8H8f
-        pXO8DuuwL7bEI/k8fEhxK1XptEKSF39u5VJbTWXmEchZeSGDcyZTYAzJntQ2x0/y4rgnKySCAuXF
-        Vnpn+F8CkaYANrDfF0ExJ34KHjLlbED+zCGFc4VJwaF0TVGGjHRhITQ+ZrrSjz+/vf69vbssPt9e
-        X41vpu+eny4fw93l2+rp4fjkl2mpb96/M3fT25OnqWofn83z7eb1a7nb9eSysSroSH0rwRdNxZDM
-        Qm5n0iM1JtAscppJMlxzpnO+7i/94Uz2ZlJTtgRDmNWOdNBrZI9k4G/UFAVSwDxTG0yRP7y/6r86
-        T4FgwbQsQrJPSxTzhtAzxFyswWtYGBSaRIAVWpFrjyqYViy9q0SI3h4/Npx8wLRpUGD45kjnR9/O
-        RYWsUt4Tm1KrMmYAERP3o6AsvsFcaFs3YSBYGOrOCaj8Ekez+r52BkLyD47TPPx6IxjTt4KC17bg
-        vPEXrFj2O8s/UGNbxdL5F28+VhBCF5KL3CEJ64KovVvrHNnIicGyiJ8h9kRwaA0euCD0e9sL6Zhf
-        mThEKtHS9hlTI8W6MRY9LLTRoWU66GNmwcCgVuiF4kvFKHUTa0tSdjUZV3CyRbvnk2iyt8dlY1gQ
-        5WEZtZjHBh1oDVIrawMsRQfJ7Rzuel+fmNH/Tsy/huIwCvP7Nw8P81Q5xfFnKiBK8LlyOZ/3GjMD
-        Lt6Io+FoPDk52su1BtPgocc8DRybLlwI0cZ5vu+Hn5XsxovHxbKkc/HyRAbixw4t4iiPOXtrph0j
-        yDVeoYhUut4QqsbHBnhNqwimg+AH7jYU2+wsio0OpQDFi4SZuISZwvnskYvBddccQtupxDjdBEUu
-        X5X9P1/c2fmrmdx92PGusdw3ft/fQ1DllKUt8Lf0ziUvA53zF7Py4IeTUdxLbR19DzuCM+w+9CTX
-        Hl8FA56dnZ5Ojs+Ho33s6vrewKI1l9T8sc5/us+oofbNhFNVXJphj/RP3xVYVdCf9MfDRV/HFegW
-        cX7ZQZUQBspVtcGE2ZPNy+b825oFx0uB99ToZNyTPK9VHQ62yWQcV2oAczCdnp/udn8BAAD//wMA
-        lPHEvLkFAAA=
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
     headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebb1d2c704b12-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
       Content-Type:
-      - application/json
+      - application/json; charset=utf-8
       Date:
-      - Sun, 19 Apr 2026 23:21:52 GMT
-      Expires:
-      - Sun, 19 Apr 2026 23:21:52 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
+      - Tue, 21 Apr 2026 19:17:47 GMT
       Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=7629
-      Set-Cookie:
-      - NID=530=Tuyo2vUhBVI4z24G3j81TRtP0-vpHM3Mdt_-50b9oHRApcULJuSw5wo4p8E4NsX0KH92aQImAYzNbGPkfVV8GKt4OiCZYsUd8fE5w0J-2-cVg50LDaX1WHHQzkRUTpGw1dhMkgdJYQYkAuvmY63A02onclJuyo_bkuH-vYcy7v01k_rdpmaT1zgyHk-KXStVeA;
-        expires=Mon, 19-Oct-2026 23:21:44 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
       Vary:
       - Origin
-      - X-Origin
-      - Referer
       X-Content-Type-Options:
       - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=GBASkBtILnJvgU4rYiBXDS.tJv5mtoOlT6uXdOJws1k-1776799067.7032456-1.0.1.1-.fwbFHv2Uk2TgmXCdxEQUrHc4N1u9Q4Cpz_JJV5cFpgIVmgbqwKK1r9XuIrNXzjOjhqaVUhRUHfylKIppsDPNSlIxyoynGjRzhzOHvgT4gp7S4oYw9JmoUU93Ywv1UDd;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        19:47:47 GMT
+      - _cfuvid=ybA3ptSMvAC1rRx.G3Uy15y5.IydMpUXIkKrrZdC2.o-1776799067.7032456-1.0.1.1-tZ7szgeOutvj6wWpC.CyDKlWEWRkXmSTL9CRjQ7PJco;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_7ca86c1838144c25bda7bd0a5883bbe3
     status:
-      code: 200
-      message: OK
+      code: 401
+      message: Unauthorized
 - request:
     body: '{"messages":[{"role":"user","content":"You are a security expert triaging
       multiple static analysis results. Analyze each of the following 2 tainted paths
@@ -1362,9 +105,9 @@ interactions:
       = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT * FROM users WHERE
       id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit: Hardcoded
       password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor each
-      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and indicate
-      if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT ONLY
-      VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."}],"model":"models/gemma-4-31b-it","tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
+      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), indicate
+      if it is a false positive, and suggest a CWE if applicable. Map each result
+      back to its slice_id."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
       extracted `BatchTriageResult` with all the required parameters with correct
       types","parameters":{"$defs":{"IndividualTriageResult":{"properties":{"analysis":{"description":"Step-by-step
       analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
@@ -1379,11 +122,14 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '1871'
+      - '1819'
       Content-Type:
       - application/json
+      Cookie:
+      - __cf_bm=GBASkBtILnJvgU4rYiBXDS.tJv5mtoOlT6uXdOJws1k-1776799067.7032456-1.0.1.1-.fwbFHv2Uk2TgmXCdxEQUrHc4N1u9Q4Cpz_JJV5cFpgIVmgbqwKK1r9XuIrNXzjOjhqaVUhRUHfylKIppsDPNSlIxyoynGjRzhzOHvgT4gp7S4oYw9JmoUU93Ywv1UDd;
+        _cfuvid=ybA3ptSMvAC1rRx.G3Uy15y5.IydMpUXIkKrrZdC2.o-1776799067.7032456-1.0.1.1-tZ7szgeOutvj6wWpC.CyDKlWEWRkXmSTL9CRjQ7PJco
       Host:
-      - generativelanguage.googleapis.com
+      - api.openai.com
       User-Agent:
       - OpenAI/Python 2.32.0
       X-Stainless-Arch:
@@ -1396,6 +142,8 @@ interactions:
       - MacOS
       X-Stainless-Package-Version:
       - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
       X-Stainless-Runtime:
       - CPython
       X-Stainless-Runtime-Version:
@@ -1403,66 +151,47 @@ interactions:
       authorization:
       - Bearer <REDACTED>
       x-stainless-read-timeout:
-      - '600'
+      - '600.0'
       x-stainless-retry-count:
       - '0'
     method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+    uri: https://api.openai.com/v1/chat/completions
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAC/3RUbU/bMBD+K5a/dEgp6xtlrcSHDRBjA8bWDgQriq7OJTF17Mx2Wtqq/33nFDok
-        ti+JfL577rnn7rzmIjdSoOPDX2ueSi1dHlsEZzQfcm+MigUo5XjEpU7wiQ9bES/QOciQD9fcGkV/
-        Ds5J50F78nsVFDDxyVuIhdEe6ZpCMmMyVQf73FRZ7mMnMw2+sgHpVN59/XL2c3l1kq0uz067F+Ob
-        x/uTO3918qW4H7UOvo1zeXF7o67Glwf3Y7G8e1SPl4ujI77ZRDyttPAyUF9zsFlVUEpiwdcTbtFV
-        yrtJ4DThoEEtiTIdJ3ycI4OyVFJACGYeZuhY5dAyqcvKs9Sagnnysvi7QufZDpu9a8ikscdAJyyR
-        FoVXSwryaEujwBOM9OFsGLDR9wtG4XbJnLdSZ5QhfEGztLm17DMqzjGSzixcuADvQcyIBwEUoGVZ
-        BdCayg4tYgohCUi7LFI/Yq0Dm1dKo4WpVNIv9yc8mnBXZRnVgEksFljXf3x72vwwGLLzorSmpGxX
-        WFHPlFxt9TApG5UoJCh2qnBbN6mTUJ5AMmQ8NkURNHjXCKfzl/yNvTqldHEKymFcGie9nIe0tYHu
-        SgWkw5YgmduBIXUCY5nU5OpDsz3hm2j9P/KHgw9D9tNhYPoZbCJMQuyOLSbElWi7msWbns/BSpgq
-        ZI3rj6NRgwXpXZhFCgZGhEg59dKsRrvT7R00IrbIpciDL3VBb3UACmQlxS6MTVhqLB0T8DAF4kST
-        r7dqPLc3pGH5jqbY0XyFDcyhqCxpwqx0s+fOvdWlU1/8Q8P/Sr552NCOaijCsn0CL/IxqZDhj3o/
-        SGUuE7pZDXA2yKsy7POyDL673SKEzUPEiTfNIvm2Dw/7/V6n1ek9x/bPUgXpbf+kP1/Nk/Prw/nX
-        762PhqAKqliRR/137zOkqWn2mt32tCnD02GmYXDIQeTg94UpSoV1zohXLy/OX2vszQw17XenTY8S
-        zW5R+p2t1+uGp8iD2pn6B93N5g8AAAD//wMAJGT/N/EEAAA=
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
     headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebb2c79738131-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
       Content-Type:
-      - application/json
+      - application/json; charset=utf-8
       Date:
-      - Sun, 19 Apr 2026 23:40:24 GMT
-      Expires:
-      - Sun, 19 Apr 2026 23:40:24 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
+      - Tue, 21 Apr 2026 19:17:50 GMT
       Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=6383
-      Set-Cookie:
-      - NID=530=cmEYkak5-4rvvu7O5ikLkZGe_dBsV7x4i68SnwwsNmg12BDkh50aZiVu2P8nAm-yteuhH4Tg01CwpjsA613wQoFdm4W6jWGkLowq1r7w0ygEPcJj_O7Mgrtte3EYIzaCoy2vN1np9ruZBlWusoU77Gqnq9mE3BQPErRr50-BuS5NoEA4BafSCtt2iZX926MKWA;
-        expires=Mon, 19-Oct-2026 23:40:17 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
       Vary:
       - Origin
-      - X-Origin
-      - Referer
       X-Content-Type-Options:
       - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_0a9ef4c10c7b47d192f93387710a9215
     status:
-      code: 200
-      message: OK
+      code: 401
+      message: Unauthorized
 - request:
     body: '{"messages":[{"role":"user","content":"You are a security expert triaging
       multiple static analysis results. Analyze each of the following 2 tainted paths
@@ -1471,9 +200,9 @@ interactions:
       = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT * FROM users WHERE
       id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit: Hardcoded
       password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor each
-      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and indicate
-      if it is a false positive. Map each result back to its slice_id.\n\nOUTPUT ONLY
-      VALID JSON. DO NOT INCLUDE ANY THOUGHTS OR COMMENTS OUTSIDE THE JSON OBJECT."}],"model":"models/gemma-4-31b-it","tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
+      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), indicate
+      if it is a false positive, and suggest a CWE if applicable. Map each result
+      back to its slice_id."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
       extracted `BatchTriageResult` with all the required parameters with correct
       types","parameters":{"$defs":{"IndividualTriageResult":{"properties":{"analysis":{"description":"Step-by-step
       analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
@@ -1488,11 +217,14 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '1871'
+      - '1819'
       Content-Type:
       - application/json
+      Cookie:
+      - __cf_bm=GBASkBtILnJvgU4rYiBXDS.tJv5mtoOlT6uXdOJws1k-1776799067.7032456-1.0.1.1-.fwbFHv2Uk2TgmXCdxEQUrHc4N1u9Q4Cpz_JJV5cFpgIVmgbqwKK1r9XuIrNXzjOjhqaVUhRUHfylKIppsDPNSlIxyoynGjRzhzOHvgT4gp7S4oYw9JmoUU93Ywv1UDd;
+        _cfuvid=ybA3ptSMvAC1rRx.G3Uy15y5.IydMpUXIkKrrZdC2.o-1776799067.7032456-1.0.1.1-tZ7szgeOutvj6wWpC.CyDKlWEWRkXmSTL9CRjQ7PJco
       Host:
-      - generativelanguage.googleapis.com
+      - api.openai.com
       User-Agent:
       - OpenAI/Python 2.32.0
       X-Stainless-Arch:
@@ -1505,6 +237,8 @@ interactions:
       - MacOS
       X-Stainless-Package-Version:
       - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
       X-Stainless-Runtime:
       - CPython
       X-Stainless-Runtime-Version:
@@ -1512,68 +246,47 @@ interactions:
       authorization:
       - Bearer <REDACTED>
       x-stainless-read-timeout:
-      - '600'
+      - '600.0'
       x-stainless-retry-count:
       - '0'
     method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+    uri: https://api.openai.com/v1/chat/completions
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAC/3xUW28aOxD+KyO/kFRACZfQIuXhHEKbtEnaBtIoOVSL8Q67Jl57a3uhFPHfO14u
-        yZGiPu167JnvMvasmUiNFOhY7781m0ktXRpZ5M5o1mPeGBUJrpRjVSZ1jL9Yr1FlGTrHE2S9NbNG
-        0Zdx56TzXHs69yIp1MRf3vJIGO2RtiklMSZRZbJPTZGkPnIy0dwXNlQayIfPnz7erW7Ok9/XHwet
-        q9H3+eP5g785/5Q9DhudL6NUXt1/Vzej687jSKwe5mp+vTw7Y5tNlc0KLbwM1NeM26TICJJYsPWY
-        WXSF8m4cOI2ZU6Q5kjEtd4vayZhV6b9IEnQe40gssdzt3w9q79734DLLrcnRwg0WpEjJ3zxAgZnB
-        MEchuYKBwhIRCocxSA1cw/DbFfRNlnEdw1ElrC71HEuWleMSMle8cHIqlfQrQjyhkHTRjCuHUW6c
-        9HIRmJQB2uOaqxW5XZIbpQgTQrOkZQLSgUVvJS4IPpaWYNQKZtZk4OmgxZ8FaYODM3A02cXqFHP1
-        BP1RRcaV48lxFZapFGkoyYMcWwsdpG6rUlle+DpQJ9z2PxwjBL0VfkDeOjCrOeKkE/AGqAgtCkEk
-        SmcI3K6IxnBwNeiP4A18uP1yXeI5uL8Y3A5AxmfrncDN5HgPGlgJFW6dKOvIvaewKJRGy7d2whQF
-        mYuBnMWQpg04rsnTffcs5NzyDD3aFx0Ndm1Vjtmmun7F9QW3kk8V2f/1n+Gw9D7QSTQZwGGnmDgQ
-        FwWVk2ar3an8z9SU21iYmI7nlLg0Nt6J2y8PpoYAHSP7Ai2yUJNW2N/1F0VL92ckiRch0UtRCqrD
-        xRYrUBIW47BFtyn0x5nCilA0xi0th6KwwTor3RNJog6ujEZYSp8CFzQp3DMTShLUYYelw89C/vKU
-        uu/f9eCOWkIuXxws6D+zKnP/9gBeeS+vPOcmNe7HhsaRpubSCPiXe5GOqGcJ3pajgPrKZEw7Gc9x
-        0bFhxPlVHs4exghV2PyoMvKMkw7C6nZPT9vNbqO1y503reJ8ePf5su+f4ruvi86w2/iWUKmMdKlQ
-        PXzd2wRpBNTatdbJtCbDlDTTcGPpgEi5rwuT5QpLzCor9sP1ORp584SaRlnztF1lNIiy3B9i7XYr
-        TF3P1SHUbXQ3mz8AAAD//wMA6sp/N9wFAAA=
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
     headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebb46bfa2dd58-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
       Content-Type:
-      - application/json
+      - application/json; charset=utf-8
       Date:
-      - Sun, 19 Apr 2026 23:51:43 GMT
-      Expires:
-      - Sun, 19 Apr 2026 23:51:43 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
+      - Tue, 21 Apr 2026 19:17:54 GMT
       Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=8008
-      Set-Cookie:
-      - NID=530=o3G-Df9ztNs24BJnEXi-8nMccsfqMt9bLa5cGDRM7C0eFFFri9xvVWhodXNICaATIS9x137aHLsuwDD8DMG70sno9_rdNXLx9NnmmNtb0dEEK_STWiO_Pqgq26WsjqeFo88IrRkeCYlKWMv-TWdmIJ2K6cmER5Q3bnWeH5_3rjCnz_9132sQz7QOugmFNR6VVw;
-        expires=Mon, 19-Oct-2026 23:51:35 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
       Vary:
       - Origin
-      - X-Origin
-      - Referer
       X-Content-Type-Options:
       - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
-      - '0'
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_07de703d62b54e54a840937307ca3b61
     status:
-      code: 200
-      message: OK
+      code: 401
+      message: Unauthorized
 - request:
     body: '{"messages":[{"role":"user","content":"You are a security expert triaging
       multiple static analysis results. Analyze each of the following 2 tainted paths
@@ -1582,8 +295,9 @@ interactions:
       = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT * FROM users WHERE
       id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit: Hardcoded
       password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor each
-      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), and indicate
-      if it is a false positive. Map each result back to its slice_id."}],"model":"models/gemma-4-31b-it","tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
+      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), indicate
+      if it is a false positive, and suggest a CWE if applicable. Map each result
+      back to its slice_id."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
       extracted `BatchTriageResult` with all the required parameters with correct
       types","parameters":{"$defs":{"IndividualTriageResult":{"properties":{"analysis":{"description":"Step-by-step
       analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
@@ -1598,11 +312,11 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '1779'
+      - '1819'
       Content-Type:
       - application/json
       Host:
-      - generativelanguage.googleapis.com
+      - 127.0.0.1:1234
       User-Agent:
       - OpenAI/Python 2.32.0
       X-Stainless-Arch:
@@ -1615,6 +329,8 @@ interactions:
       - MacOS
       X-Stainless-Package-Version:
       - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
       X-Stainless-Runtime:
       - CPython
       X-Stainless-Runtime-Version:
@@ -1622,66 +338,297 @@ interactions:
       authorization:
       - Bearer <REDACTED>
       x-stainless-read-timeout:
-      - '600'
+      - '600.0'
       x-stainless-retry-count:
       - '0'
     method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+    uri: http://127.0.0.1:1234/v1/chat/completions
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAC/4xUbW8aORD+K5a/0ErAAXmBIvXLhSjXXpKmF5oqOSpivMOuE6+99UvoBvHfb8Ys
-        JCdVar+w7NjzzPPMPDtrLgurJHg+/nfNl8ooX8wdCG8NH/NgrZ5LobXnba5MBj/4uNfmJXgvcuDj
-        NXdW45ML75UPwgS89yqJMOFHcGIurQmAx5iSW5vrlBwKG/MizL3KjQjREdKpuv3749mX+nKSP1+c
-        nR6cT28e7ia34XLysby77h19mhbq/OuNvpxeHN1NZX37oB8uVu/f882mzZfRyKCI+poLl8cSSyIL
-        vp5xBz7q4GfEacaVny+F9jCvrFdBPQHGU6A9415jP+Yqw1Dz0unPOB4II3SNOtPBtADmbXQSmPJM
-        sOjBdUgldkRDxpSpYmBLZ0t27+B7BB+6SMl3cwhvWiprvb3vMtTi2ZPQMYFkyoEMumZQLiDLEkiw
-        iH39+ZwhgquZD06ZHIvRrzBs2dlG2mxVKFlsqRhYNWG2tK4UIdDfErDdBMmuavxnqDq4VNhYBk8q
-        A4Ni7JJ5YbAnz4I6yaxjlXACs8HtY0sWUH6S2IhIhaUmH8jEV5kHSLNgT1EbcGKhtAo18qSiSB1p
-        CfkIjkkbdcZKLFpFLQIk7K1cVL+oKwRlImLUBCX3rJKvZGDR0JlFctiwTATRTcOqtMAubYviwPo0
-        2JjnOAbI5nIFaYgnX087o3dj9qGsnK2QyyVERNWvhF5XIJXQ7FRDchMNOnURJZDOE1si9Yy9adHb
-        h53q1tsZ37R/4bTf5jh8NxqzLz5N5y/hMmnJHScOMuoJoiXJPzHu4NfGLfZ4jWfuW/3BweFRa+fP
-        Jqwa6XuXCsqm4aysy8hp5ABrTDN2nC+UFfqjIUwY8oUxtbChQdW3XDzI6MglTvnHVMDU1gBbqVAw
-        IXFNefIEGSQlSRyCh61jdkzajMahAiGqEruOHdZAac6Gnb32tAnZ4odaIsFlTRx34P83Ngg0qthO
-        4KVjr/Sg6zbfNrj+DH4ruHL+FEEWU6dwT/6TVg/agasMT2BRxN7x9xGtyrqiu/u1hQibb22OsEgU
-        7/aHw+Pj4bDXHzS5+mqixW28OYvP14ORvVp9msjB50eEQgGg8UZ6+j9yQFt2DjsH/UVH0Va2C3Im
-        XpCFCF1py0pDqtnmcbfMX6LzYB/B4OocDEdtjh8HTnIfOxwMaMsHofehYa+32fwHAAD//wMAjt88
-        FEwGAAA=
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
     headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:49:21 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      multiple static analysis results. Analyze each of the following 2 tainted paths
+      and determine if they are plausible vulnerabilities or false positives.\n\n---
+      SLICE slice-1 ---\nLocation: unknown\nHit: Possible SQL injection\nSource:\nuser_id
+      = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT * FROM users WHERE
+      id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit: Hardcoded
+      password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor each
+      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), indicate
+      if it is a false positive, and suggest a CWE if applicable. Map each result
+      back to its slice_id."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
+      extracted `BatchTriageResult` with all the required parameters with correct
+      types","parameters":{"$defs":{"IndividualTriageResult":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"},"slice_id":{"title":"Slice Id","type":"string"}},"required":["analysis","plausibility","is_false_positive","suggested_cwe","slice_id"],"title":"IndividualTriageResult","type":"object"}},"properties":{"results":{"items":{"$ref":"#/$defs/IndividualTriageResult"},"title":"Results","type":"array"}},"required":["results"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1819'
       Content-Type:
       - application/json
-      Date:
-      - Mon, 20 Apr 2026 09:23:32 GMT
-      Expires:
-      - Mon, 20 Apr 2026 09:23:32 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
-      Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=8579
-      Set-Cookie:
-      - NID=530=FOmXkJTJsANjwGg6RGiIj9BEk9iyZvWKRnhJIHXlhgDPRsRneHhnDmzln-JaJ7Y4rAHDRTtgEu5OoOZ_BK4GWzR9V-NFqZngd7iE8vw5wWw9-9hcokHYBzwg3T4UWU4RnzJnXarES9HPgzLH3AdRJ66pLl8hnKDrqv1TzYKb0nCgk4Jhpq6hqggqOQYkCGPTU3c;
-        expires=Tue, 20-Oct-2026 09:23:23 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      - X-Origin
-      - Referer
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
       - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:49:21 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      multiple static analysis results. Analyze each of the following 2 tainted paths
+      and determine if they are plausible vulnerabilities or false positives.\n\n---
+      SLICE slice-1 ---\nLocation: unknown\nHit: Possible SQL injection\nSource:\nuser_id
+      = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT * FROM users WHERE
+      id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit: Hardcoded
+      password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor each
+      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), indicate
+      if it is a false positive, and suggest a CWE if applicable. Map each result
+      back to its slice_id."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"BatchTriageResult"}},"tools":[{"type":"function","function":{"name":"BatchTriageResult","description":"Correctly
+      extracted `BatchTriageResult` with all the required parameters with correct
+      types","parameters":{"$defs":{"IndividualTriageResult":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"},"slice_id":{"title":"Slice Id","type":"string"}},"required":["analysis","plausibility","is_false_positive","suggested_cwe","slice_id"],"title":"IndividualTriageResult","type":"object"}},"properties":{"results":{"items":{"$ref":"#/$defs/IndividualTriageResult"},"title":"Results","type":"array"}},"required":["results"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1819'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:49:21 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      multiple static analysis results. Analyze each of the following 2 tainted paths
+      and determine if they are plausible vulnerabilities or false positives.\n\n---
+      SLICE slice-1 ---\nLocation: unknown\nHit: Possible SQL injection\nSource:\nuser_id
+      = request.args.get(''id'')\nSink:\ncursor.execute(f''SELECT * FROM users WHERE
+      id={user_id}'')\n\n--- SLICE slice-2 ---\nLocation: unknown\nHit: Hardcoded
+      password\nSource:\nPASS = ''12345''\nSink:\nconnect(password=PASS)\n\nFor each
+      SLICE, provide a step-by-step reasoning, a plausibility score (0-1), indicate
+      if it is a false positive, and suggest a CWE if applicable. Map each result
+      back to its slice_id."}],"model":"qwen3.5-2b-mlx","response_format":{"type":"json_schema","json_schema":{"name":"BatchTriageResult","schema":{"$defs":{"IndividualTriageResult":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"},"slice_id":{"title":"Slice Id","type":"string"}},"required":["analysis","plausibility","is_false_positive","suggested_cwe","slice_id"],"title":"IndividualTriageResult","type":"object"}},"properties":{"results":{"items":{"$ref":"#/$defs/IndividualTriageResult"},"title":"Results","type":"array"}},"required":["results"],"title":"BatchTriageResult","type":"object"}}},"temperature":0.0}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1675'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: "{\n  \"id\": \"chatcmpl-0jxtdw51uv7l70sdyzlus6h\",\n  \"object\": \"chat.completion\",\n
+        \ \"created\": 1776801701,\n  \"model\": \"qwen3.5-2b-mlx\",\n  \"choices\":
+        [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n
+        \       \"content\": \"{ \\\"results\\\": [ { \\\"analysis\\\": \\\"The first
+        result is a **False Positive**. The code snippet `user_id = request.args.get('id')`
+        retrieves the input from a URL parameter, which is standard and safe. The
+        subsequent line `cursor.execute(f'SELECT * FROM users WHERE id={user_id}')`
+        is a direct SQL injection vulnerability because the user input is interpolated
+        directly into an SQL query string without any parameterization or escaping.
+        However, this specific vulnerability exists in the *Sink* code (the query
+        execution), not the *Source* logic. The source line `request.args.get('id')`
+        is perfectly normal and does not contain any injection vectors. Therefore,
+        the result labeled 'Possible SQL injection' is attributed to a false positive
+        in the source analysis. The actual vulnerability lies in the Sink, but since
+        the prompt asks to analyze the *Source* line specifically for that hit, and
+        the Source is benign, we flag this as a false positive regarding the source
+        line. If the analysis tool incorrectly attributed the Sink vulnerability to
+        the Source, it is a false positive attribution.\\\", \\\"plausibility\\\":
+        0.15, \\\"is_false_positive\\\": true, \\\"suggested_cwe\\\": \\\"CWE-89:
+        Improper Neutralization of Special Elements Used in an SQL Command Injection\\\",
+        \\\"slice_id\\\": \\\"SLICE slice-1\\\"}, { \\\"analysis\\\": \\\"The second
+        result is a **False Positive**. The variable `PASS` is assigned the literal
+        string `'12345'`. This is a hardcoded password, which is a severe security
+        risk (CWE-798: Hardcoded Credentials). However, the provided Source code snippet
+        `PASS = '12345'` is a simple assignment statement. It does not contain any
+        logic that would execute the password during runtime; it is just a configuration
+        or variable declaration. The actual vulnerability (the usage of `connect(password=PASS)`)
+        is in the Sink code, which is not provided. Therefore, attributing a hardcoded
+        password vulnerability to this specific Source line is incorrect; the source
+        code itself is benign. This results in a false positive for the specific analysis
+        of that line.\\\", \\\"plausibility\\\": 0.15, \\\"is_false_positive\\\":
+        true, \\\"suggested_cwe\\\": \\\"CWE-798: Hardcoded Credentials\\\", \\\"slice_id\\\":
+        \\\"SLICE slice-2\\\"} ] }\",\n        \"reasoning_content\": \"\",\n        \"tool_calls\":
+        []\n      },\n      \"logprobs\": null,\n      \"finish_reason\": \"stop\"\n
+        \   }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 182,\n    \"completion_tokens\":
+        494,\n    \"total_tokens\": 676,\n    \"completion_tokens_details\": {\n      \"reasoning_tokens\":
+        0\n    }\n  },\n  \"stats\": {},\n  \"system_fingerprint\": \"qwen3.5-2b-mlx\"\n}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '2794'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 20:02:05 GMT
+      ETag:
+      - W/"aea-SALwu5pIuZtwtNPjT1FIf7/eNek"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
     status:
       code: 200
       message: OK

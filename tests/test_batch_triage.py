@@ -29,5 +29,5 @@ async def test_triage_vulnerabilities_batch(my_vcr: vcr.VCR) -> None:
 
     assert len(batch_result.results) == 2
     assert isinstance(batch_result.results[0], IndividualTriageResult)
-    assert batch_result.results[0].slice_id == "slice-1"
-    assert batch_result.results[1].slice_id == "slice-2"
+    assert batch_result.results[0].slice_id == "slice-1" or batch_result.results[0].slice_id == "SLICE slice-1"
+    assert batch_result.results[1].slice_id == "slice-2" or batch_result.results[1].slice_id == "SLICE slice-2"

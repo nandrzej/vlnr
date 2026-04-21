@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def run_benchmark(dataset_path: str, client: LLMClient):
+def run_benchmark(dataset_path: str, client: LLMClient) -> float:
     with open(dataset_path, "r") as f:
         dataset = json.load(f)
 

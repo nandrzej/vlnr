@@ -1,321 +1,12 @@
 interactions:
 - request:
-    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
-      return a JSON object matching this schema:\n\n        {\n  \"properties\": {\n    \"analysis\":
-      {\n      \"description\": \"Step-by-step analysis of the tainted path\",\n      \"title\":
-      \"Analysis\",\n      \"type\": \"string\"\n    },\n    \"plausibility\": {\n      \"description\":
-      \"Likelihood of this being a real vulnerability\",\n      \"maximum\": 1,\n      \"minimum\":
-      0,\n      \"title\": \"Plausibility\",\n      \"type\": \"number\"\n    },\n    \"is_false_positive\":
-      {\n      \"title\": \"Is False Positive\",\n      \"type\": \"boolean\"\n    },\n    \"suggested_cwe\":
-      {\n      \"anyOf\": [\n        {\n          \"type\": \"string\"\n        },\n        {\n          \"type\":
-      \"null\"\n        }\n      ],\n      \"title\": \"Suggested Cwe\"\n    }\n  },\n  \"required\":
-      [\n    \"analysis\",\n    \"plausibility\",\n    \"is_false_positive\",\n    \"suggested_cwe\"\n  ],\n  \"title\":
-      \"TriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid JSON
-      instance, not the schema definition."},{"role":"user","content":"You are a security
-      expert triaging static analysis results. Analyze the following tainted path
-      and determine if it is a plausible vulnerability or a false positive.\n\nTool
-      Hit: Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
-      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
-      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
-      reasoning and a plausibility score (0-1)."}],"model":"meta/llama-3.1-8b-instruct","response_format":{"type":"json_object"}}'
-    headers:
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '1664'
-      Content-Type:
-      - application/json
-      Host:
-      - integrate.api.nvidia.com
-      User-Agent:
-      - OpenAI/Python 2.32.0
-      X-Stainless-Arch:
-      - arm64
-      X-Stainless-Async:
-      - 'false'
-      X-Stainless-Lang:
-      - python
-      X-Stainless-OS:
-      - MacOS
-      X-Stainless-Package-Version:
-      - 2.32.0
-      X-Stainless-Runtime:
-      - CPython
-      X-Stainless-Runtime-Version:
-      - 3.14.3
-      authorization:
-      - Bearer <REDACTED>
-      x-stainless-read-timeout:
-      - '600'
-      x-stainless-retry-count:
-      - '0'
-    method: POST
-    uri: https://integrate.api.nvidia.com/v1/chat/completions
-  response:
-    body:
-      string: '{"id":"chatcmpl-83eb3eb3-eb68-46f9-b476-897a7c9b2ac2","choices":[{"index":0,"message":{"content":"**Tainted
-        Path Analysis**\n\n**Tool Hit:** Possible SQL injection\n**Source Code:**
-        `user_input = request.args.get(''id'')`\n**Sink Code:** `db.execute(f''SELECT
-        * FROM users WHERE id = {user_input}'')`\n**Additional Context:** \n\nBased
-        on the provided information, I will perform a step-by-step analysis of the
-        tainted path to determine its plausibility.\n\n**Step 1: Flow Analysis**\n\nThe
-        tainted path starts at the user-provided input `user_input = request.args.get(''id'')`.
-        This input is obtained from the URL query string, which is a common source
-        of user input. The input is then passed to the `db.execute()` function, which
-        executes a SQL query.\n\n**Step 2: Sanitization Analysis**\n\nThere is no
-        explicit sanitization of the `user_input` variable. However, the `request.args.get()`
-        method is used to retrieve the input, which may perform some basic sanitization
-        (e.g., URL encoding). Nevertheless, this sanitization is not sufficient to
-        prevent SQL injection attacks.\n\n**Step 3: Reachability Analysis**\n\nThe
-        `db.execute()` function is executed with the tainted input, which allows an
-        attacker to inject malicious SQL code. The `f''SELECT * FROM users WHERE id
-        = {user_input}''` string concatenation can lead to a SQL injection vulnerability
-        if the input is not properly sanitized.\n\n**Conclusion**\n\nBased on the
-        analysis, the tainted path is vulnerable to a SQL injection attack. The lack
-        of explicit sanitization and the reachability of the `db.execute()` function
-        make it possible for an attacker to inject malicious SQL code. However, the
-        `request.args.get()` method may perform some basic sanitization, which could
-        reduce the attack surface.\n\n**Plausibility Score**\n\nGiven the analysis,
-        I would assign a plausibility score of 0.8 (out of 1). The vulnerability is
-        plausible because:\n\n* The tainted path starts at a user-provided input,
-        which is a common source of vulnerabilities.\n* There is no explicit sanitization
-        of the input.\n* The `db.execute()` function is executed with the tainted
-        input, making it possible for an attacker to inject malicious SQL code.\n\nHowever,
-        the plausibility score is not 1 because:\n\n* The `request.args.get()` method
-        may perform some basic sanitization, which could reduce the attack surface.\n*
-        The vulnerability may be mitigated by using parameterized queries or prepared
-        statements.\n\n**Recommendation**\n\nTo mitigate this vulnerability, I recommend
-        using parameterized queries or prepared statements to prevent SQL injection
-        attacks. Additionally, consider implementing additional sanitization mechanisms
-        to ensure the input is properly validated and sanitized.","role":"assistant","reasoning_content":null},"finish_reason":"stop"}],"created":1776613352,"model":"meta/llama-3.1-8b-instruct","object":"chat.completion","usage":{"prompt_tokens":379,"completion_tokens":540,"total_tokens":919,"prompt_tokens_details":{"audio_tokens":null,"cached_tokens":32}},"nvext":{"worker_id":{"prefill_worker_id":7587894239496826897,"decode_worker_id":7587894239496826897}}}'
-    headers:
-      Access-Control-Expose-Headers:
-      - nvcf-reqid
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '3120'
-      Content-Type:
-      - application/json
-      Date:
-      - Sun, 19 Apr 2026 15:42:36 GMT
-      Nvcf-Reqid:
-      - ac219ccd-c569-40b8-8ac6-1b688cb2b7e0
-      Nvcf-Status:
-      - fulfilled
-      Vary:
-      - Origin
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"messages":[{"role":"system","content":"\n        Parse the content and
-      return a JSON object matching this schema:\n\n        {\n  \"properties\": {\n    \"analysis\":
-      {\n      \"description\": \"Step-by-step analysis of the tainted path\",\n      \"title\":
-      \"Analysis\",\n      \"type\": \"string\"\n    },\n    \"plausibility\": {\n      \"description\":
-      \"Likelihood of this being a real vulnerability\",\n      \"maximum\": 1,\n      \"minimum\":
-      0,\n      \"title\": \"Plausibility\",\n      \"type\": \"number\"\n    },\n    \"is_false_positive\":
-      {\n      \"title\": \"Is False Positive\",\n      \"type\": \"boolean\"\n    },\n    \"suggested_cwe\":
-      {\n      \"anyOf\": [\n        {\n          \"type\": \"string\"\n        },\n        {\n          \"type\":
-      \"null\"\n        }\n      ],\n      \"title\": \"Suggested Cwe\"\n    }\n  },\n  \"required\":
-      [\n    \"analysis\",\n    \"plausibility\",\n    \"is_false_positive\",\n    \"suggested_cwe\"\n  ],\n  \"title\":
-      \"TriageResult\",\n  \"type\": \"object\"\n}\n\n        Return a valid JSON
-      instance, not the schema definition."},{"role":"user","content":"You are a security
-      expert triaging static analysis results. Analyze the following tainted path
-      and determine if it is a plausible vulnerability or a false positive.\n\nTool
-      Hit: Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
-      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
-      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
-      reasoning and a plausibility score (0-1)."},{"role":"assistant","content":"**Tainted
-      Path Analysis**\n\n**Tool Hit:** Possible SQL injection\n**Source Code:** `user_input
-      = request.args.get(''id'')`\n**Sink Code:** `db.execute(f''SELECT * FROM users
-      WHERE id = {user_input}'')`\n**Additional Context:** \n\nBased on the provided
-      information, I will perform a step-by-step analysis of the tainted path to determine
-      its plausibility.\n\n**Step 1: Flow Analysis**\n\nThe tainted path starts at
-      the user-provided input `user_input = request.args.get(''id'')`. This input
-      is obtained from the URL query string, which is a common source of user input.
-      The input is then passed to the `db.execute()` function, which executes a SQL
-      query.\n\n**Step 2: Sanitization Analysis**\n\nThere is no explicit sanitization
-      of the `user_input` variable. However, the `request.args.get()` method is used
-      to retrieve the input, which may perform some basic sanitization (e.g., URL
-      encoding). Nevertheless, this sanitization is not sufficient to prevent SQL
-      injection attacks.\n\n**Step 3: Reachability Analysis**\n\nThe `db.execute()`
-      function is executed with the tainted input, which allows an attacker to inject
-      malicious SQL code. The `f''SELECT * FROM users WHERE id = {user_input}''` string
-      concatenation can lead to a SQL injection vulnerability if the input is not
-      properly sanitized.\n\n**Conclusion**\n\nBased on the analysis, the tainted
-      path is vulnerable to a SQL injection attack. The lack of explicit sanitization
-      and the reachability of the `db.execute()` function make it possible for an
-      attacker to inject malicious SQL code. However, the `request.args.get()` method
-      may perform some basic sanitization, which could reduce the attack surface.\n\n**Plausibility
-      Score**\n\nGiven the analysis, I would assign a plausibility score of 0.8 (out
-      of 1). The vulnerability is plausible because:\n\n* The tainted path starts
-      at a user-provided input, which is a common source of vulnerabilities.\n* There
-      is no explicit sanitization of the input.\n* The `db.execute()` function is
-      executed with the tainted input, making it possible for an attacker to inject
-      malicious SQL code.\n\nHowever, the plausibility score is not 1 because:\n\n*
-      The `request.args.get()` method may perform some basic sanitization, which could
-      reduce the attack surface.\n* The vulnerability may be mitigated by using parameterized
-      queries or prepared statements.\n\n**Recommendation**\n\nTo mitigate this vulnerability,
-      I recommend using parameterized queries or prepared statements to prevent SQL
-      injection attacks. Additionally, consider implementing additional sanitization
-      mechanisms to ensure the input is properly validated and sanitized."},{"role":"user","content":"Correct
-      your JSON ONLY RESPONSE, based on the following errors:\n<failed_attempts>\n\n<generation
-      number=\"1\">\n<exception>\n    1 validation error for TriageResult\n  Invalid
-      JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value=\"{user_input}'')`\\n**Addit...WHERE
-      id = {user_input}\", input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id=''chatcmpl-83eb3eb3-eb68-46f9-b476-897a7c9b2ac2'',
-      choices=[Choice(finish_reason=''stop'', index=0, logprobs=None, message=ChatCompletionMessage(content=\"**Tainted
-      Path Analysis**\\n\\n**Tool Hit:** Possible SQL injection\\n**Source Code:**
-      `user_input = request.args.get(''id'')`\\n**Sink Code:** `db.execute(f''SELECT
-      * FROM users WHERE id = {user_input}'')`\\n**Additional Context:** \\n\\nBased
-      on the provided information, I will perform a step-by-step analysis of the tainted
-      path to determine its plausibility.\\n\\n**Step 1: Flow Analysis**\\n\\nThe
-      tainted path starts at the user-provided input `user_input = request.args.get(''id'')`.
-      This input is obtained from the URL query string, which is a common source of
-      user input. The input is then passed to the `db.execute()` function, which executes
-      a SQL query.\\n\\n**Step 2: Sanitization Analysis**\\n\\nThere is no explicit
-      sanitization of the `user_input` variable. However, the `request.args.get()`
-      method is used to retrieve the input, which may perform some basic sanitization
-      (e.g., URL encoding). Nevertheless, this sanitization is not sufficient to prevent
-      SQL injection attacks.\\n\\n**Step 3: Reachability Analysis**\\n\\nThe `db.execute()`
-      function is executed with the tainted input, which allows an attacker to inject
-      malicious SQL code. The `f''SELECT * FROM users WHERE id = {user_input}''` string
-      concatenation can lead to a SQL injection vulnerability if the input is not
-      properly sanitized.\\n\\n**Conclusion**\\n\\nBased on the analysis, the tainted
-      path is vulnerable to a SQL injection attack. The lack of explicit sanitization
-      and the reachability of the `db.execute()` function make it possible for an
-      attacker to inject malicious SQL code. However, the `request.args.get()` method
-      may perform some basic sanitization, which could reduce the attack surface.\\n\\n**Plausibility
-      Score**\\n\\nGiven the analysis, I would assign a plausibility score of 0.8
-      (out of 1). The vulnerability is plausible because:\\n\\n* The tainted path
-      starts at a user-provided input, which is a common source of vulnerabilities.\\n*
-      There is no explicit sanitization of the input.\\n* The `db.execute()` function
-      is executed with the tainted input, making it possible for an attacker to inject
-      malicious SQL code.\\n\\nHowever, the plausibility score is not 1 because:\\n\\n*
-      The `request.args.get()` method may perform some basic sanitization, which could
-      reduce the attack surface.\\n* The vulnerability may be mitigated by using parameterized
-      queries or prepared statements.\\n\\n**Recommendation**\\n\\nTo mitigate this
-      vulnerability, I recommend using parameterized queries or prepared statements
-      to prevent SQL injection attacks. Additionally, consider implementing additional
-      sanitization mechanisms to ensure the input is properly validated and sanitized.\",
-      refusal=None, role=''assistant'', annotations=None, audio=None, function_call=None,
-      tool_calls=None, reasoning_content=None))], created=1776613352, model=''meta/llama-3.1-8b-instruct'',
-      object=''chat.completion'', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=540,
-      prompt_tokens=379, total_tokens=919, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None,
-      audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0,
-      cached_tokens=32)), nvext={''worker_id'': {''prefill_worker_id'': 7587894239496826897,
-      ''decode_worker_id'': 7587894239496826897}})\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    1
-      validation error for TriageResult\n  Invalid JSON: key must be a string at line
-      1 column 2 [type=json_invalid, input_value=\"{user_input}'')`\\n**Addit...WHERE
-      id = {user_input}\", input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid\n</last_exception>"}],"model":"meta/llama-3.1-8b-instruct","response_format":{"type":"json_object"}}'
-    headers:
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '8679'
-      Content-Type:
-      - application/json
-      Host:
-      - integrate.api.nvidia.com
-      User-Agent:
-      - OpenAI/Python 2.32.0
-      X-Stainless-Arch:
-      - arm64
-      X-Stainless-Async:
-      - 'false'
-      X-Stainless-Lang:
-      - python
-      X-Stainless-OS:
-      - MacOS
-      X-Stainless-Package-Version:
-      - 2.32.0
-      X-Stainless-Runtime:
-      - CPython
-      X-Stainless-Runtime-Version:
-      - 3.14.3
-      authorization:
-      - Bearer <REDACTED>
-      x-stainless-read-timeout:
-      - '600'
-      x-stainless-retry-count:
-      - '0'
-    method: POST
-    uri: https://integrate.api.nvidia.com/v1/chat/completions
-  response:
-    body:
-      string: '{"id":"chatcmpl-dce07816-a5c9-43a4-952d-367d5fdadd93","choices":[{"index":0,"message":{"content":"```json\n{\n  \"analysis\":
-        \"**Tainted Path Analysis**\\n\\n**Tool Hit:** Possible SQL injection\\n**Source
-        Code:** `user_input = request.args.get(''id'')`\\n**Sink Code:** `db.execute(f''SELECT
-        * FROM users WHERE id = {user_input}'')`\\n**Additional Context:** \\n\\nBased
-        on the provided information, I will perform a step-by-step analysis of the
-        tainted path to determine its plausibility.\\n\\n**Step 1: Flow Analysis**\\n\\nThe
-        tainted path starts at the user-provided input `user_input = request.args.get(''id'')`.
-        This input is obtained from the URL query string, which is a common source
-        of user input. The input is then passed to the `db.execute()` function, which
-        executes a SQL query.\\n\\n**Step 2: Sanitization Analysis**\\n\\nThere is
-        no explicit sanitization of the `user_input` variable. However, the `request.args.get()`
-        method is used to retrieve the input, which may perform some basic sanitization
-        (e.g., URL encoding). Nevertheless, this sanitization is not sufficient to
-        prevent SQL injection attacks.\\n\\n**Step 3: Reachability Analysis**\\n\\nThe
-        `db.execute()` function is executed with the tainted input, which allows an
-        attacker to inject malicious SQL code. The `f''SELECT * FROM users WHERE id
-        = {user_input}''` string concatenation can lead to a SQL injection vulnerability
-        if the input is not properly sanitized.\\n\\n**Conclusion**\\n\\nBased on
-        the analysis, the tainted path is vulnerable to a SQL injection attack. The
-        lack of explicit sanitization and the reachability of the `db.execute()` function
-        make it possible for an attacker to inject malicious SQL code. However, the
-        `request.args.get()` method may perform some basic sanitization, which could
-        reduce the attack surface.\\n\\n**Plausibility Score**\\n\\nGiven the analysis,
-        I would assign a plausibility score of 0.8 (out of 1). The vulnerability is
-        plausible because:\\n\\n* The tainted path starts at a user-provided input,
-        which is a common source of vulnerabilities.\\n* There is no explicit sanitization
-        of the input.\\n* The `db.execute()` function is executed with the tainted
-        input, making it possible for an attacker to inject malicious SQL code.\\n\\nHowever,
-        the plausibility score is not 1 because:\\n\\n* The `request.args.get()` method
-        may perform some basic sanitization, which could reduce the attack surface.\\n*
-        The vulnerability may be mitigated by using parameterized queries or prepared
-        statements.\\n\\n**Recommendation**\\n\\nTo mitigate this vulnerability, I
-        recommend using parameterized queries or prepared statements to prevent SQL
-        injection attacks. Additionally, consider implementing additional sanitization
-        mechanisms to ensure the input is properly validated and sanitized.\",\n  \"plausibility\":
-        0.8,\n  \"is_false_positive\": false,\n  \"suggested_cwe\": \"CWE-89: Improper
-        Neutralization of Input During SQL Command or Query Construction\"\n}\n```","role":"assistant","reasoning_content":null},"finish_reason":"stop"}],"created":1776613356,"model":"meta/llama-3.1-8b-instruct","object":"chat.completion","usage":{"prompt_tokens":1933,"completion_tokens":641,"total_tokens":2574,"prompt_tokens_details":{"audio_tokens":null,"cached_tokens":912}},"nvext":{"worker_id":{"prefill_worker_id":7587894239496826897,"decode_worker_id":7587894239496826897}}}'
-    headers:
-      Access-Control-Expose-Headers:
-      - nvcf-reqid
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '3371'
-      Content-Type:
-      - application/json
-      Date:
-      - Sun, 19 Apr 2026 15:42:40 GMT
-      Nvcf-Reqid:
-      - 4822a32f-ed25-4042-9a5c-071feed46a71
-      Nvcf-Status:
-      - fulfilled
-      Vary:
-      - Origin
-    status:
-      code: 200
-      message: OK
-- request:
     body: '{"messages":[{"role":"user","content":"You are a security expert triaging
       static analysis results. Analyze the following tainted path and determine if
       it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
       Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
       Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
       Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
-      reasoning and a plausibility score (0-1)."}],"model":"models/gemma-4-31b-it","tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
       extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
       analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
       of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
@@ -329,11 +20,11 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '1307'
+      - '1350'
       Content-Type:
       - application/json
       Host:
-      - generativelanguage.googleapis.com
+      - api.openai.com
       User-Agent:
       - OpenAI/Python 2.32.0
       X-Stainless-Arch:
@@ -346,6 +37,8 @@ interactions:
       - MacOS
       X-Stainless-Package-Version:
       - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
       X-Stainless-Runtime:
       - CPython
       X-Stainless-Runtime-Version:
@@ -353,63 +46,2695 @@ interactions:
       authorization:
       - Bearer <REDACTED>
       x-stainless-read-timeout:
-      - '600'
+      - '600.0'
       x-stainless-retry-count:
       - '0'
     method: POST
-    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+    uri: https://api.openai.com/v1/chat/completions
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAC/2RUbVPbOBD+Kzv6ErhxcklDSpoZPnTA5colcIVcGbh0bEXe2KKy5EoywWT837sy
-        KdzNfYmVR/vy7LO72jFRGCnQsdk/O7aRWroiscid0WzGvDEqEVwpxyImdYZPbDaMWInO8RzZbMes
-        UfRl3DnpPNee7P7lFGLik7c8EUZ7pGtyyY3JVefsC1PnhU+czDX3tQ2RYnn358X5383lWf68OI/H
-        8+XXh/uzO395dlHe3wwnV8tCzm+/qsvlYnK/FM3dg3pYbE9OWNtGbFNr4WWgvmPc5nVJKYkF260Y
-        11w1RHLFZiu2LBBqhxakrmoPaTgn3TkF6cCitxIfMYNMWhReNbCxpgRPbhZ/1Og8vIaHg3SPDQhz
-        gxz9QU9mvcP0MIJtIUURQnINtfa2dp6iOlNbgQOgUhw8clVjMKHo+i0hlmvMMjKW2hvgcPNlDpTF
-        NuCInM6Jf/iluJv+HjlIN72beB6fLuE3+HR9tehqdHD7R3wdg8zgBHZvlba99HBPIfADoUITBeAT
-        LyuFYDZdTqkfsNM02KLtmGoDjmvp5TMPN1GoQWb7s7EhbXCvuOUlerTymeoI5CWSXEHFMCsZtxls
-        eQNUX2VJbu3/m5HofdTAvefiO/VKmFplZGkeZYZE+EW4DeVLZZaCq0lp7iAdwdU1jE5GaQi8bioq
-        C3gd1PVSdCQDx24shQeH2lEljwhUAB+sWLRi0iUbrhwmlXm5o6HpALqrFCfl11JJ3xA8IsjVeY6h
-        sYnYYjdfp7dxf/phBp9LolsR90usKZ3aCxbE+T9yU6GQXEGs8GWwSMbQ/tDjoMupKUtSDQ564d/n
-        Xyr1DlespbXTpDWN+tJKWs1rdLXyjFZCZgQOf+B0/WFrw3Y2VTB73ZT2W9t+i5ignacKqKDj4/fv
-        j8bT0bu97+T8WPG7ZHxxJEfaxX/5+btPzccFhSpNhoosuq/7PUfi1z/qj0frvgwPgVkHimQgCu4H
-        woSx6nJGrP71fryhiTffqRfEYDqJGOlWVv4VGw+H4WHxXL1CR9NJ2/4EAAD//wMAwrhfbL8EAAA=
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
     headers:
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Cache-Control:
-      - private
-      Content-Encoding:
-      - gzip
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebb7d2d781931-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
       Content-Type:
-      - application/json
+      - application/json; charset=utf-8
       Date:
-      - Mon, 20 Apr 2026 00:10:12 GMT
-      Expires:
-      - Mon, 20 Apr 2026 00:10:12 GMT
-      P3P:
-      - CP="This is not a P3P policy! See g.co/p3phelp for more info."
+      - Tue, 21 Apr 2026 19:18:03 GMT
       Server:
-      - scaffolding on HTTPServer2
-      Server-Timing:
-      - gfet4t7; dur=5811
-      Set-Cookie:
-      - NID=530=I7llE4crYv6GJq8ky0m6IbKC2RcFeOYYo-3tCq6DxJSo13M3pz1pyUODKN_fRfrWcv5JlbyXznO2AYGo06-CnleAVDOArJ54_LCOgRzJJAE02pfQfzWh-R5hTaI-FLDiC4zDJU2ZSJRqOws6h0Yi5PUGKAlSlzwmwlJ-wFKI2JUAUZPQ09xnz8lehkseOUTZ4w;
-        expires=Tue, 20-Oct-2026 00:10:06 GMT; path=/; domain=.generativelanguage.googleapis.com;
-        HttpOnly
-      Transfer-Encoding:
-      - chunked
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
       Vary:
       - Origin
-      - X-Origin
-      - Referer
       X-Content-Type-Options:
       - nosniff
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-XSS-Protection:
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=NftcrIOUq2QIULZBN3PHa_WhUlmc0PeHQbcuou0mTwM-1776799083.0614147-1.0.1.1-2CipSaZKbnFSxqYd0_lLOe4DsetvV3ssSOpKsBterlBnECXJ4K5Oxonv.0J6GFO5e4AdTE.nVBWpb4QtBhy8sqKzIQEvD627tgdGOHrlH9FYbTKukmWDy5ZxtYpXfh6k;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        19:48:03 GMT
+      - _cfuvid=qtEo19ZX_HC69hl2LI3usagjq1w7K8g7rR6NscEXJSA-1776799083.0614147-1.0.1.1-ksPiQeBbgxg43S3mTlhj05pE0fPaB173dWef_B.fnBE;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_b82fa6ec56ea480394cbc72b578e8eab
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=NftcrIOUq2QIULZBN3PHa_WhUlmc0PeHQbcuou0mTwM-1776799083.0614147-1.0.1.1-2CipSaZKbnFSxqYd0_lLOe4DsetvV3ssSOpKsBterlBnECXJ4K5Oxonv.0J6GFO5e4AdTE.nVBWpb4QtBhy8sqKzIQEvD627tgdGOHrlH9FYbTKukmWDy5ZxtYpXfh6k;
+        _cfuvid=qtEo19ZX_HC69hl2LI3usagjq1w7K8g7rR6NscEXJSA-1776799083.0614147-1.0.1.1-ksPiQeBbgxg43S3mTlhj05pE0fPaB173dWef_B.fnBE
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
       - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebb8c7c029e00-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:18:05 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_50c6e3dee6cb45738daf92ca44dc8e80
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=NftcrIOUq2QIULZBN3PHa_WhUlmc0PeHQbcuou0mTwM-1776799083.0614147-1.0.1.1-2CipSaZKbnFSxqYd0_lLOe4DsetvV3ssSOpKsBterlBnECXJ4K5Oxonv.0J6GFO5e4AdTE.nVBWpb4QtBhy8sqKzIQEvD627tgdGOHrlH9FYbTKukmWDy5ZxtYpXfh6k;
+        _cfuvid=qtEo19ZX_HC69hl2LI3usagjq1w7K8g7rR6NscEXJSA-1776799083.0614147-1.0.1.1-ksPiQeBbgxg43S3mTlhj05pE0fPaB173dWef_B.fnBE
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebbcc7c18e567-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:18:15 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_6a9a9ac3e4854b49a30a99e0d7eb8863
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebd50493d15ec-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:19:17 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=ZEGzOvzeZzNZVk11gOVNmI9pcYEOf1PLjE_txGt4oWE-1776799157.8069239-1.0.1.1-peaLKQWK2wvY_sxeHNyvtELkHbPXdFrBVcWvUfegpRFcVR_2i0kEDjFwrKslkLVsAh4obQ_W4Da7unZCfdbsMwWcfwH2TwG3or0dQnXUVOmrESCEoiu6Ji3hnbmUONUG;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        19:49:17 GMT
+      - _cfuvid=hU4dQ9pxcXuU9sVvmlHtKfDL9o3WLpS7kcqs7E9sZbo-1776799157.8069239-1.0.1.1-J4kXMXVLpNWKSBaR.yGT9AF3TrDIEYCRVVsD2FNGCfc;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_e8493a0420024adaba57293c265cbc48
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=ZEGzOvzeZzNZVk11gOVNmI9pcYEOf1PLjE_txGt4oWE-1776799157.8069239-1.0.1.1-peaLKQWK2wvY_sxeHNyvtELkHbPXdFrBVcWvUfegpRFcVR_2i0kEDjFwrKslkLVsAh4obQ_W4Da7unZCfdbsMwWcfwH2TwG3or0dQnXUVOmrESCEoiu6Ji3hnbmUONUG;
+        _cfuvid=hU4dQ9pxcXuU9sVvmlHtKfDL9o3WLpS7kcqs7E9sZbo-1776799157.8069239-1.0.1.1-J4kXMXVLpNWKSBaR.yGT9AF3TrDIEYCRVVsD2FNGCfc
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebd58f88ccf96-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:19:19 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_2ea64449565642b68386f7482c66d2d3
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=ZEGzOvzeZzNZVk11gOVNmI9pcYEOf1PLjE_txGt4oWE-1776799157.8069239-1.0.1.1-peaLKQWK2wvY_sxeHNyvtELkHbPXdFrBVcWvUfegpRFcVR_2i0kEDjFwrKslkLVsAh4obQ_W4Da7unZCfdbsMwWcfwH2TwG3or0dQnXUVOmrESCEoiu6Ji3hnbmUONUG;
+        _cfuvid=hU4dQ9pxcXuU9sVvmlHtKfDL9o3WLpS7kcqs7E9sZbo-1776799157.8069239-1.0.1.1-J4kXMXVLpNWKSBaR.yGT9AF3TrDIEYCRVVsD2FNGCfc
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebd7b3a1a321c-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:19:24 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_8a87ce1e7ab0447481ddcce9686c61cc
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebe46bdeb1eca-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:19:57 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=RtPWSIH3mW4M_ha1e1FtBw2vRcMjcct_P_m_GkBR1fU-1776799197.2384121-1.0.1.1-iKShWdVWA1lHYztRwAZWolyk9kWZ2tTCPgxeKM07OeRHDU4J3c0RnFKdRMUFpqd45cm1EIgflYW1g6hOiTCPrm1wt8ifTdnTvsALo3dSc.siRIqdL0PlZ6Z_2aLuXjo8;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        19:49:57 GMT
+      - _cfuvid=YduIBjcWSM9kHtlYflT9U6JD_sYV.2WzxjZZ0rSCIN4-1776799197.2384121-1.0.1.1-sJ5X5a53MfINLuz_vSvt2wd8mCVxTD65Pe1mdr68vG0;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_5927bfa298da4b3dad9826ff9b152efe
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=RtPWSIH3mW4M_ha1e1FtBw2vRcMjcct_P_m_GkBR1fU-1776799197.2384121-1.0.1.1-iKShWdVWA1lHYztRwAZWolyk9kWZ2tTCPgxeKM07OeRHDU4J3c0RnFKdRMUFpqd45cm1EIgflYW1g6hOiTCPrm1wt8ifTdnTvsALo3dSc.siRIqdL0PlZ6Z_2aLuXjo8;
+        _cfuvid=YduIBjcWSM9kHtlYflT9U6JD_sYV.2WzxjZZ0rSCIN4-1776799197.2384121-1.0.1.1-sJ5X5a53MfINLuz_vSvt2wd8mCVxTD65Pe1mdr68vG0
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebe503a3077fb-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:19:58 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_805fe4cc0642478cb1b06ef8f7e71d4b
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=RtPWSIH3mW4M_ha1e1FtBw2vRcMjcct_P_m_GkBR1fU-1776799197.2384121-1.0.1.1-iKShWdVWA1lHYztRwAZWolyk9kWZ2tTCPgxeKM07OeRHDU4J3c0RnFKdRMUFpqd45cm1EIgflYW1g6hOiTCPrm1wt8ifTdnTvsALo3dSc.siRIqdL0PlZ6Z_2aLuXjo8;
+        _cfuvid=YduIBjcWSM9kHtlYflT9U6JD_sYV.2WzxjZZ0rSCIN4-1776799197.2384121-1.0.1.1-sJ5X5a53MfINLuz_vSvt2wd8mCVxTD65Pe1mdr68vG0
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebe5f1830e527-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:20:01 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_d1ce7dc2aa9948689c8a891bd09e3469
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebf5d29fdb9de-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:20:41 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=xyJmch_IF_T5epwGAeEO3bw9yi9WlIE6Iu.ec9KpXCA-1776799241.7858834-1.0.1.1-Vo84ucv20jP..8iCr2UbITrM1nauDvIXvrUL2lOpZfVKhpyAd4RAuQhp9PvkoGBPqDzWSgdz4ej.YL.nWGSTLBXv9TEgr7zkn122KTJ7mTkBfPX9UnXMQEcvqtoskBzO;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        19:50:41 GMT
+      - _cfuvid=W50mYuPmGkDIGH9VjNv12mAj8dbyqGg4fcWWP8aqhMI-1776799241.7858834-1.0.1.1-nTIIEoAS0H_WVMeODrYIA4Ulu5PrhtQptDzNsbNZZr8;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_887beab1143740b199866e00920355e0
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=xyJmch_IF_T5epwGAeEO3bw9yi9WlIE6Iu.ec9KpXCA-1776799241.7858834-1.0.1.1-Vo84ucv20jP..8iCr2UbITrM1nauDvIXvrUL2lOpZfVKhpyAd4RAuQhp9PvkoGBPqDzWSgdz4ej.YL.nWGSTLBXv9TEgr7zkn122KTJ7mTkBfPX9UnXMQEcvqtoskBzO;
+        _cfuvid=W50mYuPmGkDIGH9VjNv12mAj8dbyqGg4fcWWP8aqhMI-1776799241.7858834-1.0.1.1-nTIIEoAS0H_WVMeODrYIA4Ulu5PrhtQptDzNsbNZZr8
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebfa57aa38131-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:20:53 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_10885fc53d2f4ace9436697babe0a86f
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=xyJmch_IF_T5epwGAeEO3bw9yi9WlIE6Iu.ec9KpXCA-1776799241.7858834-1.0.1.1-Vo84ucv20jP..8iCr2UbITrM1nauDvIXvrUL2lOpZfVKhpyAd4RAuQhp9PvkoGBPqDzWSgdz4ej.YL.nWGSTLBXv9TEgr7zkn122KTJ7mTkBfPX9UnXMQEcvqtoskBzO;
+        _cfuvid=W50mYuPmGkDIGH9VjNv12mAj8dbyqGg4fcWWP8aqhMI-1776799241.7858834-1.0.1.1-nTIIEoAS0H_WVMeODrYIA4Ulu5PrhtQptDzNsbNZZr8
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efebfbfba434f3e-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:20:57 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_83a813e71e474e8dac7f4348df870a01
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efec9443fa3b6ae-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:27:27 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=JHAvEpmiNF7c3RfHPe9LeQUaBa_tejIoxckDfOp7lxU-1776799647.3956742-1.0.1.1-_6pIkoIz.mkksFzjT6cpIwkqZa7.0NtALBDkDHnYGKV7WnOP2Met2Ur_igdAITgw9lIc3fDdDRfIflS7OuycPZ0H.t1_5jpty7lYY7brhsdCskE2d03hMFEOdbs.x.zS;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        19:57:27 GMT
+      - _cfuvid=aGodVWZNkoqM6ZN57GcyAjQSwO.hVhUkY5jHpl50Drk-1776799647.3956742-1.0.1.1-nvBIe5Cjw.j_SZ7fhjSokBAb85mHQ5earBG_3YastMw;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_122c40b3934e9a2da8ca149216b22c34
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=JHAvEpmiNF7c3RfHPe9LeQUaBa_tejIoxckDfOp7lxU-1776799647.3956742-1.0.1.1-_6pIkoIz.mkksFzjT6cpIwkqZa7.0NtALBDkDHnYGKV7WnOP2Met2Ur_igdAITgw9lIc3fDdDRfIflS7OuycPZ0H.t1_5jpty7lYY7brhsdCskE2d03hMFEOdbs.x.zS;
+        _cfuvid=aGodVWZNkoqM6ZN57GcyAjQSwO.hVhUkY5jHpl50Drk-1776799647.3956742-1.0.1.1-nvBIe5Cjw.j_SZ7fhjSokBAb85mHQ5earBG_3YastMw
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efec957587a207f-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:27:30 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_7c72943ae43e4d3fbcfcc22d492356c6
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=JHAvEpmiNF7c3RfHPe9LeQUaBa_tejIoxckDfOp7lxU-1776799647.3956742-1.0.1.1-_6pIkoIz.mkksFzjT6cpIwkqZa7.0NtALBDkDHnYGKV7WnOP2Met2Ur_igdAITgw9lIc3fDdDRfIflS7OuycPZ0H.t1_5jpty7lYY7brhsdCskE2d03hMFEOdbs.x.zS;
+        _cfuvid=aGodVWZNkoqM6ZN57GcyAjQSwO.hVhUkY5jHpl50Drk-1776799647.3956742-1.0.1.1-nvBIe5Cjw.j_SZ7fhjSokBAb85mHQ5earBG_3YastMw
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efec971acae9227-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:27:34 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_0ea71247b7dd4bce98e39883b4affdf3
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efeca6f19e8ac01-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:28:15 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=b6EBZexTzlUcj17.xvEN39uNlYqZ8XEizJTfw28EnUE-1776799695.214832-1.0.1.1-NM2KO8BisGDQ.QkI1TFvR08mQYztB2ON9LoxeRkVstNKToQE2wBabHDioLDYyVXz2U4k2KZJGPYyLThDM5pki5ZLfCuIRlzdL92dJh9hNUjo1tLti5Vpc_pBd7.AvDTK;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        19:58:15 GMT
+      - _cfuvid=E6BUa8OpRajlxobyDYAB4PaQFHxCvWC.4GeRfmZDYlo-1776799695.214832-1.0.1.1-sJyfpK0O9UFZW.1K9lMToNwZ9hLMAAH4VJr0XedOiys;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_469fc439ea2f4cd7a92a6c6db004ca6b
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=b6EBZexTzlUcj17.xvEN39uNlYqZ8XEizJTfw28EnUE-1776799695.214832-1.0.1.1-NM2KO8BisGDQ.QkI1TFvR08mQYztB2ON9LoxeRkVstNKToQE2wBabHDioLDYyVXz2U4k2KZJGPYyLThDM5pki5ZLfCuIRlzdL92dJh9hNUjo1tLti5Vpc_pBd7.AvDTK;
+        _cfuvid=E6BUa8OpRajlxobyDYAB4PaQFHxCvWC.4GeRfmZDYlo-1776799695.214832-1.0.1.1-sJyfpK0O9UFZW.1K9lMToNwZ9hLMAAH4VJr0XedOiys
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efecaabedfdc760-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:28:25 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_c10ba6e601784c3789e8349b4c3d9727
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=b6EBZexTzlUcj17.xvEN39uNlYqZ8XEizJTfw28EnUE-1776799695.214832-1.0.1.1-NM2KO8BisGDQ.QkI1TFvR08mQYztB2ON9LoxeRkVstNKToQE2wBabHDioLDYyVXz2U4k2KZJGPYyLThDM5pki5ZLfCuIRlzdL92dJh9hNUjo1tLti5Vpc_pBd7.AvDTK;
+        _cfuvid=E6BUa8OpRajlxobyDYAB4PaQFHxCvWC.4GeRfmZDYlo-1776799695.214832-1.0.1.1-sJyfpK0O9UFZW.1K9lMToNwZ9hLMAAH4VJr0XedOiys
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efecadb3d45dd58-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:28:32 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_b01a300644714410bbad201609d93d02
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efed3e4e9b5e51f-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:34:42 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=nEmxTIj6zcwoTSuJFcU1TTMduQkl21l8b6vGjmSQ05s-1776800082.7023582-1.0.1.1-SK8i20u20RLJm2U4siCQ.BP2BOl8Nv7uBlPO4HJlQLmyH7nxXtx5rNcwGZIYNzWCMn78lv4aEuZQWiA48sLShxV1JBrF9h2iicJaMMFf8KHJsSj8dYmEVKvVPNSF_wcV;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        20:04:42 GMT
+      - _cfuvid=pg3mx4.EDpTrgLNyAjoTVGlvSDRj6CRJHFUMwW5lnHc-1776800082.7023582-1.0.1.1-G_JlHaveQQxQmgugpeHSCsW7yYUv4DLH9uG.ahoWzOw;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_1f03e7ffbf7f469fb5b4ed8b49888294
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=nEmxTIj6zcwoTSuJFcU1TTMduQkl21l8b6vGjmSQ05s-1776800082.7023582-1.0.1.1-SK8i20u20RLJm2U4siCQ.BP2BOl8Nv7uBlPO4HJlQLmyH7nxXtx5rNcwGZIYNzWCMn78lv4aEuZQWiA48sLShxV1JBrF9h2iicJaMMFf8KHJsSj8dYmEVKvVPNSF_wcV;
+        _cfuvid=pg3mx4.EDpTrgLNyAjoTVGlvSDRj6CRJHFUMwW5lnHc-1776800082.7023582-1.0.1.1-G_JlHaveQQxQmgugpeHSCsW7yYUv4DLH9uG.ahoWzOw
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efed3f43d2aa5b6-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:34:45 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_3b01945ac51e4be8b27947324427078b
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=nEmxTIj6zcwoTSuJFcU1TTMduQkl21l8b6vGjmSQ05s-1776800082.7023582-1.0.1.1-SK8i20u20RLJm2U4siCQ.BP2BOl8Nv7uBlPO4HJlQLmyH7nxXtx5rNcwGZIYNzWCMn78lv4aEuZQWiA48sLShxV1JBrF9h2iicJaMMFf8KHJsSj8dYmEVKvVPNSF_wcV;
+        _cfuvid=pg3mx4.EDpTrgLNyAjoTVGlvSDRj6CRJHFUMwW5lnHc-1776800082.7023582-1.0.1.1-G_JlHaveQQxQmgugpeHSCsW7yYUv4DLH9uG.ahoWzOw
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efed4039ed8b173-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:34:47 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_6f1a502951ff4171bcca0d2b6094e22c
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efed5d1abb0e504-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:36:01 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      set-cookie:
+      - __cf_bm=YS6_DstxbT5be5fI3Qkq3k9nLUJwQvnkWCNVDyN5aJM-1776800161.5503373-1.0.1.1-O4kChOx9SeGRGKIpjAbD_MB6Hn95FiRW3Dae3_9Yq7KLRG4P2ZLHeiyiEWia8OiNAp_2QenCmZBC2r4Zfk2KxT.6P.wRdcoa1VuH6Qyd4WxR0VrvH5kd6u5QyhCrSK75;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 21 Apr 2026
+        20:06:01 GMT
+      - _cfuvid=_mytv_HVcTBM4bo8rF0urw5UnMT7WyycDVv7hBIjrng-1776800161.5503373-1.0.1.1-TKTqZp0ZUGlrG3d0ZuplXAmY52oInKBD3Ymn8MIe3Sk;
+        HttpOnly; SameSite=None; Secure; Path=/; Domain=api.openai.com
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_8c19c309c0a642a98397cc4c4cf8fd7c
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=YS6_DstxbT5be5fI3Qkq3k9nLUJwQvnkWCNVDyN5aJM-1776800161.5503373-1.0.1.1-O4kChOx9SeGRGKIpjAbD_MB6Hn95FiRW3Dae3_9Yq7KLRG4P2ZLHeiyiEWia8OiNAp_2QenCmZBC2r4Zfk2KxT.6P.wRdcoa1VuH6Qyd4WxR0VrvH5kd6u5QyhCrSK75;
+        _cfuvid=_mytv_HVcTBM4bo8rF0urw5UnMT7WyycDVv7hBIjrng-1776800161.5503373-1.0.1.1-TKTqZp0ZUGlrG3d0ZuplXAmY52oInKBD3Ymn8MIe3Sk
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efed5daaa87e51a-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:36:03 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_1df668ca47e94085b30f0753c67f1a0d
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Cookie:
+      - __cf_bm=YS6_DstxbT5be5fI3Qkq3k9nLUJwQvnkWCNVDyN5aJM-1776800161.5503373-1.0.1.1-O4kChOx9SeGRGKIpjAbD_MB6Hn95FiRW3Dae3_9Yq7KLRG4P2ZLHeiyiEWia8OiNAp_2QenCmZBC2r4Zfk2KxT.6P.wRdcoa1VuH6Qyd4WxR0VrvH5kd6u5QyhCrSK75;
+        _cfuvid=_mytv_HVcTBM4bo8rF0urw5UnMT7WyycDVv7hBIjrng-1776800161.5503373-1.0.1.1-TKTqZp0ZUGlrG3d0ZuplXAmY52oInKBD3Ymn8MIe3Sk
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n    \"error\": {\n        \"message\": \"Incorrect API key provided:
+        lm-studio. You can find your API key at https://platform.openai.com/account/api-keys.\",\n
+        \       \"type\": \"invalid_request_error\",\n        \"param\": null,\n        \"code\":
+        \"invalid_api_key\"\n    }\n}\n"
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - 9efed5e39bdf1eca-TXL
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '259'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:36:04 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      x-openai-proxy-wasm:
+      - v0.1
+      x-request-id:
+      - req_89c2db2c7ffb476993eac44f254c774b
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:48:38 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:48:38 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:48:38 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:49:21 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:49:21 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","temperature":0.0,"tool_choice":{"type":"function","function":{"name":"TriageResult"}},"tools":[{"type":"function","function":{"name":"TriageResult","description":"Correctly
+      extracted `TriageResult` with all the required parameters with correct types","parameters":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","is_false_positive","plausibility","suggested_cwe"],"type":"object"}}}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1350'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: '{"error":"Invalid tool_choice type: ''object''. Supported string values:
+        none, auto, required"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '93'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 19:49:21 GMT
+      ETag:
+      - W/"5d-dlbEbwYRi5N/Gul2xLTGEiQ0toc"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"messages":[{"role":"user","content":"You are a security expert triaging
+      static analysis results. Analyze the following tainted path and determine if
+      it is a plausible vulnerability or a false positive.\n\nLocation: \nTool Hit:
+      Possible SQL injection\nSource Code: user_input = request.args.get(''id'')\nSink
+      Code: db.execute(f''SELECT * FROM users WHERE id = {user_input}'')\nAdditional
+      Context: \n\nAnalyze the flow, sanitization, and reachability. Provide a step-by-step
+      reasoning, a plausibility score (0-1), and a suggested CWE if applicable."}],"model":"qwen3.5-2b-mlx","response_format":{"type":"json_schema","json_schema":{"name":"TriageResult","schema":{"properties":{"analysis":{"description":"Step-by-step
+      analysis of the tainted path","title":"Analysis","type":"string"},"plausibility":{"description":"Likelihood
+      of this being a real vulnerability","maximum":1,"minimum":0,"title":"Plausibility","type":"number"},"is_false_positive":{"title":"Is
+      False Positive","type":"boolean"},"suggested_cwe":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Suggested
+      Cwe"}},"required":["analysis","plausibility","is_false_positive","suggested_cwe"],"title":"TriageResult","type":"object"}}},"temperature":0.0}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1211'
+      Content-Type:
+      - application/json
+      Host:
+      - 127.0.0.1:1234
+      User-Agent:
+      - OpenAI/Python 2.32.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 2.32.0
+      X-Stainless-Raw-Response:
+      - 'true'
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.14.3
+      authorization:
+      - Bearer <REDACTED>
+      x-stainless-read-timeout:
+      - '600.0'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: http://127.0.0.1:1234/v1/chat/completions
+  response:
+    body:
+      string: "{\n  \"id\": \"chatcmpl-bpteqmcqz6ae04d3mp6ra\",\n  \"object\": \"chat.completion\",\n
+        \ \"created\": 1776801644,\n  \"model\": \"qwen3.5-2b-mlx\",\n  \"choices\":
+        [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n
+        \       \"content\": \"{ \\\"analysis\\\": \\\"The provided code snippet is
+        a classic example of **SQL Injection** vulnerability. The `user_input` variable,
+        obtained directly from the request without any sanitization or parameterization,
+        is interpolated into a SQL query string. This allows an attacker to inject
+        malicious SQL commands (e.g., `OR 1=1` or `' UNION SELECT ... --`) to bypass
+        authentication, access unauthorized data, or execute arbitrary commands on
+        the server.\\\", \\\"plausibility\\\": 1.0, \\\"is_false_positive\\\": false,
+        \\\"suggested_cwe\\\": \\\"CWE-89: Improper Neutralization of Special Elements
+        in SQL (SQL Injection)\\\"}\",\n        \"reasoning_content\": \"\",\n        \"tool_calls\":
+        []\n      },\n      \"logprobs\": null,\n      \"finish_reason\": \"stop\"\n
+        \   }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 126,\n    \"completion_tokens\":
+        136,\n    \"total_tokens\": 262,\n    \"completion_tokens_details\": {\n      \"reasoning_tokens\":
+        0\n    }\n  },\n  \"stats\": {},\n  \"system_fingerprint\": \"qwen3.5-2b-mlx\"\n}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1198'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 21 Apr 2026 20:00:54 GMT
+      ETag:
+      - W/"4ae-1AjRT8N4o95cDMFOoQSzEtLlQGg"
+      Keep-Alive:
+      - timeout=5
+      X-Powered-By:
+      - Express
     status:
       code: 200
       message: OK
