@@ -18,7 +18,7 @@ def _load_cache() -> None:
         try:
             with _CACHE_FILE.open("r") as f:
                 _STARS_CACHE = json.load(f)
-        except json.JSONDecodeError, IOError:
+        except (json.JSONDecodeError, IOError):
             _STARS_CACHE = {}
 
 
@@ -110,5 +110,5 @@ async def get_repo_stars(repo_url: str) -> int | None:
                                         return None
 
                         return None
-        except aiohttp.ClientError, ValueError, KeyError:
+        except (aiohttp.ClientError, ValueError, KeyError):
             return None
