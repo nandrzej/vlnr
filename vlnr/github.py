@@ -18,7 +18,7 @@ def _load_cache() -> None:
         try:
             with _CACHE_FILE.open("r") as f:
                 _STARS_CACHE = json.load(f)
-        except json.JSONDecodeError, IOError:
+        except (json.JSONDecodeError, IOError):
             _STARS_CACHE = {}
 
 
@@ -53,14 +53,16 @@ async def get_repo_stars(repo_url: str) -> int | None:
         return _STARS_CACHE[repo_url]
 
     # Extract owner/repo from URL
-    parts = repo_url.rstrip("/").split("/")
-    if len(parts) < 5:
-        return None
-
-    owner = parts[3]
-    repo = parts[4]
+    # For GitLab, we need the full path after gitlab.com/
+    path_after_host = repo_url_lower.split("github.com/" if is_github else "gitlab.com/")[1]
+    path_after_host = path_after_host.rstrip("/")
 
     if is_github:
+        parts = path_after_host.split("/")
+        if len(parts) < 2:
+            return None
+        owner = parts[0]
+        repo = parts[1]
         api_url = f"https://api.github.com/repos/{owner}/{repo}"
         headers = {"Accept": "application/vnd.github.v3+json", "User-Agent": "vlnr-candidate-finder"}
         token = os.environ.get("GITHUB_TOKEN")
@@ -69,7 +71,7 @@ async def get_repo_stars(repo_url: str) -> int | None:
         star_key = "stargazers_count"
     else:  # is_gitlab
         # GitLab API uses project ID or URL-encoded path
-        project_path = quote(f"{owner}/{repo}", safe="")
+        project_path = quote(path_after_host, safe="")
         api_url = f"https://gitlab.com/api/v4/projects/{project_path}"
         headers = {"User-Agent": "vlnr-candidate-finder"}
         token = os.environ.get("GITLAB_TOKEN")
@@ -108,5 +110,5 @@ async def get_repo_stars(repo_url: str) -> int | None:
                                         return None
 
                         return None
-        except aiohttp.ClientError, ValueError, KeyError:
+        except (aiohttp.ClientError, ValueError, KeyError):
             return None
