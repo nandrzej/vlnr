@@ -239,26 +239,6 @@ def process_package(
                         s.risk_score_static = 0.95
                         if "Conjunctive Escalation" not in s.category:
                             s.category.append("Conjunctive Escalation")
-                        s.static_class = "obvious_vuln"
-                        s.risk_score_static = 0.95
-                        if "Conjunctive Escalation" not in s.category:
-                            s.category.append("Conjunctive Escalation")
-
-        for s in all_slices:
-            # Match external hits by file and line
-            s.tool_hits = (
-                [
-                    h
-                    for h in external_hits
-                    if h.file.endswith(s.dataflow_summary[-1].file) and h.line == s.dataflow_summary[-1].line
-                ]
-                if s.dataflow_summary
-                else []
-            )
-            s.risk_score_static = score_slice(s)
-            # Add bonus for tool agreement
-            if s.tool_hits:
-                s.risk_score_static = min(1.0, s.risk_score_static + 0.1)
 
         # 5. Construct snippets
         all_slices = construct_slices(all_slices, local_path)
