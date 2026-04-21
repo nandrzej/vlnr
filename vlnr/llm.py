@@ -1,4 +1,5 @@
 import logging
+import os
 import yaml
 from enum import Enum
 from pathlib import Path
@@ -31,7 +32,7 @@ class LLMClient:
         # otherwise we can use from_openai with a custom client if needed.
         # However, liteLLM is compatible with the OpenAI SDK.
 
-        self.client = instructor.from_litellm(completion)
+        self.client = instructor.from_litellm(completion, mode=instructor.Mode.JSON_SCHEMA)
 
     def _load_config(self, path: str) -> dict[str, Any]:
         if not Path(path).exists():
@@ -55,11 +56,14 @@ class LLMClient:
         **kwargs: Any,
     ) -> T:
         tier_config = self.config.get(tier.value, self.config.get("default", {}))
+        # Merge with defaults so tiers only need to override what differs
+        defaults = self.config.get("default", {})
+        merged = {**defaults, **tier_config}
 
-        model = tier_config.get("model")
-        base_url = tier_config.get("base_url")
-        api_key = tier_config.get("api_key", "sk-dummy")  # Use dummy key for local endpoints
-        temperature = tier_config.get("temperature", 0.0)
+        model = merged.get("model")
+        base_url = merged.get("base_url")
+        api_key = merged.get("api_key")  # Use environment variable if not in config
+        temperature = merged.get("temperature", 0.0)
 
         # Merge with kwargs
         call_kwargs = {
@@ -67,12 +71,16 @@ class LLMClient:
             "messages": messages,
             "response_model": response_model,
             "temperature": temperature,
-            "api_key": api_key,
             **kwargs,
         }
 
+        if api_key:
+            call_kwargs["api_key"] = api_key
+        elif "CUSTOM_OPENAI_API_KEY" in os.environ:
+            call_kwargs["api_key"] = os.environ["CUSTOM_OPENAI_API_KEY"]
+
         if base_url:
-            call_kwargs["api_base"] = base_url
+            call_kwargs["base_url"] = base_url
 
         logger.debug(f"LLM Completion Call: model={model}, messages={len(messages)}")
 
