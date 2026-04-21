@@ -73,8 +73,7 @@ Strong criteria enable independent loop.
 2. run `ruff check --fix` (ALL rules exceot for conflicting, Google docstrings, 120 long lines), `ruff format` and `mypy` (with strict settings)
 3. Commit changes in atomic groups, write good git messsages, conssitent with the history
 
-# Memory
-## Before starting any task
+# Important: Before starting any task
 You **SHOULD** Use `memory recall` BEFORE starting tasks to get relevant context:
 
 ```bash
@@ -88,8 +87,8 @@ You **SHOULD** use `memory reflect` to synthesize context:
 uvx hindsight-embed memory reflect default "How should I approach this task based on past experience?"
 ```
 
-## Storing memories
-
+# Important: Before finsihing any task and whenever you encounter a decision points
+You **SHOULD** consider if you have memeories to retain.
 You **MUST** use `memory retain` to store user preferences, learnings from tasks, and procedure outcomes:
 
 ```bash
