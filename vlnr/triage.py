@@ -1,5 +1,10 @@
+import logging
+from typing import List, Dict
+
 from vlnr.llm import LLMClient, LLMTier
-from vlnr.models import TriageResult, BatchTriageResult
+from vlnr.models import TriageResult, BatchTriageResult, IndividualTriageResult
+
+logger = logging.getLogger(__name__)
 
 
 def triage_vulnerability(
@@ -21,7 +26,7 @@ def triage_vulnerability(
         f"Sink Code: {sink_code}\n"
         f"Additional Context: {context}\n\n"
         f"Analyze the flow, sanitization, and reachability. "
-        f"Provide a step-by-step reasoning and a plausibility score (0-1)."
+        f"Provide a step-by-step reasoning, a plausibility score (0-1), and a suggested CWE if applicable."
     )
 
     return client.completion(
@@ -32,10 +37,14 @@ def triage_vulnerability(
 
 
 def triage_vulnerabilities_batch(
-    items: list[dict[str, str]],
+    items: List[Dict[str, str]],
     client: LLMClient,
 ) -> BatchTriageResult:
-    """Triage multiple vulnerabilities in a single LLM call."""
+    """Triage multiple vulnerabilities in a single LLM call. Max batch size 5."""
+    if len(items) > 5:
+        logger.warning(f"Batch size {len(items)} exceeds recommended max of 5. Capping.")
+        items = items[:5]
+
     batch_str = ""
     for item in items:
         batch_str += (
@@ -52,7 +61,8 @@ def triage_vulnerabilities_batch(
         f"plausible vulnerabilities or false positives.\n\n"
         f"{batch_str}"
         f"For each SLICE, provide a step-by-step reasoning, a plausibility score (0-1), "
-        "and indicate if it is a false positive. Map each result back to its slice_id."
+        "indicate if it is a false positive, and suggest a CWE if applicable. "
+        "Map each result back to its slice_id."
     )
 
     return client.completion(
@@ -60,3 +70,8 @@ def triage_vulnerabilities_batch(
         response_model=BatchTriageResult,
         tier=LLMTier.TIER_2,
     )
+
+
+def filter_plausible_findings(batch_result: BatchTriageResult, threshold: float = 0.6) -> List[IndividualTriageResult]:
+    """Filter findings based on a plausibility threshold."""
+    return [res for res in batch_result.results if res.plausibility >= threshold]

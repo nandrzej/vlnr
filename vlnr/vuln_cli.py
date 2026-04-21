@@ -166,12 +166,7 @@ def process_package(
 
                             # Bypass scan for top-level execution
                             # Target __init__.py, tests/, conftest.py, and other sensitive areas
-                            if (
-                                f == "__init__.py"
-                                or "tests/" in rel_p
-                                or f == "conftest.py"
-                                or f == "setup.py"
-                            ):
+                            if f == "__init__.py" or "tests/" in rel_p or f == "conftest.py" or f == "setup.py":
                                 bypass_slices = ast_bypass_scan(tree, name, version, rel_p)
                                 all_slices.extend(bypass_slices)
                     except TimeoutException:
@@ -239,10 +234,7 @@ def process_package(
                 or (has_suspicious_metadata and has_execution)
             ):
                 for s in signals:
-                    if (
-                        s.sink_api in ["eval", "exec", "os.system", "base64.b64decode"]
-                        or "subprocess" in s.sink_api
-                    ):
+                    if s.sink_api in ["eval", "exec", "os.system", "base64.b64decode"] or "subprocess" in s.sink_api:
                         s.static_class = "obvious_vuln"
                         s.risk_score_static = 0.95
                         if "Conjunctive Escalation" not in s.category:

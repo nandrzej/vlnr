@@ -110,7 +110,7 @@ def load_osv_index(zip_path: Path, epss_scores: dict[str, float] | None = None) 
                             index.by_package[pkg_name] = []
                         index.by_package[pkg_name].append(vuln)
 
-                except (json.JSONDecodeError, KeyError, ValidationError, ValueError):
+                except json.JSONDecodeError, KeyError, ValidationError, ValueError:
                     continue
     return index
 
@@ -164,7 +164,7 @@ def is_version_affected(version_str: str, vuln: VulnerabilityRecord) -> bool:
             spec = SpecifierSet(",".join(spec_parts))
             if version in spec:
                 return True
-        except (InvalidSpecifier, ValueError):
+        except InvalidSpecifier, ValueError:
             continue
 
     return False

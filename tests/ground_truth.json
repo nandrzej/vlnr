@@ -1,0 +1,22 @@
+[
+  {
+    "slice_id": "CVE-2024-34069",
+    "package_name": "werkzeug",
+    "hit_message": "Use of unsafe debugger pin generation in Werkzeug",
+    "source_code": "def get_pin_and_cookie_name(app): ...",
+    "sink_code": "rv = \"\".join(chain(probably_public_bits, private_bits))",
+    "is_false_positive": false,
+    "suggested_cwe": "CWE-330",
+    "expected_plausibility": 0.9
+  },
+  {
+    "slice_id": "BENIGN-1",
+    "package_name": "requests",
+    "hit_message": "Potential SSRF via user-controlled URL",
+    "source_code": "def get(url, params=None, **kwargs): ...",
+    "sink_code": "return session.request('get', url, params=params, **kwargs)",
+    "is_false_positive": true,
+    "suggested_cwe": "CWE-918",
+    "expected_plausibility": 0.1
+  }
+]
