@@ -29,6 +29,7 @@ dev = [
     "mypy>=1.9",
     "types-pyyaml>=6.0.12.20260408",
     "vcrpy>=8.1.1",
+    "types-requests>=2.33.0.20260408",
 ]
 
 [tool.setuptools]

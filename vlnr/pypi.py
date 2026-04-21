@@ -63,7 +63,7 @@ def stream_packages_from_jsonl(path: Path) -> Iterator[PackageInfo]:
                     pkg.requires_dist = [str(r) for r in rdist if r]
 
                 yield pkg
-            except json.JSONDecodeError, ValidationError:
+            except (json.JSONDecodeError, ValidationError):
                 continue
 
 

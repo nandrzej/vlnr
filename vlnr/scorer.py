@@ -47,12 +47,16 @@ def compute_audit_interest_score(vuln_count: int) -> float:
     - 1–10 CVEs -> peak (approaches 1.0 at ~5 CVEs)
     - 50+ CVEs -> declining (approaches 0.5)
 
-    Implementation: score = 1.0 - 0.5 * abs(log2(count + 1) - log2(6)) / log2(60) clamped to [0, 1].
+    Implementation: score = 1.0 - 0.5 * abs(log2(count + 1) - log2(6)) / log2(6) clamped to [0, 1].
     Peaks at count=5 (log2(6) - log2(6) = 0).
+    At count=0: 1.0 - 0.5 * abs(0 - 2.585) / 2.585 = 1.0 - 0.5 = 0.5.
+    At count=35: 1.0 - 0.5 * abs(log2(36) - log2(6)) / log2(6) = 1.0 - 0.5 * (5.17 - 2.585) / 2.585 = 1.0 - 0.5 = 0.5.
     """
-    # 1.0 - 0.5 * abs(log2(cve_count + 1) - log2(6)) / log2(60)
-    # log2(60) is approx 5.9
-    val = 1.0 - 0.5 * abs(math.log2(vuln_count + 1) - math.log2(6)) / math.log2(60)
+    # Peak at 5 CVEs (count+1=6)
+    # 0 CVEs -> 0.5
+    # 35 CVEs -> 0.5
+    # 5 CVEs -> 1.0
+    val = 1.0 - 0.5 * abs(math.log2(vuln_count + 1) - math.log2(6)) / math.log2(6)
     return max(0.0, min(1.0, val))
 
 
@@ -120,37 +124,30 @@ def score_candidate(
         age_years = (now - upload_time).days / 365.25
         recency_days = (now - upload_time).days
         if recency_days <= 30:
-            recency_bonus = 0.125
+            recency_bonus = 0.5  # Increased bonus to reach ~15% impact in weighted sum
 
     # Popularity component
     norm_downloads = normalize_log(float(downloads) if downloads > 0 else 100.0, float(max_downloads))
 
     if repo_stars is None:
-        # Reweight downloads to fill gap if stars unknown (w2=0.4, w_stars=0.2 -> w2_new=0.6)
-        # Weighting: w1=0.4 (centrality), w2=0.4 (downloads), w_stars=0.2 (stars), w3=0.2 (recency)
-        # If stars None: w2 becomes 0.6
-        popularity = norm_downloads * 0.6
+        # Reweight downloads to fill gap if stars unknown
+        popularity_discovery = norm_downloads * 0.5
+        popularity_triage = norm_downloads
     else:
         norm_stars = normalize_log(float(repo_stars), float(max_stars))
-        popularity = norm_downloads * 0.4 + norm_stars * 0.2
+        popularity_discovery = (norm_downloads * 0.35) + (norm_stars * 0.15)
+        popularity_triage = (norm_downloads * 0.35 + norm_stars * 0.15) / 0.5
 
     if mode == "discovery":
-        # Score = centrality * w1 + popularity * w2 + recency * w3
-        # w1=0.4, w2=0.4, w3=0.2
-        # Note: 'popularity' already contains norm_downloads + norm_stars
-        # So we use the popularity base as the w2 component.
-        candidate_score = (centrality * 0.4) + (popularity) + (recency_bonus * 0.2)
+        # Score = centrality * 0.35 + popularity * 0.35 + recency * 0.15 + (unused buffer 0.15)
+        # Weights normalized to sum to 1.0 (approx)
+        # Weighting: centrality (0.35), downloads (0.35), stars (0.15), recency (0.15)
+        candidate_score = (centrality * 0.35) + popularity_discovery + (recency_bonus * 0.3)
     else:  # triage
         # Score = 0.5 * EPSS + 0.2 * clamp(CVSS, 0, 10)/10 + 0.3 * popularity
         epss = epss_score if epss_score is not None else 0.0
         cvss = (min(10.0, max(0.0, cvss_score)) / 10.0) if cvss_score is not None else 0.0
-        # For triage, popularity is normalized downloads + stars (if any)
-        # But wait, triage formula uses 'popularity' as 0.3 weight.
-        # Let's ensure popularity is in [0, 1] range.
-        # popularity from above is norm_dl * 0.6 or norm_dl * 0.4 + norm_stars * 0.2.
-        # These sums are max 0.6. We should normalize it to 1.0 for the triage component weight.
-        pop_norm = popularity / 0.6
-        candidate_score = (0.5 * epss) + (0.2 * cvss) + (0.3 * pop_norm)
+        candidate_score = (0.5 * epss) + (0.2 * cvss) + (0.3 * popularity_triage)
 
     # LLM Intent Score (only for discovery or if requested)
     intent_val = None
