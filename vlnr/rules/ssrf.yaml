@@ -4,10 +4,8 @@ rules:
       - pattern-either:
           - pattern: urllib.request.urlopen($URL, ...)
           - pattern: urllib.request.Request($URL, ...)
-      - pattern-not:
-          - pattern: urllib.request.urlopen("...", ...)
-      - pattern-not:
-          - pattern: urllib.request.Request("...", ...)
+      - pattern-not: urllib.request.urlopen("...", ...)
+      - pattern-not: urllib.request.Request("...", ...)
     message: Potential SSRF via urllib
     languages: [python]
     severity: ERROR
@@ -23,10 +21,14 @@ rules:
           - pattern: httpx.request($METHOD, $URL, ...)
           - pattern: httpx.Client().get($URL, ...)
           - pattern: httpx.AsyncClient().get($URL, ...)
-      - pattern-not:
-          - pattern: httpx.get("...", ...)
-      - pattern-not:
-          - pattern: httpx.post("...", ...)
+      - pattern-not: httpx.get("...", ...)
+      - pattern-not: httpx.post("...", ...)
+      - pattern-not: httpx.put("...", ...)
+      - pattern-not: httpx.delete("...", ...)
+      - pattern-not: httpx.patch("...", ...)
+      - pattern-not: httpx.request($METHOD, "...", ...)
+      - pattern-not: httpx.Client().get("...", ...)
+      - pattern-not: httpx.AsyncClient().get("...", ...)
     message: Potential SSRF via httpx
     languages: [python]
     severity: ERROR
@@ -34,11 +36,20 @@ rules:
   - id: python-ssrf-aiohttp
     patterns:
       - pattern-either:
-          - pattern: aiohttp.ClientSession().get($URL, ...)
-          - pattern: aiohttp.ClientSession().post($URL, ...)
+          - patterns:
+              - pattern: $SESSION.get($URL, ...)
+              - pattern-inside: |
+                  async with aiohttp.ClientSession(...) as $SESSION:
+                    ...
+          - patterns:
+              - pattern: $SESSION.post($URL, ...)
+              - pattern-inside: |
+                  async with aiohttp.ClientSession(...) as $SESSION:
+                    ...
           - pattern: aiohttp.request($METHOD, $URL, ...)
-      - pattern-not:
-          - pattern: aiohttp.ClientSession().get("...", ...)
+      - pattern-not: $SESSION.get("...", ...)
+      - pattern-not: $SESSION.post("...", ...)
+      - pattern-not: aiohttp.request($METHOD, "...", ...)
     message: Potential SSRF via aiohttp
     languages: [python]
     severity: ERROR
