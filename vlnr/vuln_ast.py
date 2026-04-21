@@ -264,14 +264,13 @@ def ast_bypass_scan(tree: ast.AST, package: str, version: str, filename: str) ->
                 # If these are top-level, their bodies are still "top-level execution" in the sense 
                 # that they run on import or direct execution if the condition is met.
                 todo.extend(curr.body)
-                if isinstance(curr, ast.If):
+                if hasattr(curr, "orelse"):
                     todo.extend(curr.orelse)
                 if isinstance(curr, ast.Try):
                     todo.extend(curr.handlers)
                     todo.extend(curr.finalbody)
                 if isinstance(curr, ast.With):
-                    # We already extended body, but we need to check if there's anything else?
-                    # body is already handled by common tuple
+                    # We already extended body
                     pass
             elif isinstance(curr, ast.ExceptHandler):
                 todo.extend(curr.body)

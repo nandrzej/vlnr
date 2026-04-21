@@ -171,7 +171,6 @@ def process_package(
                                 or "tests/" in rel_p
                                 or f == "conftest.py"
                                 or f == "setup.py"
-                                or f == "METADATA"
                             ):
                                 bypass_slices = ast_bypass_scan(tree, name, version, rel_p)
                                 all_slices.extend(bypass_slices)
@@ -199,6 +198,22 @@ def process_package(
                 all_slices.append(create_slice_from_hit(hit, name, version, local_path))
 
         # 4. Refine slices with external hits and scoring
+        for s in all_slices:
+            # Match external hits by file and line
+            s.tool_hits = (
+                [
+                    h
+                    for h in external_hits
+                    if h.file.endswith(s.dataflow_summary[-1].file) and h.line == s.dataflow_summary[-1].line
+                ]
+                if s.dataflow_summary
+                else []
+            )
+            s.risk_score_static = score_slice(s)
+            # Add bonus for tool agreement
+            if s.tool_hits:
+                s.risk_score_static = min(1.0, s.risk_score_static + 0.1)
+
         # 4.1 Conjunctive Bypass Logic: Escalation for co-occurring signals
         # We look for signals in the same file or package that reinforce each other
         signals_by_file: dict[str, list[Slice]] = {}
@@ -210,15 +225,28 @@ def process_package(
         for fname, signals in signals_by_file.items():
             # Example pairs: base64 + exec/eval, network call + dynamic import
             has_obfuscation = any("base64" in s.sink_api or "b64" in s.sink_api for s in signals)
-            has_execution = any(s.sink_api in ["eval", "exec", "os.system"] for s in signals)
+            has_execution = any(
+                s.sink_api in ["eval", "exec", "os.system"] or "subprocess" in s.sink_api for s in signals
+            )
             has_network = any("requests" in s.sink_api or "urllib" in s.sink_api for s in signals)
-            
+
             # Check for metadata signals too
             has_suspicious_metadata = any(sig.severity == "HIGH" for sig in metadata_signals)
 
-            if (has_obfuscation and has_execution) or (has_network and has_execution) or (has_suspicious_metadata and has_execution):
+            if (
+                (has_obfuscation and has_execution)
+                or (has_network and has_execution)
+                or (has_suspicious_metadata and has_execution)
+            ):
                 for s in signals:
-                    if s.sink_api in ["eval", "exec", "os.system", "base64.b64decode"]:
+                    if (
+                        s.sink_api in ["eval", "exec", "os.system", "base64.b64decode"]
+                        or "subprocess" in s.sink_api
+                    ):
+                        s.static_class = "obvious_vuln"
+                        s.risk_score_static = 0.95
+                        if "Conjunctive Escalation" not in s.category:
+                            s.category.append("Conjunctive Escalation")
                         s.static_class = "obvious_vuln"
                         s.risk_score_static = 0.95
                         if "Conjunctive Escalation" not in s.category:
