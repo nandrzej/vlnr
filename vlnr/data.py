@@ -25,7 +25,7 @@ async def fetch_top_packages() -> dict[str, int]:
             with cache_file.open("r") as f:
                 data = json.load(f)
                 return {item["project"].lower(): item.get("download_count", 0) for item in data.get("rows", [])}
-        except json.JSONDecodeError, KeyError:
+        except (json.JSONDecodeError, KeyError):
             pass
 
     console.print("[bold blue]Fetching popularity data from hugovk.dev...[/bold blue]")
