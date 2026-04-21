@@ -240,45 +240,16 @@ def ast_taint_scan(tree: ast.AST, package: str, version: str, filename: str) -> 
 
 
 def ast_bypass_scan(tree: ast.AST, package: str, version: str, filename: str) -> list[Slice]:
-    """Detects top-level execution of suspicious sinks outside functions/classes."""
+    """Detects execution of suspicious sinks at the module level or inside top-level control flow."""
     slices: list[Slice] = []
 
-    # Check top-level statements
-    nodes_to_check: list[ast.stmt] = []
-    if isinstance(tree, ast.Module):
-        nodes_to_check = tree.body
+    # Walk the tree but skip function and class definitions to find top-level execution
+    def walk_top_level(node: ast.AST) -> None:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            return
 
-    for node in nodes_to_check:
-        # We only care about calls at the top level
-        # Note: we might want to recurse into If/Try if they are at top level
-
-        target_calls: list[ast.Call] = []
-
-        # Simple recursion for top-level blocks like if __name__ == "__main__": or just if True:
-        todo: list[ast.AST] = [node]
-        while todo:
-            curr = todo.pop()
-            if isinstance(curr, ast.Call):
-                target_calls.append(curr)
-            elif isinstance(curr, (ast.If, ast.Try, ast.With, ast.For, ast.While)):
-                # If these are top-level, their bodies are still "top-level execution" in the sense
-                # that they run on import or direct execution if the condition is met.
-                todo.extend(curr.body)
-                if hasattr(curr, "orelse"):
-                    todo.extend(curr.orelse)
-                if isinstance(curr, ast.Try):
-                    todo.extend(curr.handlers)
-                    todo.extend(curr.finalbody)
-                if isinstance(curr, ast.With):
-                    # We already extended body
-                    pass
-            elif isinstance(curr, ast.ExceptHandler):
-                todo.extend(curr.body)
-            elif isinstance(curr, ast.Expr):
-                todo.append(curr.value)
-
-        for call in target_calls:
-            call_name = get_call_name(call)
+        if isinstance(node, ast.Call):
+            call_name = get_call_name(node)
             if call_name in BYPASS_SINKS:
                 category = ["top-level", "Bypass Signal"]
                 if "requests" in call_name or "urllib" in call_name:
@@ -286,7 +257,7 @@ def ast_bypass_scan(tree: ast.AST, package: str, version: str, filename: str) ->
 
                 slices.append(
                     Slice(
-                        slice_id=f"bypass-{package}-{filename}-{call.lineno}",
+                        slice_id=f"bypass-{package}-{filename}-{node.lineno}",
                         package=package,
                         version=version,
                         category=category,
@@ -297,8 +268,13 @@ def ast_bypass_scan(tree: ast.AST, package: str, version: str, filename: str) ->
                         or call_name in ["eval", "exec", "builtins.eval", "builtins.exec"]
                         else "suspicious",
                         risk_score_static=0.9 if "system" in call_name or "subprocess" in call_name else 0.7,
-                        dataflow_summary=[DataflowNode(file=filename, line=call.lineno, expr=ast.unparse(call))],
+                        dataflow_summary=[DataflowNode(file=filename, line=node.lineno, expr=ast.unparse(node))],
+                        code_snippets=[],
                     )
                 )
 
+        for child in ast.iter_child_nodes(node):
+            walk_top_level(child)
+
+    walk_top_level(tree)
     return slices
