@@ -1,8 +1,10 @@
 from pathlib import Path
 import json
 import zipfile
-from vlnr.osv import load_osv_index, is_version_affected, get_vulnerability_ids
+import pytest
+from vlnr.osv import load_osv_index, is_version_affected, get_vulnerability_ids, load_epss_scores
 from vlnr.models import VulnerabilityRecord
+import gzip
 
 
 def test_is_version_affected() -> None:
@@ -82,3 +84,39 @@ def test_is_version_affected_with_local_versions() -> None:
     assert is_version_affected("1.2.3", vuln_la) is True
     # 1.2.4 is NOT affected
     assert is_version_affected("1.2.4", vuln_la) is False
+
+
+def test_epss_cache_fresh(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """EPSS CSV downloaded today is used from cache"""
+    cache_file = tmp_path / "epss_scores-current.csv.gz"
+    # Create a fake GZIP CSV
+    with gzip.open(cache_file, "wt") as f:
+        f.write("cve,epss,percentile\n")
+        f.write("CVE-2024-0001,0.95,0.99\n")
+
+    # Ensure mtime is today
+    # (default is now)
+
+    scores = load_epss_scores(tmp_path)
+    assert scores["CVE-2024-0001"] == 0.95
+
+
+def test_cross_ecosystem_advisories_loaded(tmp_path: Path) -> None:
+    """Non-PyPI ecosystem advisories attach as signals"""
+    zip_p = tmp_path / "osv_cross.zip"
+    vuln_data = {
+        "id": "GO-2024-0001",
+        "affected": [
+            {
+                "package": {"ecosystem": "Go", "name": "vulnpkg"},
+                "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}]}],
+            }
+        ],
+    }
+
+    with zipfile.ZipFile(zip_p, "w") as z:
+        z.writestr("vuln.json", json.dumps(vuln_data))
+
+    index = load_osv_index(zip_p)
+    assert "vulnpkg" in index.by_package
+    assert index.by_package["vulnpkg"][0].is_cross_ecosystem is True

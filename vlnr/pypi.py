@@ -56,6 +56,12 @@ def stream_packages_from_jsonl(path: Path) -> Iterator[PackageInfo]:
                 pkg.repo_url = extract_repo_url(pkg.project_urls)
                 if "console_scripts" in info_data:
                     pkg.console_scripts = info_data["console_scripts"]
+
+                # Extract requires_dist
+                rdist = info_data.get("requires_dist")
+                if isinstance(rdist, list):
+                    pkg.requires_dist = [str(r) for r in rdist if r]
+
                 yield pkg
             except json.JSONDecodeError, ValidationError:
                 continue
@@ -98,6 +104,10 @@ async def fetch_packages_from_api(names: list[str]) -> AsyncIterator[PackageInfo
                     entry_points = info.get("entry_points")
                     if isinstance(entry_points, dict):
                         pkg.console_scripts = list(entry_points.get("console_scripts", {}).keys())
+
+                    rdist = info.get("requires_dist")
+                    if isinstance(rdist, list):
+                        pkg.requires_dist = [str(r) for r in rdist if r]
 
                     yield pkg
                 except ValidationError:

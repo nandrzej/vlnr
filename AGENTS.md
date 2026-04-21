@@ -72,3 +72,28 @@ Strong criteria enable independent loop.
 1. Run the tests and address any issues
 2. run `ruff check --fix` (ALL rules exceot for conflicting, Google docstrings, 120 long lines), `ruff format` and `mypy` (with strict settings)
 3. Commit changes in atomic groups, write good git messsages, conssitent with the history
+
+# Memory
+## Before starting any task
+You **SHOULD** Use `memory recall` BEFORE starting tasks to get relevant context:
+
+```bash
+uvx hindsight-embed memory recall default "user preferences for this project"
+uvx hindsight-embed memory recall default "what issues have we encountered before"
+```
+
+You **SHOULD** use `memory reflect` to synthesize context:
+
+```bash
+uvx hindsight-embed memory reflect default "How should I approach this task based on past experience?"
+```
+
+## Storing memories
+
+You **MUST** use `memory retain` to store user preferences, learnings from tasks, and procedure outcomes:
+
+```bash
+uvx hindsight-embed memory retain default "User prefers TypeScript with strict mode"
+uvx hindsight-embed memory retain default "Running tests requires NODE_ENV=test" --context procedures
+uvx hindsight-embed memory retain default "Build failed when using Node 18, works with Node 20" --context learnings
+```

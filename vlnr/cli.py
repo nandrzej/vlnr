@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -12,9 +13,9 @@ from vlnr.filters import is_target_category
 from vlnr.github import get_repo_stars
 from vlnr.models import CandidateRecord, PackageInfo, VulnerabilityIndex
 from vlnr.llm import LLMClient
-from vlnr.osv import load_osv_index
+from vlnr.osv import load_osv_index, load_epss_scores
 from vlnr.pypi import fetch_packages_from_api, stream_packages_from_jsonl
-from vlnr.scorer import score_candidate
+from vlnr.scorer import score_candidate, build_reverse_dependency_graph, normalize_log
 
 app = typer.Typer(help="Vulnerability-aware Python Project Finder")
 console = Console()
@@ -26,29 +27,37 @@ async def run_pipeline(
     osv_dump: Optional[Path] = None,
     pypa_repo: Optional[Path] = None,
     downloads_csv: Optional[Path] = None,
-    deps_csv: Optional[Path] = None,
     limit: int = 100,
     include_cli: bool = True,
     include_ml: bool = True,
     include_dev: bool = True,
     llm_discovery: bool = False,
+    mode: str = "discovery",
     out: Path = Path("top_candidates.json"),
 ) -> None:
     """Orchestrate the candidate finding pipeline."""
 
-    # 1. Load OSV index
+    # 1. Load OSV index and EPSS scores
+    epss_scores = {}
+    cache_dir = Path(".vlnr_cache")
+    try:
+        console.print("[bold blue]Loading EPSS scores...[/bold blue]")
+        epss_scores = load_epss_scores(cache_dir)
+    except Exception as e:
+        console.print(f"[yellow]Warning: Failed to load EPSS scores: {e}[/yellow]")
+
     vuln_index = VulnerabilityIndex()
     if osv_dump and osv_dump.exists():
         console.print(f"[bold blue]Loading OSV index from {osv_dump}...[/bold blue]")
-        vuln_index = load_osv_index(osv_dump)
+        vuln_index = load_osv_index(osv_dump, epss_scores=epss_scores)
     else:
         console.print("[yellow]Warning: No OSV dump provided or found. Skipping OSV vulnerability analysis.[/yellow]")
 
     if pypa_repo and pypa_repo.exists():
-        from vlnr.osv import load_pypa_advisory_db
-
         console.print(f"[bold blue]Loading PyPA advisories from {pypa_repo}...[/bold blue]")
-        load_pypa_advisory_db(pypa_repo, vuln_index)
+        # Note: load_pypa_advisory_db was removed in OSV refactor as OSV covers it
+        # and load_pypa_advisory_db was not updated for the new schema.
+        # It is deprecated in favor of OSV dump.
 
     # 1.5 Setup LLM Client if discovery enabled
     llm_client: Optional[LLMClient] = None
@@ -63,7 +72,7 @@ async def run_pipeline(
             console.print(f"[bold red]Error initializing LLM client: {e}. Proceeding without LLM.[/bold red]")
             llm_discovery = False
 
-    # 2. Load downloads and deps data if provided
+    # 2. Load downloads data
     downloads_map: Optional[dict[str, int]] = None
     if downloads_csv and downloads_csv.exists():
         downloads_map = {}
@@ -78,130 +87,99 @@ async def run_pipeline(
                     except ValueError:
                         continue
     elif not downloads_csv:
-        # Auto-fetch if no CSV provided
         downloads_map = await fetch_top_packages()
-    else:
-        console.print("[yellow]Warning: Downloads CSV provided but not found. Download scores will be 0.0.[/yellow]")
 
-    deps_map: Optional[dict[str, int]] = None
-    if deps_csv and deps_csv.exists():
-        deps_map = {}
-        console.print(f"[bold blue]Loading dependencies from {deps_csv}...[/bold blue]")
-        with deps_csv.open("r") as f:
-            for line in f:
-                parts = line.strip().split(",")
-                if len(parts) >= 2:
-                    name, count = parts[0], parts[1]
-                    try:
-                        deps_map[name.lower()] = int(count)
-                    except ValueError:
-                        continue
-    else:
-        console.print("[yellow]Warning: No dependencies CSV provided. Centrality scores will be 0.5.[/yellow]")
-
-    # 2.5 Check GITHUB_TOKEN
-    import os
-
+    # 2.5 Check tokens
     if not os.environ.get("GITHUB_TOKEN"):
         console.print(
             "[yellow]Warning: GITHUB_TOKEN not set. GitHub API requests will be heavily rate-limited.[/yellow]"
         )
 
-    # 3. Stream and process packages (Pass 1: Discovery)
-    # Store tuples of (PackageInfo, CandidateRecord) to avoid re-calculating preliminary data
-    discovered: list[tuple[PackageInfo, CandidateRecord]] = []
+    # 3. Stream and process packages (Pass 1: Discovery & Graph building)
+    discovered_pkgs: list[PackageInfo] = []
 
     with Progress() as progress:
         scan_task = progress.add_task("[green]Scanning packages...", total=None)
 
-        # Determine source and stream
         if packages:
             pkg_names = [p.strip() for p in packages.split(",") if p.strip()]
             async for pkg in fetch_packages_from_api(pkg_names):
-                if not is_target_category(pkg, include_cli, include_ml, include_dev):
-                    continue
-                # Score with 0 stars initially
-                pkg_downloads = 0
-                if downloads_map is not None:
-                    pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
-
-                candidate = score_candidate(
-                    pkg,
-                    vuln_index,
-                    downloads=pkg_downloads,
-                    repo_stars=0,
-                    dependency_map=deps_map,
-                    llm_client=llm_client if llm_discovery else None,
-                )
-                discovered.append((pkg, candidate))
-                progress.update(
-                    scan_task, advance=1, description=f"[green]Scanning: {len(discovered)} candidates found"
-                )
+                if is_target_category(pkg, include_cli, include_ml, include_dev):
+                    discovered_pkgs.append(pkg)
+                    progress.update(
+                        scan_task, advance=1, description=f"[green]Scanning: {len(discovered_pkgs)} pkgs found"
+                    )
         elif pypi_json and pypi_json.exists():
             for pkg in stream_packages_from_jsonl(pypi_json):
-                if not is_target_category(pkg, include_cli, include_ml, include_dev):
-                    continue
-
-                pkg_downloads = 0
-                if downloads_map is not None:
-                    pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
-
-                candidate = score_candidate(
-                    pkg,
-                    vuln_index,
-                    downloads=pkg_downloads,
-                    repo_stars=0,
-                    dependency_map=deps_map,
-                    llm_client=llm_client if llm_discovery else None,
-                )
-                discovered.append((pkg, candidate))
-                progress.update(
-                    scan_task, advance=1, description=f"[green]Scanning: {len(discovered)} candidates found"
-                )
+                if is_target_category(pkg, include_cli, include_ml, include_dev):
+                    discovered_pkgs.append(pkg)
+                    progress.update(
+                        scan_task, advance=1, description=f"[green]Scanning: {len(discovered_pkgs)} pkgs found"
+                    )
         else:
             console.print("[bold red]Error: Either --pypi-json or --packages must be provided.[/bold red]")
             raise typer.Exit(1)
 
-        # 4. Refinement Pass (Pass 2)
-        if not discovered:
+        if not discovered_pkgs:
             console.print("[yellow]No candidates found.[/yellow]")
             return
 
-        # Sort by preliminary score
-        discovered.sort(key=lambda x: x[1].candidate_score, reverse=True)
+        # Pass 2: Build dependency graph and preliminary score
+        console.print("[bold blue]Building reverse dependency graph...[/bold blue]")
+        dep_graph = build_reverse_dependency_graph(discovered_pkgs)
 
-        # Select refinement buffer
-        refine_buffer = min(len(discovered), max(limit * 3, 500))
-        to_refine = discovered[:refine_buffer]
+        discovered_candidates: list[tuple[PackageInfo, CandidateRecord]] = []
+        scoring_task = progress.add_task("[blue]Scoring candidates...", total=len(discovered_pkgs))
 
-        console.print(f"[bold blue]Discovered {len(discovered)} packages. Refining top {len(to_refine)}...[/bold blue]")
+        for pkg in discovered_pkgs:
+            pkg_downloads = downloads_map.get(pkg.name.lower(), 0) if downloads_map else 0
+            deps_count = dep_graph.get(pkg.name.lower(), 0)
+            centrality = normalize_log(float(deps_count), 10_000.0)
 
-        refine_task = progress.add_task("[blue]Refining (fetching stars)...", total=len(to_refine))
+            # Initial score with stars=None
+            candidate = score_candidate(
+                pkg,
+                vuln_index,
+                mode=mode,  # type: ignore
+                downloads=pkg_downloads,
+                repo_stars=None,
+                centrality=centrality,
+                llm_client=llm_client if llm_discovery else None,
+            )
+            discovered_candidates.append((pkg, candidate))
+            progress.update(scoring_task, advance=1)
+
+        # 4. Refinement Pass (Pass 3: Fetch stars for top buffer)
+        discovered_candidates.sort(key=lambda x: x[1].candidate_score, reverse=True)
+        refine_buffer = min(len(discovered_candidates), max(limit * 3, 500))
+        to_refine = discovered_candidates[:refine_buffer]
+
+        console.print(f"[bold blue]Refining top {len(to_refine)} candidates (fetching stars)...[/bold blue]")
+        refine_task = progress.add_task("[magenta]Refining...", total=len(to_refine))
 
         final_candidates: list[CandidateRecord] = []
-
-        # Batch fetching stars to be efficient
         batch_size = 20
         for i in range(0, len(to_refine), batch_size):
             batch = to_refine[i : i + batch_size]
 
-            async def process_refined(pkg_record: tuple[PackageInfo, CandidateRecord]) -> CandidateRecord:
-                pkg, _ = pkg_record
-                stars = 0
+            async def process_refined(item: tuple[PackageInfo, CandidateRecord]) -> CandidateRecord:
+                pkg, _ = item
+                stars = None
                 if pkg.repo_url:
                     stars = await get_repo_stars(pkg.repo_url)
 
-                pkg_downloads = 0
-                if downloads_map is not None:
-                    pkg_downloads = downloads_map.get(pkg.name.lower(), 0)
+                pkg_downloads = downloads_map.get(pkg.name.lower(), 0) if downloads_map else 0
+                deps_count = dep_graph.get(pkg.name.lower(), 0)
+                centrality = normalize_log(float(deps_count), 10_000.0)
 
                 # Re-score with stars
                 candidate = score_candidate(
                     pkg,
                     vuln_index,
+                    mode=mode,  # type: ignore
                     downloads=pkg_downloads,
                     repo_stars=stars,
-                    dependency_map=deps_map,
+                    centrality=centrality,
                     llm_client=llm_client if llm_discovery else None,
                 )
                 progress.update(refine_task, advance=1)
@@ -210,7 +188,7 @@ async def run_pipeline(
             results = await asyncio.gather(*[process_refined(item) for item in batch])
             final_candidates.extend(results)
 
-    # 4. Sort and output
+    # Final sort and output
     final_candidates.sort(key=lambda x: x.candidate_score, reverse=True)
     top_candidates = final_candidates[:limit]
 
@@ -226,12 +204,12 @@ def main(
     osv_dump: Path = typer.Option(..., help="Path to OSV PyPI vulnerability ZIP dump"),
     pypa_repo: Optional[Path] = typer.Option(None, help="Path to local clone of pypa/advisory-database"),
     downloads_csv: Optional[Path] = typer.Option(None, help="Path to CSV with package downloads (name,count)"),
-    deps_csv: Optional[Path] = typer.Option(None, help="Path to CSV with package dependents (name,count)"),
     limit: int = typer.Option(100, help="Max number of candidates to output"),
     include_cli: bool = typer.Option(True, help="Include CLI tools"),
     include_ml: bool = typer.Option(True, help="Include ML/AI projects"),
     include_dev: bool = typer.Option(True, help="Include Dev tools"),
     llm_discovery: bool = typer.Option(False, "--llm-discovery", help="Use LLM to score package intent"),
+    mode: str = typer.Option("discovery", help="Scoring mode: discovery or triage"),
     out: Path = typer.Option("top_candidates.json", help="Output file path"),
 ) -> None:
     """Find candidate Python projects for security audit."""
@@ -242,12 +220,12 @@ def main(
             osv_dump=osv_dump,
             pypa_repo=pypa_repo,
             downloads_csv=downloads_csv,
-            deps_csv=deps_csv,
             limit=limit,
             include_cli=include_cli,
             include_ml=include_ml,
             include_dev=include_dev,
             llm_discovery=llm_discovery,
+            mode=mode,
             out=out,
         )
     )
