@@ -251,9 +251,9 @@ def ast_bypass_scan(tree: ast.AST, package: str, version: str, filename: str) ->
     for node in nodes_to_check:
         # We only care about calls at the top level
         # Note: we might want to recurse into If/Try if they are at top level
-        
+
         target_calls: list[ast.Call] = []
-        
+
         # Simple recursion for top-level blocks like if __name__ == "__main__": or just if True:
         todo: list[ast.AST] = [node]
         while todo:
@@ -261,7 +261,7 @@ def ast_bypass_scan(tree: ast.AST, package: str, version: str, filename: str) ->
             if isinstance(curr, ast.Call):
                 target_calls.append(curr)
             elif isinstance(curr, (ast.If, ast.Try, ast.With, ast.For, ast.While)):
-                # If these are top-level, their bodies are still "top-level execution" in the sense 
+                # If these are top-level, their bodies are still "top-level execution" in the sense
                 # that they run on import or direct execution if the condition is met.
                 todo.extend(curr.body)
                 if hasattr(curr, "orelse"):
@@ -283,7 +283,7 @@ def ast_bypass_scan(tree: ast.AST, package: str, version: str, filename: str) ->
                 category = ["top-level", "Bypass Signal"]
                 if "requests" in call_name or "urllib" in call_name:
                     category.append("Outbound Connection")
-                
+
                 slices.append(
                     Slice(
                         slice_id=f"bypass-{package}-{filename}-{call.lineno}",
@@ -296,12 +296,8 @@ def ast_bypass_scan(tree: ast.AST, package: str, version: str, filename: str) ->
                         or "subprocess" in call_name
                         or call_name in ["eval", "exec", "builtins.eval", "builtins.exec"]
                         else "suspicious",
-                        risk_score_static=0.9
-                        if "system" in call_name or "subprocess" in call_name
-                        else 0.7,
-                        dataflow_summary=[
-                            DataflowNode(file=filename, line=call.lineno, expr=ast.unparse(call))
-                        ],
+                        risk_score_static=0.9 if "system" in call_name or "subprocess" in call_name else 0.7,
+                        dataflow_summary=[DataflowNode(file=filename, line=call.lineno, expr=ast.unparse(call))],
                     )
                 )
 

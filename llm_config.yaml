@@ -1,0 +1,20 @@
+# llm_config.yaml
+# Centralized model routing and parameters
+
+default:
+  base_url: "http://127.0.0.1:1234/v1"
+  model: "custom_openai/qwen3.5-2b-mlx"
+  temperature: 0.0
+  reasoning_effort: "low"
+
+tier_1: # Deep Reasoning / PoC Generation
+  model: "custom_openai/qwen3.5-2b-mlx"
+  temperature: 0.1
+
+tier_2: # Triage / Refinement
+  model: "custom_openai/qwen3.5-2b-mlx"
+  temperature: 0.0
+
+tier_3: # Metadata / Rapid Scoring
+  model: "custom_openai/qwen3.5-2b-mlx"
+  temperature: 0.0

@@ -104,7 +104,7 @@ def score_candidate(
         epss_scores = [v.epss_score for v in vulns if v.epss_score is not None]
         if epss_scores:
             epss_score = max(epss_scores)
-            
+
     if cvss_score is None and vulns:
         cvss_scores = [v.cvss_score for v in vulns if v.cvss_score is not None]
         if cvss_scores:
