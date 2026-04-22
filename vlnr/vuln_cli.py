@@ -314,9 +314,13 @@ def process_package(
                                             )
                                             if val_result.status == "Runtime_Reachable":
                                                 s.category.append("Runtime_Reachable")
-                                                logger.info(f"PoC validated as Runtime_Reachable for slice {s.slice_id}")
+                                                logger.info(
+                                                    f"PoC validated as Runtime_Reachable for slice {s.slice_id}"
+                                                )
                                             else:
-                                                logger.info(f"PoC validation result: {val_result.status} for slice {s.slice_id}")
+                                                logger.info(
+                                                    f"PoC validation result: {val_result.status} for slice {s.slice_id}"
+                                                )
                                         except ContainerIsolationError as e:
                                             logger.error(f"Container isolation unavailable: {e}")
                                             # Graceful degradation: log and continue with the batch
@@ -348,7 +352,6 @@ def process_package(
         with open(slices_path, "w") as f_slices:
             for s in all_slices:
                 f_slices.write(json.dumps(s.model_dump()) + "\n")
-
 
             # 6.5 VEX output for false-positive findings
             for s in all_slices:
