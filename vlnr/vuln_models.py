@@ -67,6 +67,6 @@ class Slice(BaseModel):
 
 class PackageFindings(BaseModel):
     package: dict[str, Any]
-    sinks: list[dict[str, Any]]  # Summary of slices
+    sinks: list[Slice]  # Full Slice objects
     metadata_signals: list[dict[str, Any]] = Field(default_factory=list)
     stats: dict[str, Any]  # num_sinks_total, num_obvious_vuln, num_bandit_hits
