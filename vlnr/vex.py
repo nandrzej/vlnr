@@ -49,27 +49,21 @@ def generate_vex_document(
     prod_id = _derive_product_id(finding, product_id)
 
     statement: dict[str, Any] = {
-        "vulnerability": {"name": vuln_id},
-        "product": {
-            "id": prod_id,
-            "identifiers": [{"type": "purl", "value": prod_id}],
-        },
+        "vulnerability": vuln_id,
+        "products": [prod_id],
         "status": vex_status,
     }
 
     if vex_status == "not_affected":
-        statement["justification"] = {"type": "code_not_reachable"}
-    elif vex_status == "fixed":
-        statement["justification"] = {"type": "vulnerable_code_not_in_execute_path"}
+        statement["justification"] = "vulnerable_code_not_in_execute_path"
 
     return {
         "@context": OPENVEX_CONTEXT,
         "id": f"vex:{uuid.uuid4()}",
-        "metadata": {
-            "author": "vlnr",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tool": {"name": "vlnr", "version": "0.1.0"},
-        },
+        "author": "vlnr",
+        "role": "Security Researcher",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": 1,
         "statements": [statement],
     }
 

@@ -31,42 +31,40 @@ def test_generate_vex_basic_structure() -> None:
 
     assert doc["@context"] == OPENVEX_CONTEXT
     assert isinstance(doc["id"], str) and doc["id"].startswith("vex:")
-    assert isinstance(doc["metadata"], dict)
-    for key in ("author", "timestamp", "tool"):
-        assert key in doc["metadata"], f"metadata missing '{key}'"
+    assert doc["author"] == "vlnr"
+    assert "role" in doc
+    assert "timestamp" in doc
+    assert doc["version"] == 1
     assert isinstance(doc["statements"], list)
     assert len(doc["statements"]) >= 1
 
 
 def test_vex_statement_fields() -> None:
-    """Each statement contains vulnerability, product, status, and justification."""
+    """Each statement contains vulnerability, products, status, and justification."""
     doc = generate_vex_document(_sample_finding(), "not_affected")
     stmt = doc["statements"][0]
 
-    assert "vulnerability" in stmt and "name" in stmt["vulnerability"]
-    assert "product" in stmt and "id" in stmt["product"]
-    assert "identifiers" in stmt["product"]
+    assert isinstance(stmt["vulnerability"], str)
+    assert "products" in stmt and isinstance(stmt["products"], list)
     assert stmt["status"] in VALID_VEX_STATUSES
     # 'not_affected' requires justification per OpenVEX
     if stmt["status"] == "not_affected":
         assert "justification" in stmt
-        assert "type" in stmt["justification"]
+        assert isinstance(stmt["justification"], str)
 
 
 # ── False positive ─────────────────────────────────────────────────────
 
 
 def test_false_positive_produces_not_affected() -> None:
-    """Finding marked is_false_positive yields status='not_affected' with code_not_reachable justification."""
+    """Finding marked is_false_positive yields status='not_affected' with justification."""
     doc = generate_vex_document(_sample_finding(is_false_positive=True), "not_affected")
     stmt = doc["statements"][0]
 
     assert stmt["status"] == "not_affected"
     assert "justification" in stmt
-    jtype = stmt["justification"]["type"]
-    # OpenVEX justification codes for not_affected include code_not_reachable,
-    # vulnerable_code_not_in_execute_path, etc.
-    assert "code_not_reachable" in jtype or "not_in_execute_path" in jtype or jtype.startswith("impact")
+    justification = stmt["justification"]
+    assert justification == "vulnerable_code_not_in_execute_path"
 
 
 # ── VexStatus coverage ─────────────────────────────────────────────────
@@ -118,11 +116,11 @@ def test_vex_product_id_from_finding() -> None:
     doc = generate_vex_document(
         _sample_finding(), "affected", product_id="pkg:pypi/custom@2.0.0"
     )
-    assert doc["statements"][0]["product"]["id"] == "pkg:pypi/custom@2.0.0"
+    assert doc["statements"][0]["products"][0] == "pkg:pypi/custom@2.0.0"
 
     # Derived pURL from package_name + version
     doc = generate_vex_document(_sample_finding(), "affected")
-    product_id = doc["statements"][0]["product"]["id"]
+    product_id = doc["statements"][0]["products"][0]
     assert product_id == "pkg:pypi/test-package@1.0.0"
 
 
@@ -135,16 +133,16 @@ def test_vex_vulnerability_id_from_finding() -> None:
     doc = generate_vex_document(
         _sample_finding(), "affected", vulnerability_id="CVE-2024-99999"
     )
-    assert doc["statements"][0]["vulnerability"]["name"] == "CVE-2024-99999"
+    assert doc["statements"][0]["vulnerability"] == "CVE-2024-99999"
 
     # Derived from finding 'id'
     doc = generate_vex_document(_sample_finding(), "affected")
-    assert doc["statements"][0]["vulnerability"]["name"] == "GHSA-xxxx-xxxx"
+    assert doc["statements"][0]["vulnerability"] == "GHSA-xxxx-xxxx"
 
     # Derived from osv_ids when 'id' is absent
     finding = _sample_finding(id="", osv_ids=["OSV-2024-001"])
     doc = generate_vex_document(finding, "affected")
-    assert doc["statements"][0]["vulnerability"]["name"] == "OSV-2024-001"
+    assert doc["statements"][0]["vulnerability"] == "OSV-2024-001"
 
 
 # ── Edge cases ─────────────────────────────────────────────────────────
@@ -155,14 +153,14 @@ def test_vex_finding_with_no_id_fields() -> None:
     finding = {"package_name": "pkg", "version": "1.0.0"}
     doc = generate_vex_document(finding, "under_investigation")
     stmt = doc["statements"][0]
-    assert stmt["vulnerability"]["name"] == "unknown"
+    assert stmt["vulnerability"] == "unknown"
 
 
 def test_vex_finding_with_no_version() -> None:
     """Finding without version still produces valid VEX (pURL without @version)."""
     finding = {"id": "GHSA-abc-123", "package_name": "no-ver-pkg"}
     doc = generate_vex_document(finding, "affected")
-    product_id = doc["statements"][0]["product"]["id"]
+    product_id = doc["statements"][0]["products"][0]
     # pURL without version: pkg:pypi/no-ver-pkg (no @ suffix)
     assert "no-ver-pkg" in product_id
     assert "@context" in doc  # structural integrity preserved

@@ -119,14 +119,14 @@ class TestValidatePocInContainer:
 
     def test_validate_poc_wrong_output(self) -> None:
         """PoC produces output that doesn't match expected → matched=False.
-        Status is still Runtime_Reachable because the code ran successfully."""
+        Status is Runtime_Failed because the specific expectation was not met."""
         result = validate_poc_in_container(
             poc_code="print('wrong')",
             package_name="pip",
             package_version="24.0",
             expected_output="VULN_CONFIRMED",
         )
-        assert result.status == "Runtime_Reachable"
+        assert result.status == "Runtime_Failed"
         assert result.expected_output_matched is False
 
     def test_container_cleanup_on_failure(self) -> None:

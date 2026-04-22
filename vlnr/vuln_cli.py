@@ -319,7 +319,7 @@ def process_package(
                                                 logger.info(f"PoC validation result: {val_result.status} for slice {s.slice_id}")
                                         except ContainerIsolationError as e:
                                             logger.error(f"Container isolation unavailable: {e}")
-                                            raise
+                                            # Graceful degradation: log and continue with the batch
                             else:
                                 logger.warning(f"No triage result returned for slice {s.slice_id} in batch")
                     except Exception as e:
