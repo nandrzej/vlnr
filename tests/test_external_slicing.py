@@ -46,8 +46,8 @@ def test_external_hit_creates_slice() -> None:
             assert findings.stats["num_sinks_total"] == 1
             # The slice should have been created from the hit
             s = findings.sinks[0]
-            assert s["static_class"] == "suspicious"
-            assert s["tool_hits"][0]["rule"] == "B602"
-            assert s["dataflow_summary"][0]["line"] == 2
+            assert s.static_class == "suspicious"
+            assert s.tool_hits[0].rule == "B602"
+            assert s.dataflow_summary[0].line == 2
 
     shutil.rmtree(temp_dir)
