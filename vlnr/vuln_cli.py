@@ -337,7 +337,7 @@ def process_package(
 
         findings = PackageFindings(
             package=pkg,
-            sinks=[s.model_dump() for s in all_slices],
+            sinks=all_slices,
             metadata_signals=[s.__dict__ for s in metadata_signals],
             stats={
                 "num_sinks_total": len(all_slices),
