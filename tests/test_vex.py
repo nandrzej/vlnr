@@ -113,9 +113,7 @@ def test_write_vex_document() -> None:
 def test_vex_product_id_from_finding() -> None:
     """Explicit product_id is used; absent product_id derives pURL from finding."""
     # Explicit product_id
-    doc = generate_vex_document(
-        _sample_finding(), "affected", product_id="pkg:pypi/custom@2.0.0"
-    )
+    doc = generate_vex_document(_sample_finding(), "affected", product_id="pkg:pypi/custom@2.0.0")
     assert doc["statements"][0]["products"][0] == "pkg:pypi/custom@2.0.0"
 
     # Derived pURL from package_name + version
@@ -130,9 +128,7 @@ def test_vex_product_id_from_finding() -> None:
 def test_vex_vulnerability_id_from_finding() -> None:
     """Explicit vulnerability_id is used; absent id derives from finding fields."""
     # Explicit vulnerability_id
-    doc = generate_vex_document(
-        _sample_finding(), "affected", vulnerability_id="CVE-2024-99999"
-    )
+    doc = generate_vex_document(_sample_finding(), "affected", vulnerability_id="CVE-2024-99999")
     assert doc["statements"][0]["vulnerability"] == "CVE-2024-99999"
 
     # Derived from finding 'id'

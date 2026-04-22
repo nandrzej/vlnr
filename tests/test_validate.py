@@ -141,12 +141,11 @@ class TestValidatePocInContainer:
 
         # Verify no vlnr-prefixed containers are lingering
         import docker as _docker
+
         client = _docker.from_env()
         containers = client.containers.list(all=True, filters={"name": "vlnr"})
         vlnr_containers = [c for c in containers if c.name.startswith("vlnr-poc")]
-        assert len(vlnr_containers) == 0, (
-            f"Leftover containers: {[c.name for c in vlnr_containers]}"
-        )
+        assert len(vlnr_containers) == 0, f"Leftover containers: {[c.name for c in vlnr_containers]}"
 
     def test_validate_poc_multiline(self) -> None:
         """Multiline PoC code must execute correctly."""

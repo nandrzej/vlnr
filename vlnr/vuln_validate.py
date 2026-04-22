@@ -144,9 +144,7 @@ def _install_package(
 ) -> None:
     """Install the target package inside the container. Best-effort."""
     # Strict validation of package name and version to prevent command injection
-    if not re.match(r"^[a-zA-Z0-9._-]+$", package_name) or not re.match(
-        r"^[a-zA-Z0-9._-]+$", package_version
-    ):
+    if not re.match(r"^[a-zA-Z0-9._-]+$", package_name) or not re.match(r"^[a-zA-Z0-9._-]+$", package_version):
         logger.warning(
             "Invalid package name or version: %s==%s; skipping installation",
             package_name,
