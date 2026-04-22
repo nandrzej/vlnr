@@ -1,0 +1,14 @@
+{
+  "results": [
+    {"slice_id": "pos-1", "analysis": "Reasoning", "plausibility": 0.9, "is_false_positive": false, "suggested_cwe": "CWE-94"},
+    {"slice_id": "pos-2", "analysis": "Reasoning", "plausibility": 0.95, "is_false_positive": false, "suggested_cwe": "CWE-78"},
+    {"slice_id": "pos-3", "analysis": "Reasoning", "plausibility": 0.85, "is_false_positive": false, "suggested_cwe": "CWE-89"},
+    {"slice_id": "pos-4", "analysis": "Reasoning", "plausibility": 0.7, "is_false_positive": false, "suggested_cwe": "CWE-798"},
+    {"slice_id": "pos-5", "analysis": "Reasoning", "plausibility": 0.9, "is_false_positive": false, "suggested_cwe": "CWE-502"},
+    {"slice_id": "neg-1", "analysis": "Reasoning", "plausibility": 0.1, "is_false_positive": true, "suggested_cwe": null},
+    {"slice_id": "neg-2", "analysis": "Reasoning", "plausibility": 0.2, "is_false_positive": true, "suggested_cwe": null},
+    {"slice_id": "neg-3", "analysis": "Reasoning", "plausibility": 0.15, "is_false_positive": true, "suggested_cwe": null},
+    {"slice_id": "neg-4", "analysis": "Reasoning", "plausibility": 0.05, "is_false_positive": true, "suggested_cwe": null},
+    {"slice_id": "neg-5", "analysis": "Reasoning", "plausibility": 0.1, "is_false_positive": true, "suggested_cwe": null}
+  ]
+}

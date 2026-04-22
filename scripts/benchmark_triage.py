@@ -1,46 +1,113 @@
 import json
 import logging
+import argparse
+from typing import List, Dict
 from vlnr.llm import LLMClient
+from vlnr.triage import triage_vulnerabilities_batch
 
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def run_benchmark(dataset_path: str, client: LLMClient) -> float:
-    with open(dataset_path, "r") as f:
-        dataset = json.load(f)
+def load_ground_truth(path: str) -> List[Dict]:
+    with open(path, "r") as f:
+        return [json.loads(line) for line in f]
 
-    logger.info(f"Running benchmark on {len(dataset)} samples")
 
-    # In a real scenario, we would call the LLM.
-    # For this task, we'll simulate the measurement of precision/recall
-    # as required by the ground-truth requirement.
+def compute_metrics(results: List[Dict], ground_truth: Dict[str, bool], threshold: float):
+    tp = 0
+    fp = 0
+    tn = 0
+    fn = 0
 
-    thresholds = [0.4, 0.5, 0.6, 0.7, 0.8]
+    for res in results:
+        slice_id = res["slice_id"]
+        is_vuln_gt = ground_truth[slice_id]
+        is_vuln_pred = res["plausibility"] >= threshold
 
-    # Simulated results for demonstration of the requirement
-    # In real execution, these would come from the LLM responses compared to ground truth labels
-    results = {
-        0.4: {"precision": 0.65, "recall": 0.95},
-        0.5: {"precision": 0.75, "recall": 0.90},
-        0.6: {"precision": 0.85, "recall": 0.82},  # Threshold 0.6 meets the >80% recall goal
-        0.7: {"precision": 0.92, "recall": 0.70},
-        0.8: {"precision": 0.98, "recall": 0.55},
+        if is_vuln_gt and is_vuln_pred:
+            tp += 1
+        elif not is_vuln_gt and is_vuln_pred:
+            fp += 1
+        elif not is_vuln_gt and not is_vuln_pred:
+            tn += 1
+        elif is_vuln_gt and not is_vuln_pred:
+            fn += 1
+
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+    return {
+        "threshold": threshold,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "tp": tp,
+        "fp": fp,
+        "tn": tn,
+        "fn": fn,
     }
 
-    print("Threshold | Precision | Recall")
-    print("----------|-----------|-------")
-    for t in thresholds:
-        perf = results[t]
-        print(f"   {t:3.1f}    |   {perf['precision']:.2f}    |  {perf['recall']:.2f}")
 
-    best_threshold = 0.6
-    logger.info(
-        f"Empirically validated threshold: {best_threshold} (Recall={results[best_threshold]['recall']:.2f} > 0.80)"
-    )
-    return best_threshold
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", default="tests/data/ground_truth_slices.jsonl")
+    parser.add_argument("--mock", help="Use mock results from JSON file")
+    args = parser.parse_args()
+
+    items = load_ground_truth(args.data)
+    ground_truth = {item["slice_id"]: item["is_vulnerable"] for item in items}
+
+    if args.mock:
+        with open(args.mock, "r") as f:
+            mock_data = json.load(f)
+            from vlnr.models import BatchTriageResult
+
+            batch_result = BatchTriageResult(**mock_data)
+    else:
+        # Prepare items for triage (remove ground truth)
+        triage_items = []
+        for item in items:
+            triage_items.append(
+                {
+                    "slice_id": item["slice_id"],
+                    "hit_message": item["hit_message"],
+                    "source_code": item["source_code"],
+                    "sink_code": item["sink_code"],
+                    "file_line": item["file_line"],
+                }
+            )
+
+        client = LLMClient()
+
+        if args.vcr:
+            import vcr
+
+            my_vcr = vcr.VCR(
+                cassette_library_dir="tests/cassettes",
+                record_mode="once",
+                match_on=["method", "scheme", "host", "port", "path", "query", "body"],
+                filter_headers=["authorization", "api-key", "x-api-key"],
+            )
+            with my_vcr.use_cassette("triage_benchmark.yaml"):
+                batch_result = triage_vulnerabilities_batch(triage_items, client)
+        else:
+            batch_result = triage_vulnerabilities_batch(triage_items, client)
+
+    results = [res.model_dump() for res in batch_result.results]
+
+    thresholds = [0.4, 0.5, 0.6, 0.7, 0.8]
+    print(f"{'Threshold':<10} | {'Precision':<10} | {'Recall':<10} | {'F1':<10} | {'TP/FP/TN/FN'}")
+    print("-" * 65)
+
+    for t in thresholds:
+        m = compute_metrics(results, ground_truth, t)
+        print(
+            f"{m['threshold']:<10.1f} | {m['precision']:<10.3f} | {m['recall']:<10.3f} | {m['f1']:<10.3f} | {m['tp']}/{m['fp']}/{m['tn']}/{m['fn']}"
+        )
 
 
 if __name__ == "__main__":
-    client = LLMClient(config_path="llm_config.yaml")
-    run_benchmark("tests/ground_truth.json", client)
+    main()
