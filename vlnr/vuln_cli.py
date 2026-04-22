@@ -19,6 +19,8 @@ from vlnr.vuln_ast import ast_taint_scan, ast_bypass_scan
 from vlnr.vuln_slice import construct_slices
 from vlnr.vuln_scorer import score_slice
 from vlnr.vuln_models import PackageFindings, TriageInfo, PoCData, Slice, ToolHit, DataflowNode
+from vlnr.vuln_validate import ContainerIsolationError, validate_poc_in_container
+from vlnr.vex import generate_vex_document, write_vex_document
 
 
 class TimeoutException(Exception):
@@ -299,8 +301,25 @@ def process_package(
                                         f"Source: {next((c['code'] for c in s.code_snippets if 'source' in c.get('tags', [])), '')}\n"
                                         f"Sink: {next((c['code'] for c in s.code_snippets if 'sink' in c.get('tags', [])), '')}"
                                     )
-                                    poc_res = generate_poc(name, vuln_ctx, llm_client)
+                                    poc_res = generate_poc(name, vuln_ctx, llm_client, suggested_cwe=res.suggested_cwe)
                                     s.poc_data = PoCData(**poc_res.model_dump())
+
+                                    # 5.6 PoC Validation in container
+                                    if s.poc_data and s.poc_data.exploit_code:
+                                        try:
+                                            val_result = validate_poc_in_container(
+                                                poc_code=s.poc_data.exploit_code,
+                                                package_name=name,
+                                                package_version=version,
+                                            )
+                                            if val_result.status == "Runtime_Reachable":
+                                                s.category.append("Runtime_Reachable")
+                                                logger.info(f"PoC validated as Runtime_Reachable for slice {s.slice_id}")
+                                            else:
+                                                logger.info(f"PoC validation result: {val_result.status} for slice {s.slice_id}")
+                                        except ContainerIsolationError as e:
+                                            logger.error(f"Container isolation unavailable: {e}")
+                                            raise
                             else:
                                 logger.warning(f"No triage result returned for slice {s.slice_id} in batch")
                     except Exception as e:
@@ -330,6 +349,17 @@ def process_package(
             for s in all_slices:
                 f_slices.write(json.dumps(s.model_dump()) + "\n")
 
+
+            # 6.5 VEX output for false-positive findings
+            for s in all_slices:
+                if s.triage_info and s.triage_info.is_false_positive:
+                    vex_doc = generate_vex_document(
+                        finding={"id": s.slice_id, "package_name": name, "version": version},
+                        vex_status="not_affected",
+                    )
+                    vex_path = os.path.join(out_dir, f"{name}-{s.slice_id}-vex.json")
+                    write_vex_document(vex_doc, vex_path)
+                    logger.info(f"VEX document written for false-positive slice {s.slice_id}")
         logger.info(f"Finished processing {name}. Found {len(all_slices)} potential vulnerabilities.")
         return findings
 
