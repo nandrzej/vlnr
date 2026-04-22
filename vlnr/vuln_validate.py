@@ -1,6 +1,7 @@
 """Validate PoC scripts inside disposable Docker containers."""
 
 import logging
+import re
 import threading
 import uuid
 from typing import Literal
@@ -80,12 +81,14 @@ def validate_poc_in_container(
             )
             result_holder.append((ec, output))
 
-        thread = threading.Thread(target=run_poc)
+        thread = threading.Thread(target=run_poc, daemon=True)
         thread.start()
         thread.join(timeout=timeout)
 
         if thread.is_alive():
             timed_out = True
+            # The thread is daemonized and the container will be removed in finally,
+            # which will terminate the exec_run call.
         else:
             exit_code, (stdout_bytes, stderr_bytes) = result_holder[0]
             if stdout_bytes is not None:
@@ -116,7 +119,7 @@ def validate_poc_in_container(
         # Determine status
         if exit_code == 0:
             status: Literal["Runtime_Reachable", "Runtime_Failed", "Runtime_Error", "Runtime_Timeout"] = (
-                "Runtime_Reachable" if expected_output_matched else "Runtime_Reachable"
+                "Runtime_Reachable" if expected_output_matched else "Runtime_Failed"
             )
         elif expected_exception is not None and expected_exception in stderr:
             status = "Runtime_Reachable"
@@ -140,9 +143,20 @@ def _install_package(
     package_version: str,
 ) -> None:
     """Install the target package inside the container. Best-effort."""
+    # Strict validation of package name and version to prevent command injection
+    if not re.match(r"^[a-zA-Z0-9._-]+$", package_name) or not re.match(
+        r"^[a-zA-Z0-9._-]+$", package_version
+    ):
+        logger.warning(
+            "Invalid package name or version: %s==%s; skipping installation",
+            package_name,
+            package_version,
+        )
+        return
+
     try:
         container.exec_run(
-            cmd=["pip", "install", "--quiet", f"{package_name}=={package_version}"],
+            cmd=["pip", "install", "--quiet", "--", f"{package_name}=={package_version}"],
         )
     except DockerException:
         logger.warning(
