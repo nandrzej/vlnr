@@ -198,6 +198,50 @@ async def run_pipeline(
 
 
 @app.command()
+def agent(
+    package: Optional[str] = typer.Option(None, help="Initial package to scan"),
+    state_path: str = typer.Option("agent_session.json", help="Path to state JSON file"),
+    max_iterations: int = typer.Option(5, help="Max loop iterations"),
+    budget: float = typer.Option(10.0, help="Total budget in USD"),
+) -> None:
+    """Run the autonomous security agent."""
+    from vlnr.agent import AgentLoop
+    from vlnr.agent_models import AgentState, AgentAction
+    from vlnr.llm import LLMClient
+
+    llm_client = LLMClient()
+    loop = AgentLoop(llm_client)
+
+    if os.path.exists(state_path):
+        console.print(f"[bold blue]Resuming from state: {state_path}[/bold blue]")
+        state = AgentState.load_from_json(state_path)
+    else:
+        console.print("[bold green]Initializing new agent state[/bold green]")
+        state = AgentState(max_iterations=max_iterations, budget_remaining=budget)
+        if package:
+            # Add initial action if package is provided
+            state.history.append({
+                "iteration": 0,
+                "action": AgentAction(
+                    action="scan_package", 
+                    package_name=package, 
+                    reasoning="Initial user request"
+                ).model_dump(),
+                "observation": {"success": True, "data": None, "message": "Queued initial scan"}
+            })
+            # Actually, to make it work with the current loop, we might need a better way.
+            # But the loop calls decide_action first.
+            # If I add it to history, decide_action will see it.
+            # Let's just add it to scanned_packages so the agent knows?
+            # Or better, just let decide_action handle it if it's smart enough.
+            # But the prompt says "Prioritize packages with high-risk signals".
+            # I'll just prepopulate scanned_packages and findings if I could, but I can't yet.
+            # I'll just pass it as an initial signal in history.
+
+    loop.run(state, state_path=state_path)
+
+
+@app.command()
 def main(
     pypi_json: Optional[Path] = typer.Option(None, help="Path to PyPI bulk JSONL file"),
     packages: Optional[str] = typer.Option(None, help="Comma-separated package names for live API fetch"),
