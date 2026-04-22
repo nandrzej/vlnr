@@ -1,21 +1,24 @@
 import json
 import logging
 import argparse
-from typing import List, Dict
+from typing import List, Dict, Any
 from vlnr.llm import LLMClient
 from vlnr.triage import triage_vulnerabilities_batch
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def load_ground_truth(path: str) -> List[Dict]:
+def load_ground_truth(path: str) -> List[Dict[str, Any]]:
     with open(path, "r") as f:
         return [json.loads(line) for line in f]
 
 
-def compute_metrics(results: List[Dict], ground_truth: Dict[str, bool], threshold: float):
+def compute_metrics(
+    results: List[Dict[str, Any]], ground_truth: Dict[str, bool], threshold: float
+) -> Dict[str, Any]:
     tp = 0
     fp = 0
     tn = 0
@@ -35,9 +38,13 @@ def compute_metrics(results: List[Dict], ground_truth: Dict[str, bool], threshol
         elif is_vuln_gt and not is_vuln_pred:
             fn += 1
 
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    f1 = (
+        2 * (precision * recall) / (precision + recall)
+        if (precision + recall) > 0
+        else 0.0
+    )
 
     return {
         "threshold": threshold,
@@ -51,10 +58,11 @@ def compute_metrics(results: List[Dict], ground_truth: Dict[str, bool], threshol
     }
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default="tests/data/ground_truth_slices.jsonl")
     parser.add_argument("--mock", help="Use mock results from JSON file")
+    parser.add_argument("--vcr", action="store_true", help="Use VCR for recording/playing back")
     args = parser.parse_args()
 
     items = load_ground_truth(args.data)

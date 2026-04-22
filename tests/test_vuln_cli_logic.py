@@ -1,3 +1,4 @@
+from typing import Any, Generator, Dict
 import os
 import pytest
 from unittest.mock import MagicMock, patch
@@ -6,7 +7,7 @@ from vlnr.vuln_models import Slice, DataflowNode
 
 
 @pytest.fixture
-def mock_dependencies():
+def mock_dependencies() -> Generator[Dict[str, Any], None, None]:
     with (
         patch("vlnr.vuln_cli.fetch_source") as mock_fetch,
         patch("vlnr.vuln_cli.discover_entrypoints") as mock_eps,
@@ -35,7 +36,7 @@ def mock_dependencies():
         }
 
 
-def create_mock_slice(slice_id, sink_api, file="test.py"):
+def create_mock_slice(slice_id: str, sink_api: str, file: str = "test.py") -> Slice:
     return Slice(
         slice_id=slice_id,
         package="test-pkg",
@@ -48,7 +49,7 @@ def create_mock_slice(slice_id, sink_api, file="test.py"):
     )
 
 
-def test_escalation_base64_exec(mock_dependencies, tmp_path):
+def test_escalation_base64_exec(mock_dependencies: Dict[str, Any], tmp_path: Any) -> None:
     # base64.b64decode + exec
     s1 = create_mock_slice("s1", "base64.b64decode")
     s2 = create_mock_slice("s2", "exec")
@@ -63,7 +64,7 @@ def test_escalation_base64_exec(mock_dependencies, tmp_path):
         # We need builtins.open to work for reading the source file and for writing findings
         real_open = open
 
-        def side_effect(path, *args, **kwargs):
+        def side_effect(path: Any, *args: Any, **kwargs: Any) -> Any:
             if "/tmp/fake/test.py" in str(path):
                 m = MagicMock()
                 m.read.return_value = "pass"
@@ -74,14 +75,15 @@ def test_escalation_base64_exec(mock_dependencies, tmp_path):
         with patch("builtins.open", side_effect=side_effect), patch("ast.parse", return_value=None):
             findings = process_package(pkg, out_dir=out_dir)
 
-    escalated = [s for s in findings.sinks if s["static_class"] == "obvious_vuln"]
+    assert findings is not None
+    escalated = [s for s in findings.sinks if s.static_class == "obvious_vuln"]
     assert len(escalated) > 0
-    assert any("exec" in s["sink_api"] for s in escalated)
-    assert any(s["risk_score_static"] == 0.95 for s in escalated)
-    assert any("Conjunctive Escalation" in s["category"] for s in escalated)
+    assert any("exec" in s.sink_api for s in escalated)
+    assert any(s.risk_score_static == 0.95 for s in escalated)
+    assert any("Conjunctive Escalation" in s.category for s in escalated)
 
 
-def test_escalation_network_execution(mock_dependencies, tmp_path):
+def test_escalation_network_execution(mock_dependencies: Dict[str, Any], tmp_path: Any) -> None:
     # requests.get + os.system
     s1 = create_mock_slice("s1", "requests.get")
     s2 = create_mock_slice("s2", "os.system")
@@ -95,7 +97,7 @@ def test_escalation_network_execution(mock_dependencies, tmp_path):
         mock_walk.return_value = [("/tmp/fake", [], ["test.py"])]
         real_open = open
 
-        def side_effect(path, *args, **kwargs):
+        def side_effect(path: Any, *args: Any, **kwargs: Any) -> Any:
             if "/tmp/fake/test.py" in str(path):
                 m = MagicMock()
                 m.read.return_value = "pass"
@@ -106,12 +108,13 @@ def test_escalation_network_execution(mock_dependencies, tmp_path):
         with patch("builtins.open", side_effect=side_effect), patch("ast.parse", return_value=None):
             findings = process_package(pkg, out_dir=out_dir)
 
-    escalated = [s for s in findings.sinks if s["static_class"] == "obvious_vuln"]
+    assert findings is not None
+    escalated = [s for s in findings.sinks if s.static_class == "obvious_vuln"]
     assert len(escalated) > 0
-    assert any("os.system" in s["sink_api"] for s in escalated)
+    assert any("os.system" in s.sink_api for s in escalated)
 
 
-def test_escalation_metadata_execution(mock_dependencies, tmp_path):
+def test_escalation_metadata_execution(mock_dependencies: Dict[str, Any], tmp_path: Any) -> None:
     # HIGH metadata signal + subprocess.run
     s1 = create_mock_slice("s1", "subprocess.run")
     mock_dependencies["taint"].return_value = [s1]
@@ -135,7 +138,7 @@ def test_escalation_metadata_execution(mock_dependencies, tmp_path):
 
         real_open = open
 
-        def side_effect(path, *args, **kwargs):
+        def side_effect(path: Any, *args: Any, **kwargs: Any) -> Any:
             if "/tmp/fake/test.py" in str(path):
                 m = MagicMock()
                 m.read.return_value = "pass"
@@ -146,12 +149,13 @@ def test_escalation_metadata_execution(mock_dependencies, tmp_path):
         with patch("builtins.open", side_effect=side_effect), patch("ast.parse", return_value=None):
             findings = process_package(pkg, out_dir=out_dir)
 
-    escalated = [s for s in findings.sinks if s["static_class"] == "obvious_vuln"]
+    assert findings is not None
+    escalated = [s for s in findings.sinks if s.static_class == "obvious_vuln"]
     assert len(escalated) > 0
-    assert any("subprocess" in s["sink_api"] for s in escalated)
+    assert any("subprocess" in s.sink_api for s in escalated)
 
 
-def test_no_escalation_single_signal(mock_dependencies, tmp_path):
+def test_no_escalation_single_signal(mock_dependencies: Dict[str, Any], tmp_path: Any) -> None:
     # Single os.system without other signals
     s1 = create_mock_slice("s1", "os.system")
     mock_dependencies["taint"].return_value = [s1]
@@ -164,7 +168,7 @@ def test_no_escalation_single_signal(mock_dependencies, tmp_path):
         mock_walk.return_value = [("/tmp/fake", [], ["test.py"])]
         real_open = open
 
-        def side_effect(path, *args, **kwargs):
+        def side_effect(path: Any, *args: Any, **kwargs: Any) -> Any:
             if "/tmp/fake/test.py" in str(path):
                 m = MagicMock()
                 m.read.return_value = "pass"
@@ -175,7 +179,8 @@ def test_no_escalation_single_signal(mock_dependencies, tmp_path):
         with patch("builtins.open", side_effect=side_effect), patch("ast.parse", return_value=None):
             findings = process_package(pkg, out_dir=out_dir)
 
-    escalated = [s for s in findings.sinks if s["static_class"] == "obvious_vuln"]
+    assert findings is not None
+    escalated = [s for s in findings.sinks if s.static_class == "obvious_vuln"]
     assert len(escalated) == 0
     # Should stay suspicious (as initialized in create_mock_slice)
-    assert all(s["static_class"] == "suspicious" for s in findings.sinks)
+    assert all(s.static_class == "suspicious" for s in findings.sinks)
