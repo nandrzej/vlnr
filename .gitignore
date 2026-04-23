@@ -18,6 +18,8 @@ findings/
 *_findings/
 logs/
 *.log
+skills-lock.json
+test_agent_session.json
 
 # Caches & Environment
 .env
@@ -33,3 +35,5 @@ pypicache.json
 manual_top.json
 top_candidates.json
 llms.json
+!tests/data/*.jsonl
+!tests/fixtures/*.jsonl
