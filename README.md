@@ -1,120 +1,94 @@
-# Vulnerability Audit Toolkit (vlnr)
+# vlnr: Autonomous Vulnerability Discovery Pipeline
 
-A high-performance pipeline for identifying high-value Python projects for security audits and scanning them for vulnerabilities, now augmented with LLM-based semantic discovery and automated triage.
+[![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
+[![Type Checking: MyPy](https://img.shields.io/badge/typing-strict-brightgreen.svg)](https://mypy.readthedocs.io/)
+[![Linting: Ruff](https://img.shields.io/badge/lint-ruff-black.svg)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
-## Tools
-
-The toolkit consists of two primary tools:
-1. **Candidate Finder (`poc-find-candidates`)**: Ranks PyPI projects by audit value using popularity, vulnerability history, and semantic intent.
-2. **Vulnerability Scanner (`poc-scan-vulnerabilities`)**: Scans candidate source code using static analysis, taint tracking, and LLM-powered triage/PoC generation.
-
----
-
-## Configuration & Environment
-
-The toolkit uses environment variables for API access:
-
-- `GITHUB_TOKEN`: **(Recommended)** Used to fetch repository stars and metadata. Prevents rate-limiting.
-- `LLM_API_KEY`: **(Required for LLM features)** Your NVIDIA NIM API key.
-- `LLM_BASE_URL`: **(Optional)** Base URL for the LLM API (defaults to `https://integrate.api.nvidia.com/v1`).
-- `LLM_MODEL_TIER_1`: **(Optional)** Tier 1 model ID (Deep Reasoning, defaults to `meta/llama-3.1-405b-instruct`).
-- `LLM_MODEL_TIER_2`: **(Optional)** Tier 2 model ID (Triage/Refinement, defaults to `meta/llama-3.1-70b-instruct`).
-- `LLM_MODEL_TIER_3`: **(Optional)** Tier 3 model ID (Metadata/Rapid, defaults to `meta/llama-3.1-8b-instruct`).
-
-Create a `.env` file in the root directory:
-```bash
-GITHUB_TOKEN=ghp_...
-LLM_API_KEY=nvapi-...
-LLM_BASE_URL=https://integrate.api.nvidia.com/v1
-
-# Optional model overrides
-LLM_MODEL_TIER_1=meta/llama-3.1-405b-instruct
-LLM_MODEL_TIER_2=meta/llama-3.1-70b-instruct
-LLM_MODEL_TIER_3=meta/llama-3.1-8b-instruct
-```
+**vlnr** is an autonomous security research framework designed to discover, triage, and validate vulnerabilities across the Python ecosystem. Moving beyond simple static analysis, `vlnr` implements an agentic orchestration loop that combines deep code reasoning with automated exploit validation.
 
 ---
 
-## 1. Candidate Finder (`poc-find-candidates`)
+## 🧠 Novel Approach: The Agentic Security Loop
 
-Identifies projects with high popularity but low auditability or high-value security intent.
+The core innovation of `vlnr` is its autonomous "Plan-Scan-Validate" loop. Unlike traditional scanners that stop at a list of potential hits, `vlnr` operates as an agent:
 
-### Usage
-```bash
-# Minimal Run (Specific Packages)
-uv run poc-find-candidates --packages "requests,flask,cryptography" --osv-dump path/to/osv-pypi.zip
-
-# LLM-Augmented Discovery (Semantic Intent Scoring)
-uv run poc-find-candidates --packages "fastapi,django" --osv-dump path/to/osv-pypi.zip --llm-discovery
-
-# Full Pipeline (Bulk Ingestion)
-uv run poc-find-candidates --pypi-json path/to/pypi.jsonl --osv-dump path/to/osv-pypi.zip
-```
-
-### Options
-- `--pypi-json`: Path to bulk JSONL file from PyPI.
-- `--packages`: Comma-separated package list for targeted fetching.
-- `--osv-dump`: **(Required)** Path to OSV PyPI ZIP dump.
-- `--pypa-repo`: Path to local clone of `pypa/advisory-database`.
-- `--llm-discovery`: Use Small Language Models (SLMs) to identify high-value targets based on intent (auth, crypto, networking).
-- `--limit`: Max candidates to output (default 100).
-- `--include-cli / --include-ml / --include-dev`: Category toggles.
-- `--out`: Output JSON path (default `top_candidates.json`).
+1.  **Semantic Intent Scoring**: Analyzes package metadata and source code to identify "High-Value Targets"—projects handling sensitive data, cryptography, or critical infrastructure.
+2.  **Symbolic & Taint Analysis**: Performs deep AST-based scanning and cross-file taint tracking to identify potentially exploitable data flows.
+3.  **Tiered Reasoning Triage**: Uses a hierarchy of LLMs to analyze tainted paths, filter out false positives, and determine exploitability.
+4.  **Autonomous PoC Validation**: For high-confidence findings, the agent drafts a functional Proof-of-Concept (PoC) exploit and executes it in a transient, isolated Docker container to confirm reachability and impact.
 
 ---
 
-## 2. Vulnerability Scanner (`poc-scan-vulnerabilities`)
+## 🛠 Architecture: Tiered LLM Strategy
 
-Performs deep static analysis and LLM-powered triage on identified packages.
+`vlnr` uses a cost-and-performance optimized model hierarchy. Each tier is mapped to a specific cognitive load within the audit pipeline:
 
-### Usage
-```bash
-# Standard Scan
-uv run poc-scan-vulnerabilities top_candidates.json --out-dir findings
+### **Tier 3: Metadata & Rapid Filtering**
+*   **Role**: Intent scoring, initial triage, and metadata classification.
+*   **Requirements**: Low latency, high throughput.
+*   **Suggested Models**: `Qwen 3.5 4B`, `Gemma 4 2B`.
 
-# Augmented Triage (LLM-based Noise Reduction)
-uv run poc-scan-vulnerabilities top_candidates.json --llm-triage
+### **Tier 2: Refinement & Contextual Triage**
+*   **Role**: Analyzing tainted code slices and reducing static analysis noise.
+*   **Requirements**: Strong logical reasoning and moderate context windows.
+*   **Suggested Models**: `Gemma 4 31B`, `Mistral Large 2`.
 
-# Deep Reasoning & PoC Generation (requires --llm-triage)
-uv run poc-scan-vulnerabilities top_candidates.json --llm-triage --llm-poc
-```
-
-### Options
-- `CANDIDATES_FILE`: JSON file generated by `poc-find-candidates`.
-- `--out-dir`: Directory to store findings (default: `findings`).
-- `--max-packages`: Limit the number of packages to scan.
-- `--max-files-per-pkg`: Limit the number of files scanned per package.
-- `--llm-triage`: Filters static analysis noise using contextual LLM evaluation (Tier 3 model).
-- `--llm-poc`: Leverages deep reasoning models (Tier 1) to generate functional exploit scripts for high-confidence findings.
+### **Tier 1: Deep Reasoning & PoC Generation**
+*   **Role**: Multi-step exploitability analysis and functional exploit generation.
+*   **Requirements**: Frontier reasoning capabilities and "Whole-Repo" context.
+*   **Suggested Models**: `Qwen 3.5 397B`, `Gemini 3 Flash`.
 
 ---
 
-## LLM Augmentation Internals
+## 🔍 Showcase: From Hit to Validated Exploit
 
-### Model Tier Strategy
-The toolkit uses a tiered model strategy via NVIDIA NIM to balance cost, latency, and reasoning depth:
-- **Tier 3 (Metadata/Rapid)**: `meta/llama-3.1-8b-instruct` - Initial intent scoring and triage.
-- **Tier 2 (Refinement)**: `meta/llama-3.1-70b-instruct` - Complex triage and ranking.
-- **Tier 1 (Deep Reasoning)**: `meta/llama-3.1-405b-instruct` - Exploitability analysis and PoC generation.
+When the `vlnr` agent identifies a high-confidence finding, it produces a detailed triage report and a validated exploit script.
 
-### Scoring & Triage
-- **Intent Score**: SLMs analyze package summaries to identify critical infrastructure (e.g., crypto, auth). A high intent score can boost a candidate's priority by up to 50%.
-- **Triage Score**: Analyzes the tainted path (source to sink) to determine plausibility. High-confidence findings (`> 0.7`) trigger the Tier 1 reasoning loop.
+**Example Finding: Server-Side Request Forgery (SSRF)**
+*   **Signal**: User-controlled URL from a Web API flows into a low-level socket request.
+*   **Agent Decision**: Triage score `0.94`. "Sink reachable via unvalidated user input."
+*   **Validation**: The agent generates an exploit script targeting an internal metadata service and confirms the vulnerability by observing a successful exfiltration in the sandbox.
 
 ---
 
-## Installation
+## 💻 Getting Started
+
+### Installation
 ```bash
 uv sync
 ```
 
-## Development
+### Discovery & Audit Pipeline
+Identify high-value targets and perform an automated scan:
 ```bash
-# Run tests (includes VCR cassettes for LLM testing)
-uv run pytest
+# Discover high-value candidates using semantic scoring
+uv run poc-find-candidates --packages "requests,flask" --llm-discovery
 
-# Linting & Formatting
-uv run ruff check --fix .
-uv run ruff format .
-uv run mypy --strict vlnr/
+# Execute deep scan and triage findings
+uv run poc-scan-vulnerabilities top_candidates.json --llm-triage --llm-poc
 ```
+
+### Autonomous Agent Mode
+Launch the fully autonomous agent to explore, scan, and validate vulnerabilities independently:
+```bash
+uv run vlnr agent --package "target-lib" --budget 10.0
+```
+
+---
+
+## ⚙️ Configuration
+Configure model routing and API endpoints in `llm_config.yaml`.
+- `LLM_API_KEY`: Your preferred LLM provider key.
+- `GITHUB_TOKEN`: (Optional) For high-rate repo metadata fetching.
+
+---
+
+## 🧪 Quality & Standards
+Built for security-critical environments with a focus on reliability and correctness:
+- **Strict Typing**: Full MyPy coverage with `--strict`.
+- **Reproducible Tests**: Logic verified via `pytest` with extensive mocking for external dependencies.
+- **Modern Tooling**: Built on the `uv` Python toolchain.
+
+---
+*Created by [nandrzej](https://github.com/nandrzej)*
