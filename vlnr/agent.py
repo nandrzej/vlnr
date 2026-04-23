@@ -21,21 +21,23 @@ class AgentLoop:
 
         while state.iterations < state.max_iterations and state.budget_remaining > 0:
             logger.info(f"Iteration {state.iterations + 1}/{state.max_iterations}")
-            
+
             action = self.decide_action(state)
-            
+
             if action.action == "stop":
                 logger.info(f"Agent decided to stop. Reason: {action.reasoning}")
-                state.history.append({
-                    "iteration": state.iterations,
-                    "action": action.model_dump(),
-                    "observation": {"success": True, "data": None, "message": "Stopped by agent"}
-                })
+                state.history.append(
+                    {
+                        "iteration": state.iterations,
+                        "action": action.model_dump(),
+                        "observation": {"success": True, "data": None, "message": "Stopped by agent"},
+                    }
+                )
                 break
 
             observation = self.dispatch_action(action, state)
             self._update_state(state, action, observation)
-            
+
             state.iterations += 1
             state.save_to_json(state_path)
             logger.info(f"State saved to {state_path}")
@@ -71,14 +73,12 @@ class AgentLoop:
         # Summarize state for the prompt
         scanned = ", ".join(state.scanned_packages) or "None"
         findings_count = len(state.findings)
-        
+
         slices_needing_poc = [
-            s.slice_id for s in state.slices 
-            if s.triage_score and s.triage_score > 0.7 and not s.poc_data
+            s.slice_id for s in state.slices if s.triage_score and s.triage_score > 0.7 and not s.poc_data
         ]
         slices_needing_validation = [
-            s.slice_id for s in state.slices 
-            if s.poc_data and s.poc_data.verification_steps == "pending_validation"
+            s.slice_id for s in state.slices if s.poc_data and s.poc_data.verification_steps == "pending_validation"
         ]
 
         last_action_summary = "None"
@@ -89,7 +89,7 @@ class AgentLoop:
                 f"Success: {last_entry.get('observation', {}).get('success', False)}, "
                 f"Message: {last_entry.get('observation', {}).get('message', 'N/A')}"
             )
-        
+
         user_prompt = (
             f"Current State Summary:\n"
             f"- Scanned Packages: {scanned}\n"
@@ -104,14 +104,11 @@ class AgentLoop:
 
         tier = LLMTier.TIER_1
         state.budget_remaining -= self._estimate_cost(tier)
-        
+
         return self.llm_client.completion(
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
             response_model=AgentAction,
-            tier=tier
+            tier=tier,
         )
 
     def dispatch_action(self, action: AgentAction, state: AgentState) -> AgentObservation:
@@ -119,8 +116,10 @@ class AgentLoop:
         try:
             if action.action == "scan_package":
                 if not action.package_name:
-                    return AgentObservation(success=False, data=None, message="package_name is required for scan_package")
-                
+                    return AgentObservation(
+                        success=False, data=None, message="package_name is required for scan_package"
+                    )
+
                 pkg_info = {"name": action.package_name, "version": "latest"}
                 findings = process_package(pkg_info, out_dir="out", llm_client=self.llm_client)
                 if findings:
@@ -129,40 +128,45 @@ class AgentLoop:
 
             elif action.action == "generate_poc":
                 if not action.package_name or not action.slice_id:
-                    return AgentObservation(success=False, data=None, message="package_name and slice_id are required for generate_poc")
-                
+                    return AgentObservation(
+                        success=False, data=None, message="package_name and slice_id are required for generate_poc"
+                    )
+
                 target_slice = next((s for s in state.slices if s.slice_id == action.slice_id), None)
                 if not target_slice:
-                    return AgentObservation(success=False, data=None, message=f"Slice {action.slice_id} not found in state")
-                
+                    return AgentObservation(
+                        success=False, data=None, message=f"Slice {action.slice_id} not found in state"
+                    )
+
                 if not target_slice.triage_info:
-                    return AgentObservation(success=False, data=None, message=f"Slice {action.slice_id} has no triage info")
-                
+                    return AgentObservation(
+                        success=False, data=None, message=f"Slice {action.slice_id} has no triage info"
+                    )
+
                 vulnerability_context = (
                     f"Analysis: {target_slice.triage_info.analysis}\n"
                     f"Tool Hit: {target_slice.tool_hits[0].message if target_slice.tool_hits else 'N/A'}\n"
                     f"Sink API: {target_slice.sink_api}\n"
                 )
                 poc_result = generate_poc(
-                    action.package_name, 
-                    vulnerability_context, 
-                    self.llm_client, 
-                    target_slice.triage_info.suggested_cwe
+                    action.package_name, vulnerability_context, self.llm_client, target_slice.triage_info.suggested_cwe
                 )
                 return AgentObservation(success=True, data=poc_result.model_dump())
 
             elif action.action == "validate_poc":
                 if not action.package_name or not action.slice_id:
-                    return AgentObservation(success=False, data=None, message="package_name and slice_id are required for validate_poc")
-                
+                    return AgentObservation(
+                        success=False, data=None, message="package_name and slice_id are required for validate_poc"
+                    )
+
                 target_slice = next((s for s in state.slices if s.slice_id == action.slice_id), None)
                 if not target_slice or not target_slice.poc_data:
-                    return AgentObservation(success=False, data=None, message=f"Slice {action.slice_id} or its PoC data not found")
-                
+                    return AgentObservation(
+                        success=False, data=None, message=f"Slice {action.slice_id} or its PoC data not found"
+                    )
+
                 validation_result = validate_poc_in_container(
-                    target_slice.poc_data.exploit_code,
-                    target_slice.package,
-                    target_slice.version
+                    target_slice.poc_data.exploit_code, target_slice.package, target_slice.version
                 )
                 return AgentObservation(success=True, data=validation_result.model_dump())
 
@@ -173,11 +177,9 @@ class AgentLoop:
 
     def _update_state(self, state: AgentState, action: AgentAction, observation: AgentObservation) -> None:
         """Merges results into state."""
-        state.history.append({
-            "iteration": state.iterations,
-            "action": action.model_dump(),
-            "observation": observation.model_dump()
-        })
+        state.history.append(
+            {"iteration": state.iterations, "action": action.model_dump(), "observation": observation.model_dump()}
+        )
 
         if not observation.success:
             return
@@ -185,12 +187,13 @@ class AgentLoop:
         if action.action == "scan_package":
             if action.package_name and action.package_name not in state.scanned_packages:
                 state.scanned_packages.append(action.package_name)
-            
+
             from vlnr.vuln_models import PackageFindings
+
             findings_data = observation.data
             findings = PackageFindings.model_validate(findings_data)
             state.findings.append(findings)
-            
+
             # Extend state.slices with new findings
             state.slices.extend(findings.sinks)
 
@@ -209,4 +212,3 @@ class AgentLoop:
                 res = observation.data
                 status = res.get("status", "unknown")
                 target_slice.poc_data.verification_steps = f"validated: {status}"
-

@@ -220,15 +220,15 @@ def agent(
         state = AgentState(max_iterations=max_iterations, budget_remaining=budget)
         if package:
             # Add initial action if package is provided
-            state.history.append({
-                "iteration": 0,
-                "action": AgentAction(
-                    action="scan_package", 
-                    package_name=package, 
-                    reasoning="Initial user request"
-                ).model_dump(),
-                "observation": {"success": True, "data": None, "message": "Queued initial scan"}
-            })
+            state.history.append(
+                {
+                    "iteration": 0,
+                    "action": AgentAction(
+                        action="scan_package", package_name=package, reasoning="Initial user request"
+                    ).model_dump(),
+                    "observation": {"success": True, "data": None, "message": "Queued initial scan"},
+                }
+            )
             # Actually, to make it work with the current loop, we might need a better way.
             # But the loop calls decide_action first.
             # If I add it to history, decide_action will see it.
