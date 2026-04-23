@@ -16,9 +16,7 @@ def load_ground_truth(path: str) -> List[Dict[str, Any]]:
         return [json.loads(line) for line in f]
 
 
-def compute_metrics(
-    results: List[Dict[str, Any]], ground_truth: Dict[str, bool], threshold: float
-) -> Dict[str, Any]:
+def compute_metrics(results: List[Dict[str, Any]], ground_truth: Dict[str, bool], threshold: float) -> Dict[str, Any]:
     tp = 0
     fp = 0
     tn = 0
@@ -40,11 +38,7 @@ def compute_metrics(
 
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-    f1 = (
-        2 * (precision * recall) / (precision + recall)
-        if (precision + recall) > 0
-        else 0.0
-    )
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
 
     return {
         "threshold": threshold,
