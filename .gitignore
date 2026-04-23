@@ -13,10 +13,23 @@ wheels/
 # Virtual environments
 .venv
 
+# Result Findings & Local Logs
 findings/
+*_findings/
+logs/
+*.log
 
+# Caches & Environment
 .env
-
-logs/
+.vlnr_cache/
+.coverage
+.python-version
 .DS_Store
-logs/
+
+# Data Dumps
+*.zip
+*.jsonl
+pypicache.json
+manual_top.json
+top_candidates.json
+llms.json

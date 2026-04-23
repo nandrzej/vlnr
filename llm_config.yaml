@@ -1,20 +1,21 @@
 # llm_config.yaml
-# Centralized model routing and parameters
+# Centralized model routing and parameters optimized for 2026 SOTA models
 
 default:
-  base_url: "http://127.0.0.1:1234/v1"
-  model: "custom_openai/qwen3.5-2b-mlx"
+  base_url: "https://api.vlnr.ai/v1" # Placeholder for portfolio
+  model: "qwen-3.5-4b"
   temperature: 0.0
   reasoning_effort: "low"
 
 tier_1: # Deep Reasoning / PoC Generation
-  model: "custom_openai/qwen3.5-2b-mlx"
+  model: "openai/qwen-3.5-397b-instruct"
   temperature: 0.1
+  reasoning_effort: "high"
 
 tier_2: # Triage / Refinement
-  model: "custom_openai/qwen3.5-2b-mlx"
+  model: "openai/gemma-4-31b-it"
   temperature: 0.0
 
 tier_3: # Metadata / Rapid Scoring
-  model: "custom_openai/qwen3.5-2b-mlx"
+  model: "openai/qwen-3.5-4b-instruct"
   temperature: 0.0
