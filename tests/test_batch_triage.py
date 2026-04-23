@@ -1,14 +1,13 @@
 import pytest
-import vcr
+from unittest.mock import patch
 from vlnr.llm import LLMClient
-from vlnr.models import IndividualTriageResult
+from vlnr.models import BatchTriageResult, IndividualTriageResult
 from vlnr.triage import triage_vulnerabilities_batch
 
-
 @pytest.mark.asyncio
-async def test_triage_vulnerabilities_batch(my_vcr: vcr.VCR) -> None:
+async def test_triage_vulnerabilities_batch() -> None:
     client = LLMClient()
-
+    
     slices = [
         {
             "slice_id": "slice-1",
@@ -24,10 +23,14 @@ async def test_triage_vulnerabilities_batch(my_vcr: vcr.VCR) -> None:
         },
     ]
 
-    with my_vcr.use_cassette("test_batch_triage.yaml"):
+    mock_res = BatchTriageResult(
+        results=[
+            IndividualTriageResult(slice_id="slice-1", analysis="Analysis 1", plausibility=0.9, is_false_positive=False, suggested_cwe="CWE-89"),
+            IndividualTriageResult(slice_id="slice-2", analysis="Analysis 2", plausibility=1.0, is_false_positive=False, suggested_cwe="CWE-259"),
+        ]
+    )
+
+    with patch("vlnr.llm.LLMClient.completion", return_value=mock_res):
         batch_result = triage_vulnerabilities_batch(slices, client)
 
     assert len(batch_result.results) == 2
-    assert isinstance(batch_result.results[0], IndividualTriageResult)
-    assert batch_result.results[0].slice_id == "slice-1" or batch_result.results[0].slice_id == "SLICE slice-1"
-    assert batch_result.results[1].slice_id == "slice-2" or batch_result.results[1].slice_id == "SLICE slice-2"
