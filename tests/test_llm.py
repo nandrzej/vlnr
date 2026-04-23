@@ -50,4 +50,4 @@ def test_tier_routing(llm_client: LLMClient) -> None:
         # Verify it called with tier_1 config (temperature 0.1)
         args, kwargs = mock_client.chat.completions.create.call_args
         assert kwargs["temperature"] == 0.1
-        assert kwargs["model"] == "custom_openai/qwen3.5-2b-mlx"
+        assert kwargs["model"] == "openai/qwen-3.5-397b-instruct"
