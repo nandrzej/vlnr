@@ -6,7 +6,9 @@ import signal
 import uuid
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
+
+import typer
 
 from vlnr.llm import LLMClient
 from vlnr.triage import triage_vulnerabilities_batch
@@ -77,7 +79,7 @@ def setup_logging(level: int = logging.INFO) -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-logger = setup_logging()
+logger = logging.getLogger(__name__)
 
 
 def create_slice_from_hit(hit: ToolHit, pkg_name: str, pkg_version: str, local_path: str) -> Slice:
@@ -370,59 +372,44 @@ def process_package(
         cleanup_source(source)
 
 
-def main() -> None:
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("candidates", help="Path to candidates.json")
-    parser.add_argument("--out-dir", default="findings", help="Output directory")
-    parser.add_argument("--max-packages", type=int, default=0, help="Max packages to process")
-    parser.add_argument("--max-files-per-pkg", type=int, default=0, help="Max files to scan per package")
-    parser.add_argument("--llm-triage", action="store_true", help="Use LLM to triage findings")
-    parser.add_argument(
-        "--llm-poc", action="store_true", help="Generate PoC for high-confidence findings (requires --llm-triage)"
-    )
-    args = parser.parse_args()
-
-    if not os.path.exists(args.out_dir):
-        os.makedirs(args.out_dir)
-
-    llm_client: Optional[LLMClient] = None
-    if args.llm_triage or args.llm_poc:
-        try:
-            llm_client = LLMClient()
-            logger.info("LLM Client enabled for triage/PoC. Using NVIDIA NIM.")
-        except Exception as e:
-            logger.error(f"Failed to initialize LLM client: {e}. Proceeding without LLM features.")
-            args.llm_triage = False
-            args.llm_poc = False
-
-    with open(args.candidates, "r") as f:
+def run_scan(
+    candidates_path: Path,
+    out_dir: Path,
+    max_packages: int = 0,
+    max_files_per_pkg: int = 0,
+    llm_client: LLMClient | None = None,
+    generate_pocs: bool = False,
+) -> None:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    with candidates_path.open() as f:
         candidates = json.load(f)
-
-    if args.max_packages > 0:
-        candidates = candidates[: args.max_packages]
-
-    global_index = []
-
+    if max_packages > 0:
+        candidates = candidates[:max_packages]
+    global_index: list[dict[str, Any]] = []
     for pkg in candidates:
         try:
             findings = process_package(
                 pkg,
-                args.out_dir,
-                max_files=args.max_files_per_pkg,
-                llm_client=llm_client if args.llm_triage or args.llm_poc else None,
-                generate_pocs=args.llm_poc,
+                str(out_dir),
+                max_files=max_files_per_pkg,
+                llm_client=llm_client,
+                generate_pocs=generate_pocs,
             )
             if findings:
                 global_index.append({"package": pkg["name"], "version": pkg["version"], "stats": findings.stats})
         except Exception as e:
             logger.exception(f"Failed to process {pkg['name']}: {e}")
-
-    index_path = os.path.join(args.out_dir, "all-findings-index.json")
-    with open(index_path, "w") as f_index:
-        json.dump(global_index, f_index, indent=2)
+    (out_dir / "all-findings-index.json").write_text(json.dumps(global_index, indent=2))
 
 
-if __name__ == "__main__":
-    main()
+def scan(
+    candidates: Path = typer.Argument(..., exists=True, dir_okay=False),
+    out_dir: Path = typer.Option(Path("findings"), "--out-dir", file_okay=False, dir_okay=True),
+    max_packages: int = typer.Option(0, "--max-packages"),
+    max_files_per_pkg: int = typer.Option(0, "--max-files-per-pkg"),
+    llm_triage: bool = typer.Option(False, "--llm-triage"),
+    llm_poc: bool = typer.Option(False, "--llm-poc"),
+) -> None:
+    setup_logging()
+    llm_client = LLMClient() if (llm_triage or llm_poc) else None
+    run_scan(candidates, out_dir, max_packages, max_files_per_pkg, llm_client, generate_pocs=llm_poc)
