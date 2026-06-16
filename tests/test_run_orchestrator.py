@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -41,3 +42,28 @@ def test_build_initial_state_skip_scan(candidates: list[dict]) -> None:
     assert state.candidate_pool == ["pkg-a", "pkg-b", "pkg-c"]
     assert state.findings == []
     assert state.slices == []
+
+
+def test_run_stage_returns_on_success() -> None:
+    from vlnr.__main__ import _run_stage
+
+    fn = MagicMock(return_value=None)
+    _run_stage("discover", fn, "arg1", key="value")
+    fn.assert_called_once_with("arg1", key="value")
+
+
+def test_run_stage_exits_one_on_exception(capsys: pytest.CaptureFixture[str]) -> None:
+    from typer import Exit
+
+    from vlnr.__main__ import _run_stage
+
+    def boom() -> None:
+        raise ValueError("kaboom")
+
+    with pytest.raises(Exit) as exc_info:
+        _run_stage("scan", boom)
+    assert exc_info.value.exit_code == 1
+    err = capsys.readouterr().err
+    assert "Stage scan failed" in err
+    assert "ValueError" in err
+    assert "kaboom" in err
