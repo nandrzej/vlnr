@@ -1,8 +1,10 @@
 import asyncio
+import json
 import logging
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import typer
 
@@ -29,9 +31,74 @@ app.command("agent")(_agent)
 
 
 @app.command()
-def run() -> None:
-    """Chain discover → scan → agent."""
-    raise NotImplementedError("vlnr run is implemented in Task 8")
+def run(
+    out_dir: Path = typer.Option(..., "--out-dir", file_okay=False, dir_okay=True),
+    osv_dump: Path = typer.Option(..., "--osv-dump"),
+    packages: str | None = typer.Option(None, "--packages"),
+    pypi_json: Path | None = typer.Option(None, "--pypi-json", exists=True, dir_okay=False),
+    limit: int = typer.Option(100, "--limit"),
+    llm_discovery: bool = typer.Option(False, "--llm-discovery"),
+    llm_triage: bool = typer.Option(False, "--llm-triage"),
+    llm_poc: bool = typer.Option(False, "--llm-poc"),
+    budget: float = typer.Option(10.0, "--budget"),
+    max_iterations: int = typer.Option(5, "--max-iterations"),
+    skip_scan: bool = typer.Option(False, "--skip-scan"),
+    skip_agent: bool = typer.Option(False, "--skip-agent"),
+) -> None:
+    """Chain discover → scan → agent into a single command."""
+    if (packages is None) == (pypi_json is None):
+        raise typer.BadParameter("Specify exactly one of --packages or --pypi-json.")
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    needs_llm = (not skip_agent) or llm_discovery or llm_triage or llm_poc
+    llm_client: LLMClient | None = None
+    if needs_llm:
+        try:
+            llm_client = LLMClient()
+        except Exception as e:
+            logger.exception("LLM client initialization failed")
+            print(f"LLM client initialization failed: {type(e).__name__}: {e}", file=sys.stderr)
+            raise typer.Exit(1) from e
+
+    _run_stage(
+        "discover",
+        _discover_stage,
+        osv_dump=osv_dump,
+        packages=packages,
+        pypi_json=pypi_json,
+        limit=limit,
+        llm_discovery=llm_discovery,
+        out=out_dir / "candidates.json",
+    )
+
+    candidates: list[dict[str, Any]] = []
+    if not skip_agent:
+        candidates = json.loads((out_dir / "candidates.json").read_text())
+
+    if not skip_scan:
+        _run_stage(
+            "scan",
+            _scan_stage,
+            candidates=out_dir / "candidates.json",
+            out_dir=out_dir / "findings",
+            max_packages=0,
+            max_files_per_pkg=0,
+            llm_client=llm_client,
+            generate_pocs=llm_poc,
+        )
+
+    if not skip_agent:
+        _run_stage(
+            "agent",
+            _agent_stage,
+            out_dir=out_dir,
+            candidates=candidates,
+            llm_client=llm_client,
+            budget=budget,
+            max_iterations=max_iterations,
+            scanned=[] if skip_scan else None,
+        )
 
 
 def build_initial_state(
@@ -76,7 +143,7 @@ def build_initial_state(
 def _run_stage(name: str, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
     try:
         fn(*args, **kwargs)
-    except (typer.Exit, typer.BadParameter):
+    except typer.Exit, typer.BadParameter:
         raise
     except Exception as e:
         logger.exception(f"Stage {name} failed")
@@ -100,7 +167,7 @@ def _discover_stage(
             limit=limit,
             llm_discovery=llm_discovery,
             out=out,
-        )
+        ),
     )
 
 
@@ -141,7 +208,7 @@ def _agent_stage(
 ) -> None:
     if llm_client is None:
         raise RuntimeError(
-            "_agent_stage requires a non-None llm_client (orchestrator gates construction on needs_llm)."
+            "_agent_stage requires a non-None llm_client (orchestrator gates construction on needs_llm).",
         )
     state = build_initial_state(out_dir, candidates, max_iterations, budget, scanned=scanned)
     loop = AgentLoop(llm_client, out_dir=str(out_dir / "findings"))
