@@ -11,8 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class AgentLoop:
-    def __init__(self, llm_client: LLMClient) -> None:
+    def __init__(self, llm_client: LLMClient, out_dir: str = "out") -> None:
         self.llm_client = llm_client
+        self.out_dir = out_dir
 
     def run(self, initial_state: AgentState, state_path: str = "agent_session.json") -> None:
         """Main orchestration loop."""
@@ -121,7 +122,7 @@ class AgentLoop:
                     )
 
                 pkg_info = {"name": action.package_name, "version": "latest"}
-                findings = process_package(pkg_info, out_dir="out", llm_client=self.llm_client)
+                findings = process_package(pkg_info, out_dir=self.out_dir, llm_client=self.llm_client)
                 if findings:
                     return AgentObservation(success=True, data=findings.model_dump())
                 return AgentObservation(success=False, data=None, message="Scan failed or no findings")
