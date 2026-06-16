@@ -25,6 +25,7 @@ class AgentState(BaseModel):
     max_iterations: int
     budget_remaining: float
     history: list[dict[str, Any]] = Field(default_factory=list)
+    candidate_pool: list[str] | None = None
 
     def save_to_json(self, path: str) -> None:
         """Saves the agent state to a JSON file."""
