@@ -21,8 +21,9 @@ dependencies = [
 ]
 
 [project.scripts]
-poc-find-candidates = "vlnr.cli:app"
-poc-scan-vulnerabilities = "vlnr.vuln_cli:main"
+vlnr = "vlnr.__main__:app"
+poc-find-candidates = "vlnr._legacy:find_candidates_shim"
+poc-scan-vulnerabilities = "vlnr._legacy:scan_shim"
 
 [dependency-groups]
 dev = [
