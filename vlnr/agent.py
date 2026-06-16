@@ -102,6 +102,8 @@ class AgentLoop:
             f"- Budget Remaining: ${state.budget_remaining:.2f}\n\n"
             f"Determine the next action."
         )
+        if state.candidate_pool:
+            user_prompt += f"\n- Available candidates (unscanned): {', '.join(state.candidate_pool)}"
 
         tier = LLMTier.TIER_1
         state.budget_remaining -= self._estimate_cost(tier)
