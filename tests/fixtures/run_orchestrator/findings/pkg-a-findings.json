@@ -1,0 +1,29 @@
+{
+  "package": {"name": "pkg-a", "version": "1.0.0"},
+  "sinks": [
+    {
+      "slice_id": "slice-aaa-111",
+      "package": "pkg-a",
+      "version": "1.0.0",
+      "category": ["B605"],
+      "sink_api": "os.system",
+      "static_class": "suspicious",
+      "risk_score_static": 0.6,
+      "cwe_candidates": [],
+      "source_types": [],
+      "tainted_args": [],
+      "sanitizers": [],
+      "entrypoint": null,
+      "code_snippets": [],
+      "dataflow_summary": [
+        {"file": "src/pkg_a/run.py", "line": 12, "expr": "os.system(cmd)"}
+      ],
+      "tool_hits": [],
+      "triage_info": null,
+      "triage_score": null,
+      "poc_data": null
+    }
+  ],
+  "metadata_signals": [],
+  "stats": {"num_sinks_total": 1, "num_obvious_vuln": 0, "num_bandit_hits": 0}
+}

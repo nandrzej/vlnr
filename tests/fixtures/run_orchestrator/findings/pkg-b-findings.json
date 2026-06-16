@@ -1,0 +1,6 @@
+{
+  "package": {"name": "pkg-b", "version": "1.0.0"},
+  "sinks": [],
+  "metadata_signals": [],
+  "stats": {"num_sinks_total": 0, "num_obvious_vuln": 0, "num_bandit_hits": 0}
+}
