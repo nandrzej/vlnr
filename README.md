@@ -159,31 +159,38 @@ tier3:
 
 ## Usage
 
-### Stage 1 — Candidate Discovery
-
 ```bash
-# Heuristic scoring only
-uv run poc-find-candidates --include-cli --include-ml --limit 500 --out top_candidates.json
+# Simplest: full pipeline in one command
+# vlnr run uses the LLM agent by default; export CUSTOM_OPENAI_API_KEY first or pass --skip-agent.
+vlnr run --out-dir results/ --osv-dump osv.zip --packages requests,flask
 
-# With LLM-augmented intent detection (finds crypto/auth/network libs heuristics miss)
-uv run poc-find-candidates --packages requests,flask --llm-discovery
+# Or run stages individually for finer control
+vlnr discover --osv-dump osv.zip --packages requests,flask --out cands.json
+vlnr scan cands.json --out-dir findings/ --llm-triage --llm-poc
+vlnr agent --package requests --budget 10.0
 ```
 
-### Stage 2 — Deep Scan + Triage (pipeline mode)
+A full `vlnr run --out-dir results/` populates:
 
-```bash
-uv run poc-scan-vulnerabilities top_candidates.json --llm-triage --llm-poc
-```
+- `results/candidates.json` — discover stage output (ranked candidates)
+- `results/findings/all-findings-index.json` — scan stage summary index
+- `results/findings/<pkg>-findings.json` — per-package findings (one file per scanned package with results)
+- `results/findings/<pkg>-slices.jsonl` — per-package taint slices (one line per slice)
+- `results/findings/<pkg>-<slice_id>-vex.json` — OpenVEX record for each false-positive slice
+- `results/agent_session.json` — agent state (resumable with `vlnr agent --state-path`)
 
-### Autonomous Agent Mode
+### Migrating from `poc-find-candidates` / `poc-scan-vulnerabilities`
 
-```bash
-# Start a new agent session
-uv run vlnr agent --package target-lib --budget 10.0
+The legacy entry points `poc-find-candidates` and `poc-scan-vulnerabilities` still work but emit a `DeprecationWarning`. After pulling this release, run `uv sync` to install the new `vlnr` console script. Then:
 
-# Resume a previous session
-uv run vlnr agent --state-path session.json
-```
+| Old | New |
+|---|---|
+| `poc-find-candidates main` | `vlnr discover` |
+| `poc-find-candidates agent` | `vlnr agent` |
+| `poc-scan-vulnerabilities` | `vlnr scan` |
+| (none) | `vlnr run` (full pipeline) |
+
+Note: the `poc-find-candidates` script is a typer app with `main` and `agent` subcommands (`pyproject.toml:24` → `vlnr.cli:app`); the bare flag examples in the current README's "Stage 1" / "Stage 2" sections (e.g. `poc-find-candidates --include-cli --limit 500`) will fail with `No such option` because typer expects a subcommand. The above table reflects the actual working invocations. Replacing the Usage section per Step 1 also fixes those Stage 1/Stage 2 examples.
 
 ---
 
